@@ -191,7 +191,7 @@
             } while (cardEls.every((_, i) => positions[i].row === Math.floor(i / 3) && positions[i].col === i % 3));
             layoutCards();
             round++;
-            setTimeout(doShuffleRound, 1800);   // 拉長：CSS 移動 0.9s + 0.9s 看停下來
+            setTimeout(doShuffleRound, 2500);   // CSS 移動 1.8s + 0.7s 看停下來再下一輪
         }
         setTimeout(doShuffleRound, 800);
     }
