@@ -157,8 +157,8 @@
         $("fg-controls").style.display = "none";
 
         state = STATE.PREVIEW;
-        // 階段 2：4 秒預覽
-        setTimeout(coverCards, 4000);
+        // 階段 2：5 秒預覽（派派指定）
+        setTimeout(coverCards, 5000);
     }
 
     // ─── 階段 3：全部蓋起來 ──────────────────────

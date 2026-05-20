@@ -154,6 +154,8 @@
     position: relative;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.5, 0, 0.3, 1);
+    transform: rotateY(0deg);   /* 顯式 base，trigger 3D context */
+    will-change: transform;
 }
 .fg-card.flipped .fg-card-inner {
     transform: rotateY(180deg);
@@ -184,9 +186,12 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    /* opacity 保險：backface-visibility 在部分瀏覽器/實作下會失效，
+       用 opacity 同步切換確保「沒翻到的那面」絕對看不見。 */
+    transition: opacity 0.3s linear 0.2s;
 }
 
-/* 卡背（書頁古卷風） */
+/* 卡背（書頁古卷風）— 預設「翻面後」才顯示（flipped 狀態） */
 .fg-card-back {
     background:
         radial-gradient(circle at 30% 30%, #c8a268 0%, #9a6f3b 50%, #5a3a1f 100%);
@@ -194,7 +199,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: rotateY(0deg);
+    transform: rotateY(180deg);    /* 預設朝後（看不到），flipped 後翻過來 */
+    opacity: 0;                    /* 預設透明 */
 }
 .fg-card-back::before {
     content: "";
@@ -227,17 +233,22 @@
     line-height: 1;
 }
 
-/* 卡正面（偉人圖） */
+/* 卡正面（偉人圖）— 預設「朝前」顯示偉人 */
 .fg-card-front {
     background: #1f1408;
     border: 2px solid #d4af6e;
-    transform: rotateY(180deg);
+    transform: rotateY(0deg);     /* 預設朝前（看得到偉人） */
+    opacity: 1;                    /* 預設顯示 */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
     overflow: hidden;
 }
+
+/* flipped 切換：正面隱、卡背顯 */
+.fg-card.flipped .fg-card-front { opacity: 0; }
+.fg-card.flipped .fg-card-back { opacity: 1; }
 .fg-card-front img {
     position: absolute;
     inset: 0;
