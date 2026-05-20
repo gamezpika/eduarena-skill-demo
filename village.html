@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#2a7ba8">
+    <meta name="description" content="EduArena 大場景島嶼地圖技術 Demo — 手繪 2.5D 島嶼村莊風。">
+    <title>EduArena 島嶼村莊地圖 Demo</title>
+    <link rel="stylesheet" href="static/css/demo.css?v=3">
+    <link rel="stylesheet" href="static/css/village.css?v=1">
+</head>
+<body>
+
+<div class="demo-banner">技術 DEMO</div>
+
+<div class="iphone-frame">
+    <div class="iphone-island" aria-hidden="true"></div>
+    <div class="iphone-home" aria-hidden="true"></div>
+
+    <div class="iphone-screen">
+        <div id="screen-village">
+
+            <!-- ── Top HUD ─────────────────────── -->
+            <div class="village-hud">
+                <div class="v-player">
+                    <div class="v-avatar">
+                        🧑‍🎓
+                        <span class="v-player-lv">42</span>
+                    </div>
+                    <div>
+                        <div class="v-player-name">派派同學</div>
+                        <div class="v-player-bar" style="width:90px;"><i></i></div>
+                    </div>
+                </div>
+                <div class="v-resources">
+                    <div class="v-res">
+                        <span class="v-res-icon coin">⭐</span>
+                        <span>87 / 150</span>
+                    </div>
+                    <div class="v-res">
+                        <span class="v-res-icon gem">💰</span>
+                        <span>2,580</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 左側 vertical icon stack ────── -->
+            <div class="v-side-icons">
+                <button class="v-side-icon" data-side="settings">⚙️<span class="v-side-icon-label">設定</span></button>
+                <button class="v-side-icon" data-side="news">📢<span class="v-side-icon-label">公告</span></button>
+                <button class="v-side-icon" data-side="mail">✉️<span class="v-side-icon-label">郵件</span></button>
+                <button class="v-side-icon" data-side="friends">👥<span class="v-side-icon-label">好友</span></button>
+                <button class="v-side-icon" data-side="quest">📋<span class="v-side-icon-label">任務</span></button>
+            </div>
+
+            <!-- ── 右側角落按鈕 ───────────────── -->
+            <div class="v-corner-btn-stack">
+                <button class="v-corner-btn" data-corner="daily">🎁<span class="v-corner-btn-label">每日</span></button>
+                <button class="v-corner-btn" data-corner="ranking">🏆<span class="v-corner-btn-label">排行</span></button>
+            </div>
+
+            <!-- ── 主場景：背景圖 + hotspots ────── -->
+            <div class="village-viewport">
+                <!-- 5 個科目島：藍色泡泡 -->
+                <button class="v-hotspot" style="top:14%;left:24%;" data-tap="chinese">
+                    <span class="v-hot-bubble subject">📖</span>
+                    <span class="v-hot-label">國語島</span>
+                </button>
+                <button class="v-hotspot" style="top:14%;left:72%;" data-tap="english">
+                    <span class="v-hot-bubble subject">🔤</span>
+                    <span class="v-hot-label">英文島</span>
+                </button>
+                <button class="v-hotspot" style="top:30%;left:48%;" data-tap="math">
+                    <span class="v-hot-bubble subject">🔢</span>
+                    <span class="v-hot-label">數學島</span>
+                </button>
+                <button class="v-hotspot" style="top:52%;left:24%;" data-tap="science">
+                    <span class="v-hot-bubble subject">🔬</span>
+                    <span class="v-hot-label">自然島</span>
+                </button>
+                <button class="v-hotspot" style="top:52%;left:72%;" data-tap="social">
+                    <span class="v-hot-bubble subject">🌏</span>
+                    <span class="v-hot-label">社會島</span>
+                </button>
+
+                <!-- 5 個建築：分色 -->
+                <button class="v-hotspot" style="top:70%;left:26%;" data-tap="shop">
+                    <span class="v-hot-new">新</span>
+                    <span class="v-hot-bubble shop">🏪</span>
+                    <span class="v-hot-label">商店</span>
+                </button>
+                <button class="v-hotspot" style="top:70%;left:64%;" data-tap="farm">
+                    <span class="v-hot-bubble farm">🐄</span>
+                    <span class="v-hot-label">牧場</span>
+                </button>
+                <button class="v-hotspot" style="top:87%;left:36%;" data-tap="closet">
+                    <span class="v-hot-bubble closet">👕</span>
+                    <span class="v-hot-label">衣櫥</span>
+                </button>
+                <button class="v-hotspot" style="top:87%;left:60%;" data-tap="pvp">
+                    <span class="v-hot-lock">🔒 Lv5</span>
+                    <span class="v-hot-bubble pvp">⚔️</span>
+                    <span class="v-hot-label">PK 大廳</span>
+                </button>
+                <button class="v-hotspot" style="top:36%;left:84%;" data-tap="boss">
+                    <span class="v-hot-lock">🔒 Lv10</span>
+                    <span class="v-hot-bubble boss">🏰</span>
+                    <span class="v-hot-label">魔王塔</span>
+                </button>
+            </div>
+
+            <!-- ── 底部導覽列 ──────────────────── -->
+            <div class="v-bottom-nav">
+                <button class="v-nav-btn active" data-nav="home">
+                    <span class="v-nav-icon">🏝️</span>
+                    <span class="v-nav-label">村莊</span>
+                </button>
+                <button class="v-nav-btn" data-nav="dex">
+                    <span class="v-nav-icon">📚</span>
+                    <span class="v-nav-label">圖鑑</span>
+                </button>
+                <button class="v-nav-btn" data-nav="cert">
+                    <span class="v-nav-icon">🎓</span>
+                    <span class="v-nav-label">證書</span>
+                </button>
+                <button class="v-nav-btn" data-nav="event">
+                    <span class="v-nav-icon">🎉</span>
+                    <span class="v-nav-label">活動</span>
+                </button>
+                <button class="v-nav-btn" data-nav="me">
+                    <span class="v-nav-icon">👤</span>
+                    <span class="v-nav-label">我的</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ── Demo Modal ─────────────────────────────── -->
+<div id="demo-modal" class="demo-modal">
+    <div class="demo-modal-card">
+        <div class="demo-modal-icon" id="demo-modal-icon">✨</div>
+        <div class="demo-modal-title" id="demo-modal-title">技術 Demo</div>
+        <div class="demo-modal-body" id="demo-modal-body"></div>
+        <button class="demo-modal-close" id="demo-modal-close">了解</button>
+    </div>
+</div>
+
+<script>
+    const POPUPS = {
+        chinese: { icon: "📖", title: "國語島", body: "讀寫、注音、閱讀、成語<br>6 個年級 36 章節" },
+        english: { icon: "🔤", title: "英文島", body: "單字、文法、聽力、口說<br>含 ABC 字母與聽力重組" },
+        math: { icon: "🔢", title: "數學島", body: "加減乘除、分數、幾何<br>6 個年級 36 章節" },
+        science: { icon: "🔬", title: "自然島", body: "生物、物質、能量、地球<br>含實驗題與圖示題" },
+        social: { icon: "🌏", title: "社會島", body: "歷史、地理、公民<br>含台灣社會與世界文化" },
+        shop: { icon: "🏪", title: "商店", body: "服裝/職業道具/節日造型<br>多主題輪換上架" },
+        farm: { icon: "🐄", title: "牧場", body: "養動物、收穫資源<br>每日任務獎勵金幣" },
+        closet: { icon: "👕", title: "衣櫥", body: "換造型、換職業、套裝預覽<br>含 50 套服裝整圖" },
+        pvp: { icon: "⚔️", title: "PK 大廳", body: "同年級對戰、大亂鬥、朋友房<br>累積積分上王榜" },
+        boss: { icon: "🏰", title: "魔王塔", body: "三階魔王戰、Phaser 第一人稱<br>累積學習換取勳章" },
+        settings: { icon: "⚙️", title: "設定", body: "通知、音效、語言、版本資訊" },
+        news: { icon: "📢", title: "公告", body: "活動公告、版本更新、客服訊息" },
+        mail: { icon: "✉️", title: "郵件", body: "獎勵領取、系統訊息、好友邀請" },
+        friends: { icon: "👥", title: "好友", body: "加好友、查看好友進度、組房間 PK" },
+        quest: { icon: "📋", title: "任務", body: "每日任務、成就、限時挑戰" },
+        daily: { icon: "🎁", title: "每日獎勵", body: "登入連續獎勵、轉盤、寶箱" },
+        ranking: { icon: "🏆", title: "排行榜", body: "週排行、PK 王、年級排名" },
+    };
+
+    function showModal(key) {
+        const opts = POPUPS[key];
+        if (!opts) return;
+        document.getElementById("demo-modal-icon").textContent = opts.icon;
+        document.getElementById("demo-modal-title").textContent = opts.title;
+        document.getElementById("demo-modal-body").innerHTML = opts.body;
+        document.getElementById("demo-modal").classList.add("show");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // hotspots
+        document.querySelectorAll("[data-tap]").forEach(el => {
+            el.addEventListener("click", () => showModal(el.dataset.tap));
+        });
+        // side icons + corner buttons
+        document.querySelectorAll("[data-side], [data-corner]").forEach(el => {
+            el.addEventListener("click", () => showModal(el.dataset.side || el.dataset.corner));
+        });
+        // bottom nav toggle (純切 active，不彈窗)
+        document.querySelectorAll(".v-nav-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".v-nav-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                if (btn.dataset.nav !== "home") {
+                    showModal(btn.dataset.nav === "dex" ? "quest" : btn.dataset.nav === "cert" ? "ranking" : btn.dataset.nav === "event" ? "daily" : "settings");
+                }
+            });
+        });
+        // modal close
+        const modal = document.getElementById("demo-modal");
+        document.getElementById("demo-modal-close").addEventListener("click", () => modal.classList.remove("show"));
+        modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+    });
+</script>
+
+</body>
+</html>
