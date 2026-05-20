@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#3a2410">
+    <meta name="description" content="EduArena 名人九宮格遊戲技術 Demo — 翻牌記憶遊戲，認識中外歷史偉人。">
+    <title>EduArena 名人九宮格 Demo</title>
+    <link rel="stylesheet" href="static/css/demo.css?v=3">
+    <link rel="stylesheet" href="static/css/figures.css?v=1">
+</head>
+<body>
+
+<div class="demo-banner">技術 DEMO</div>
+
+<div class="iphone-frame">
+    <div class="iphone-island" aria-hidden="true"></div>
+    <div class="iphone-home" aria-hidden="true"></div>
+
+    <div class="iphone-screen">
+        <div id="screen-figures">
+
+            <header class="fg-header">
+                <button class="fg-back" id="fg-back" title="關於這個 demo">←</button>
+                <span class="fg-title">名人九宮格</span>
+                <span class="fg-progress" id="fg-progress">第 1 / 9 題</span>
+            </header>
+
+            <div class="fg-question">
+                <div class="fg-target">找出：<b id="fg-target-name">李白</b></div>
+                <div class="fg-hints" id="fg-hints"></div>
+                <div class="fg-status" id="fg-status">準備中…</div>
+            </div>
+
+            <div class="fg-grid-wrap">
+                <div class="fg-grid" id="fg-grid">
+                    <!-- 9 張卡 by JS -->
+                </div>
+            </div>
+
+            <div class="fg-controls" id="fg-controls" style="display:none;">
+                <button class="fg-btn" id="fg-next">下一題 →</button>
+                <button class="fg-btn secondary" id="fg-replay">再玩一輪</button>
+                <button class="fg-btn secondary" id="fg-start" style="display:none;">重新開始</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ── 知識卡 Modal ───────────────────────────── -->
+<div id="fg-modal" class="fg-modal">
+    <div class="fg-modal-card">
+        <div class="fg-modal-header">
+            <div class="fg-modal-icon" id="fg-modal-icon"></div>
+            <div>
+                <div class="fg-modal-name" id="fg-modal-name"></div>
+                <div class="fg-modal-title" id="fg-modal-title"></div>
+            </div>
+        </div>
+        <div class="fg-modal-body">
+            <div class="fg-modal-row">
+                <span class="fg-modal-row-label">年代</span>
+                <span id="fg-modal-era"></span>
+            </div>
+            <div class="fg-modal-row">
+                <span class="fg-modal-row-label">領域</span>
+                <span id="fg-modal-field"></span>
+            </div>
+            <div class="fg-modal-intro" id="fg-modal-intro"></div>
+            <div class="fg-modal-quote" id="fg-modal-quote"></div>
+        </div>
+        <button class="fg-modal-close" id="fg-modal-close">關 閉</button>
+    </div>
+</div>
+
+<script src="static/js/figures.js?v=1"></script>
+
+</body>
+</html>
