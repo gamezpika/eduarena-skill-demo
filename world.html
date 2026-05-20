@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a6b9c">
+    <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
+    <title>EduArena 探索地圖 Demo</title>
+    <link rel="stylesheet" href="static/css/demo.css?v=3">
+    <link rel="stylesheet" href="static/css/world.css?v=1">
+</head>
+<body>
+
+<div class="demo-banner">技術 DEMO</div>
+
+<div class="iphone-frame">
+    <div class="iphone-island" aria-hidden="true"></div>
+    <div class="iphone-home" aria-hidden="true"></div>
+
+    <div class="iphone-screen">
+        <div id="screen-world">
+
+            <!-- ── 上：場景名 + 任務進度 ──────── -->
+            <div class="wd-top">
+                <div class="wd-scene">
+                    <div class="wd-scene-name">起 始 之 地</div>
+                    <div class="wd-scene-progress">已開採 0 / 1</div>
+                </div>
+            </div>
+
+            <!-- ── 左側：玩家頭像 + 狀態 ────── -->
+            <div class="wd-left">
+                <div class="wd-player-card">
+                    <div class="wd-avatar">🧙</div>
+                    <div>
+                        <div class="wd-player-name">派派 Lv 42</div>
+                        <div class="wd-player-bar"><i></i></div>
+                    </div>
+                </div>
+                <div class="wd-status-card">
+                    <div class="wd-status-label">工作排程</div>
+                    <div class="wd-status-value">休息中…</div>
+                </div>
+            </div>
+
+            <!-- ── 右上：資源欄 ─────────────── -->
+            <div class="wd-right">
+                <div class="wd-res">
+                    <span class="wd-res-icon coin">🍯</span>
+                    <span>1.5M</span>
+                </div>
+                <div class="wd-res">
+                    <span class="wd-res-icon gem">💎</span>
+                    <span>238</span>
+                </div>
+            </div>
+
+            <!-- ── 主場景：大背景可上下滑動 ──── -->
+            <div class="wd-viewport" id="wd-viewport">
+                <div class="wd-world" id="wd-world"></div>
+                <div class="wd-hint">↕ 上下拖曳探索地圖</div>
+            </div>
+
+            <!-- ── 底部寵物欄（純擺飾） ──────── -->
+            <div class="wd-bottom">
+                <div class="wd-pet active">🐱</div>
+                <div class="wd-pet">🐶</div>
+                <div class="wd-pet">🐰</div>
+                <div class="wd-pet">🦊</div>
+                <div class="wd-pet">🐻</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="static/js/world.js?v=1"></script>
+
+</body>
+</html>
