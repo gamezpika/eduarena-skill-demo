@@ -143,9 +143,9 @@
     padding: 0;
     perspective: 800px;
     cursor: pointer;
-    /* 派派：移動軌跡要看得清楚，慢且平順（去掉 spring 跳動感） */
-    transition: left 1.8s cubic-bezier(0.4, 0, 0.2, 1),
-                top 1.8s cubic-bezier(0.4, 0, 0.2, 1),
+    /* 派派：軌跡平順 + 速度依題目遞增（var 由 JS 動態設定） */
+    transition: left var(--card-move-duration, 1.8s) cubic-bezier(0.4, 0, 0.2, 1),
+                top var(--card-move-duration, 1.8s) cubic-bezier(0.4, 0, 0.2, 1),
                 width 0.2s, height 0.2s;
     z-index: 1;
 }

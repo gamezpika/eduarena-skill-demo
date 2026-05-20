@@ -74,14 +74,29 @@
 
     // ─── 狀態 ────────────────────────────────────
     const STATE = { IDLE: 0, INTRO: 1, PREVIEW: 2, COVER: 3, SHUFFLE: 4, GUESS: 5, RESULT: 6 };
+    const TOTAL_ROUNDS = 5;
+    // 第 1-5 題的卡片移動秒數（漸漸變快）
+    const MOVE_DURATIONS_S = [1.8, 1.5, 1.2, 0.9, 0.6];
+
     let state = STATE.IDLE;
-    let currentTargetIdx = 0;   // 當前要找的偉人在 FIGURES 中的 index
+    let currentTargetIdx = 0;   // 當前是第幾題 (0-4)
+    let questionOrder = [];      // 從 9 偉人中隨機選 5 個的 index 陣列
     let positions = [];          // [{row, col}] x 9，記每張卡的位置
     let cardEls = [];            // 9 個卡片 DOM
-    let answered = [];           // [boolean] x 9，紀錄哪些題已答對（過關紀錄）
+    let answered = [];           // [boolean] x TOTAL_ROUNDS，紀錄哪些題已答對
 
     // ─── DOM ─────────────────────────────────────
     function $(id) { return document.getElementById(id); }
+
+    // ─── Fisher-Yates shuffle helper ─────────────
+    function shuffleArr(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
 
     // ─── 初始化 ──────────────────────────────────
     function init() {
@@ -89,7 +104,9 @@
         grid.innerHTML = "";
         cardEls = [];
         positions = [];
-        answered = FIGURES.map(() => false);
+        answered = new Array(TOTAL_ROUNDS).fill(false);
+        // 從 9 偉人中隨機選 5 個出題（卡片本身 9 張全部在 grid）
+        questionOrder = shuffleArr([...Array(FIGURES.length).keys()]).slice(0, TOTAL_ROUNDS);
 
         FIGURES.forEach((fig, idx) => {
             const card = document.createElement("button");
@@ -117,7 +134,12 @@
 
         $("fg-start").addEventListener("click", startRound);
         $("fg-next").addEventListener("click", nextTarget);
-        $("fg-replay").addEventListener("click", () => { currentTargetIdx = 0; startRound(); });
+        $("fg-replay").addEventListener("click", () => {
+            currentTargetIdx = 0;
+            questionOrder = shuffleArr([...Array(FIGURES.length).keys()]).slice(0, TOTAL_ROUNDS);
+            answered = new Array(TOTAL_ROUNDS).fill(false);
+            startRound();
+        });
         $("fg-back").addEventListener("click", showAbout);
         $("fg-modal-close").addEventListener("click", closeModal);
         $("fg-modal").addEventListener("click", e => { if (e.target.id === "fg-modal") closeModal(); });
@@ -140,7 +162,11 @@
 
     // ─── 開新一題 ────────────────────────────────
     function startRound() {
-        const target = FIGURES[currentTargetIdx];
+        const target = FIGURES[questionOrder[currentTargetIdx]];
+        // 設定這一題的卡片移動速度（漸漸變快）
+        const speedS = MOVE_DURATIONS_S[currentTargetIdx] ?? 0.6;
+        document.documentElement.style.setProperty("--card-move-duration", speedS + "s");
+
         // 重置：全部翻回正面（預覽階段）
         cardEls.forEach(c => {
             c.classList.remove("flipped");
@@ -151,9 +177,10 @@
         // 顯示題目
         $("fg-target-name").textContent = target.name;
         $("fg-hints").innerHTML = target.hints.map(h => `<span class="fg-hint">${h}</span>`).join("");
-        $("fg-status").textContent = "記住每位偉人的位置 🔍";
+        const speedHint = currentTargetIdx === 0 ? "" : (currentTargetIdx < 3 ? "（速度漸快）" : "（速度加快！）");
+        $("fg-status").textContent = "記住每位偉人的位置 🔍" + speedHint;
         $("fg-status").className = "fg-status preview";
-        $("fg-progress").textContent = `第 ${currentTargetIdx + 1} / ${FIGURES.length} 題`;
+        $("fg-progress").textContent = `第 ${currentTargetIdx + 1} / ${TOTAL_ROUNDS} 題`;
         $("fg-controls").style.display = "none";
 
         state = STATE.PREVIEW;
@@ -191,7 +218,9 @@
             } while (cardEls.every((_, i) => positions[i].row === Math.floor(i / 3) && positions[i].col === i % 3));
             layoutCards();
             round++;
-            setTimeout(doShuffleRound, 2500);   // CSS 移動 1.8s + 0.7s 看停下來再下一輪
+            // 間隔 = 移動時間 + 0.7s 停留看清楚（速度遞增時間隔也跟著縮）
+            const moveMs = (MOVE_DURATIONS_S[currentTargetIdx] ?? 0.6) * 1000;
+            setTimeout(doShuffleRound, moveMs + 700);
         }
         setTimeout(doShuffleRound, 800);
     }
@@ -209,7 +238,7 @@
         const card = cardEls[idx];
         if (card.classList.contains("disabled")) return;
         const fig = FIGURES[idx];
-        const target = FIGURES[currentTargetIdx];
+        const target = FIGURES[questionOrder[currentTargetIdx]];
 
         // 翻開
         card.classList.remove("flipped");
@@ -246,8 +275,14 @@
         $("fg-modal").classList.add("show");
         // 顯示下一題 / 重玩按鈕
         $("fg-controls").style.display = "flex";
-        $("fg-next").style.display = currentTargetIdx < FIGURES.length - 1 ? "" : "none";
-        $("fg-replay").style.display = currentTargetIdx >= FIGURES.length - 1 ? "" : "none";
+        const isLast = currentTargetIdx >= TOTAL_ROUNDS - 1;
+        $("fg-next").style.display = isLast ? "none" : "";
+        $("fg-replay").style.display = isLast ? "" : "none";
+        if (isLast) {
+            // 通關慶祝文案
+            $("fg-status").textContent = "🎉 五關全部破關！你是名人達人！";
+            $("fg-status").className = "fg-status guess";
+        }
     }
 
     function closeModal() {
@@ -255,7 +290,7 @@
     }
 
     function nextTarget() {
-        if (currentTargetIdx < FIGURES.length - 1) {
+        if (currentTargetIdx < TOTAL_ROUNDS - 1) {
             currentTargetIdx++;
             closeModal();
             startRound();
