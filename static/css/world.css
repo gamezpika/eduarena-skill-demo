@@ -155,8 +155,8 @@
 .wd-world {
     position: relative;
     width: 100%;
-    /* 高度按比例設定，由 JS 在載入時讀圖比例算 */
-    background: url("../../assets/images/world_bg.jpg?v=1") top center / 100% 100% no-repeat;
+    /* JS 設 height = viewport × 2.5 確保有拖曳空間 */
+    background: url("../../assets/images/world_bg.jpg?v=2") center top / cover no-repeat;
     will-change: transform;
 }
 

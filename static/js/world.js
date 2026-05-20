@@ -11,12 +11,14 @@
     const world = document.getElementById("wd-world");
     if (!vp || !world) return;
 
-    // ─── 設背景圖比例（720:1280 = 9:16）── world 高度 = viewport 寬 × (1280/720)
+    // ─── world 高度 = viewport × 2.5，確保有大範圍可上下拖
+    // （原本按圖比例算 720:1280 在 iPhone 殼內框會跟 viewport 差不多大，拖不動）
     function fitWorldSize() {
         const w = vp.clientWidth;
-        const ratio = 1280 / 720;   // 跟背景圖比例對齊
+        const vpH = vp.clientHeight;
+        if (w < 1 || vpH < 1) return;
         world.style.width = w + "px";
-        world.style.height = (w * ratio) + "px";
+        world.style.height = (vpH * 2.5) + "px";   // 2.5 倍視窗 = 拖曳範圍 1.5x viewport
     }
     fitWorldSize();
     window.addEventListener("resize", () => { fitWorldSize(); bounds(); pos = clamp(pos); render(); });
