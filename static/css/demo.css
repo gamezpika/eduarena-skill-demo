@@ -160,6 +160,170 @@ body::before {
 }
 .demo-modal-close:active { transform: scale(0.97); }
 
+/* ── iPhone Mockup Frame ────────────────────────
+   Mobile-first：預設殼框透明滿版（手機看像原生 App）。
+   桌面 (≥768px) 才顯示 iPhone 14 Pro 殼包裝。 */
+
+.iphone-frame {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    position: relative;
+}
+.iphone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    overflow: hidden;
+    background: var(--bg-dark);
+    position: relative;
+}
+.iphone-screen #app {
+    height: 100%;
+}
+.iphone-island, .iphone-home,
+.desktop-stage-info, .desktop-stage-hint { display: none; }
+
+@media (min-width: 768px) {
+    /* 桌面舞台：黑色背景 + 居中 iPhone 殼 */
+    html, body {
+        background:
+            radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 30% 80%, rgba(255, 140, 66, 0.06) 0%, transparent 50%),
+            linear-gradient(180deg, #050810 0%, #0d1424 60%, #16213e 100%);
+    }
+    body::before { display: none; }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    /* iPhone 14 Pro 殼框：414x868 (含 padding 14px → 內 386x840) */
+    .iphone-frame {
+        flex-shrink: 0;
+        width: 414px;
+        height: 868px;
+        background: linear-gradient(160deg, #2a2d33 0%, #1a1c20 50%, #0e0f12 100%);
+        border-radius: 56px;
+        padding: 14px;
+        box-shadow:
+            0 70px 140px rgba(0, 0, 0, 0.7),
+            0 30px 60px rgba(0, 0, 0, 0.5),
+            0 0 0 2px #2a2a2c,
+            inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+        position: relative;
+    }
+
+    .iphone-screen {
+        border-radius: 44px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Dynamic Island */
+    .iphone-island {
+        display: block;
+        position: absolute;
+        top: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 118px;
+        height: 36px;
+        background: #000;
+        border-radius: 999px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Home indicator */
+    .iphone-home {
+        display: block;
+        position: absolute;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 134px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.55);
+        border-radius: 999px;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    /* 海洋視窗在桌面殼內固定高度（取代 starmap.css 的 74vh） */
+    .iphone-screen .ocean-viewport {
+        height: 700px !important;
+        min-height: 700px !important;
+        max-height: 700px !important;
+        max-width: 100% !important;
+    }
+
+    /* 站台周圍文字（桌面顯示） */
+    .desktop-stage-info {
+        display: block;
+        position: fixed;
+        top: 36px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        color: rgba(255, 255, 255, 0.95);
+        font-family: "Noto Sans TC", sans-serif;
+        pointer-events: none;
+        z-index: 10;
+    }
+    .desktop-stage-info h1 {
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+        background: linear-gradient(135deg, var(--brand-blue), #b292ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .desktop-stage-info p {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.55);
+        font-weight: 400;
+    }
+    .desktop-stage-hint {
+        display: block;
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    /* Demo banner 改貼在 iPhone 殼右上角偏外（小貼紙風） */
+    .demo-banner {
+        top: 50%;
+        right: calc(50% - 240px);
+        transform: translate(0, -380px);
+    }
+}
+
+/* 桌面但高度不夠（< 920px）：縮小 iPhone 殼避免被裁 */
+@media (min-width: 768px) and (max-height: 920px) {
+    .iphone-frame {
+        transform: scale(0.85);
+        transform-origin: center center;
+    }
+    .desktop-stage-info { top: 16px; }
+    .desktop-stage-hint { bottom: 16px; }
+}
+@media (min-width: 768px) and (max-height: 780px) {
+    .iphone-frame { transform: scale(0.72); }
+}
+
 /* ── Demo Banner (右上角貼紙) ─────────────── */
 .demo-banner {
     position: fixed;

@@ -13,7 +13,22 @@
 
 <div class="demo-banner">技術 DEMO</div>
 
-<div id="app">
+<!-- 桌面才會顯示的舞台文字（手機 @media 隱藏） -->
+<div class="desktop-stage-info">
+    <h1>EduArena 地圖技術 Demo</h1>
+    <p>3D 透視縮放海洋 · 慣性視差 · 手寫彈簧物理引擎</p>
+</div>
+<div class="desktop-stage-hint">↑ 在手機殼內拖曳海洋體驗深度感，點 5 座島看主題彈窗</div>
+
+<!-- iPhone 殼框（桌面顯示；手機 @media 退化成全螢幕） -->
+<div class="iphone-frame">
+    <!-- Dynamic Island（裝飾） -->
+    <div class="iphone-island" aria-hidden="true"></div>
+    <!-- Home indicator（裝飾） -->
+    <div class="iphone-home" aria-hidden="true"></div>
+
+    <div class="iphone-screen">
+        <div id="app">
 
     <!-- ─── 海洋地圖 Screen（預設 active） ───────────────── -->
     <div id="screen-starmap" class="screen active">
@@ -149,7 +164,9 @@
         <button id="lb-back" style="display:none"></button>
     </div>
 
-</div>
+        </div><!-- /#app -->
+    </div><!-- /.iphone-screen -->
+</div><!-- /.iphone-frame -->
 
 <!-- ─── Demo Modal（點島彈窗） ───────────────────── -->
 <div id="demo-modal" class="demo-modal">
