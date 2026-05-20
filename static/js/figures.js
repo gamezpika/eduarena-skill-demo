@@ -169,28 +169,32 @@
         setTimeout(shuffleCards, 900);
     }
 
-    // ─── 階段 4：洗牌（位置交換，看得到動） ──────
+    // ─── 階段 4：洗牌（9 張全部同時滑動到新位置，2 次大洗） ──
     function shuffleCards() {
         state = STATE.SHUFFLE;
         $("fg-status").textContent = "洗牌中… 別跟丟！🌀";
         $("fg-status").className = "fg-status shuffle";
 
-        let swaps = 0;
-        const totalSwaps = 6;
-        function doSwap() {
-            if (swaps >= totalSwaps) {
+        let round = 0;
+        const totalRounds = 2;
+        function doShuffleRound() {
+            if (round >= totalRounds) {
                 guessPhase();
                 return;
             }
-            const a = Math.floor(Math.random() * 9);
-            let b = Math.floor(Math.random() * 9);
-            while (b === a) b = Math.floor(Math.random() * 9);
-            [positions[a], positions[b]] = [positions[b], positions[a]];
+            // Fisher-Yates：一次把 9 個位置全部打散
+            // 保證新位置至少有 8 張卡跟舊位置不同（避免無感洗牌）
+            do {
+                for (let i = positions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [positions[i], positions[j]] = [positions[j], positions[i]];
+                }
+            } while (cardEls.every((_, i) => positions[i].row === Math.floor(i / 3) && positions[i].col === i % 3));
             layoutCards();
-            swaps++;
-            setTimeout(doSwap, 500);
+            round++;
+            setTimeout(doShuffleRound, 900);  // 等 CSS transition (0.45s) 完成再洗下一輪
         }
-        setTimeout(doSwap, 300);
+        setTimeout(doShuffleRound, 500);
     }
 
     // ─── 階段 5：玩家可猜 ───────────────────────
