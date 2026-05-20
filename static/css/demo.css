@@ -1,0 +1,245 @@
+/* EduArena Skill Demo — baseline styles
+   從 EduArena app.css 萃取的 baseline 樣式，讓 standalone demo 跑起來。
+   只放海洋地圖會用到的 baseline，其他全砍。 */
+
+:root {
+    --brand-orange: #FF8C42;
+    --brand-blue: #00D4FF;
+    --accent-yellow: #FFD54F;
+    --accent-teal: #26C6DA;
+    --bg-dark: #1A1A2E;
+    --bg-light: #F5F5FA;
+    --danger-red: #FF5252;
+    --text-light: #FFFFFF;
+    --text-dark: #2D2D3A;
+    --brand-orange-glow: rgba(255, 140, 66, 0.3);
+    --brand-blue-glow: rgba(0, 212, 255, 0.3);
+    --bg-dark-mid: #16213E;
+    --bg-card: rgba(255, 255, 255, 0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: "Noto Sans TC", "PingFang TC", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    font-size: 16px;
+    color: var(--text-light);
+    background: var(--bg-dark);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+img {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+/* Arena background (星空) */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 212, 255, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(255, 140, 66, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 80% 70%, rgba(124, 77, 255, 0.08) 0%, transparent 50%),
+        linear-gradient(180deg, #0D0D1A 0%, #1A1A2E 40%, #16213E 100%);
+    pointer-events: none;
+}
+
+#app {
+    height: 100%;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+}
+.screen.active { display: flex; }
+
+.screen-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-dark-mid);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.btn-back {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+}
+.screen-title {
+    font-size: 20px;
+    font-weight: 700;
+    flex: 1;
+}
+
+.emo {
+    display: inline-block;
+    vertical-align: middle;
+    height: 1em;
+    width: auto;
+}
+.emo.lg { height: 1.6em; }
+
+/* ── Demo Modal (點島彈窗) ───────────────────── */
+.demo-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(10, 10, 25, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    backdrop-filter: blur(8px);
+}
+.demo-modal.show { display: flex; }
+.demo-modal-card {
+    background: linear-gradient(180deg, #1d2748, #16213e);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 212, 255, 0.15);
+}
+.demo-modal-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.demo-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand-blue);
+    margin-bottom: 8px;
+}
+.demo-modal-body {
+    font-size: 15px;
+    color: #c8d0e0;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+.demo-modal-close {
+    background: linear-gradient(135deg, var(--brand-orange), #ff6b1a);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+}
+.demo-modal-close:active { transform: scale(0.97); }
+
+/* ── Demo Banner (右上角貼紙) ─────────────── */
+.demo-banner {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+    background: rgba(255, 140, 66, 0.95);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 章節星星 details 內的基本樣式（從 EduArena starmap details 萃取） */
+.starmap-details {
+    margin: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+.starmap-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    color: #c8d0e0;
+    list-style: none;
+}
+.starmap-details summary::-webkit-details-marker { display: none; }
+.island-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.island-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+.island-name { flex: 1; font-size: 14px; }
+.island-star-count { color: var(--accent-yellow); font-size: 13px; }
+.island-toggle { color: rgba(255,255,255,0.5); font-size: 12px; }
+.island-grades-host { padding: 0 12px 10px; }
+.grade-row {
+    padding: 8px 4px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.grade-row.locked { opacity: 0.45; }
+.grade-row-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.grade-label { flex: 1; font-size: 13px; }
+.grade-stars { font-size: 12px; color: var(--accent-yellow); }
+.grade-stars.locked-text { color: rgba(255,255,255,0.4); }
+.grade-toggle { color: rgba(255,255,255,0.5); font-size: 11px; }
+.grade-topics-host { padding-top: 6px; }
+.star-topic-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+    color: #c8d0e0;
+}
+.star-topic-name { flex: 1; }
+.star-topic-stars { display: inline-flex; gap: 2px; }
+.topic-empty { color: rgba(255,255,255,0.4); font-size: 12px; padding: 4px; }
+
+.starmap-stars-top {
+    font-size: 14px;
+    color: var(--accent-yellow);
+    font-weight: 600;
+}

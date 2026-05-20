@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#16213E">
+    <meta name="description" content="EduArena 地圖技術 Demo — DOGTOR 風 3D 透視縮放海洋、慣性視差、彈簧物理引擎。">
+    <title>EduArena 地圖技術 Demo</title>
+    <link rel="stylesheet" href="static/css/starmap.css">
+    <link rel="stylesheet" href="static/css/demo.css">
+</head>
+<body>
+
+<div class="demo-banner">技術 DEMO</div>
+
+<div id="app">
+
+    <!-- ─── 海洋地圖 Screen（預設 active） ───────────────── -->
+    <div id="screen-starmap" class="screen active">
+        <header class="screen-header screen-header--glass">
+            <button class="btn-back" id="starmap-back" title="技術 demo，無上一頁">←</button>
+            <span class="screen-title">冒險地圖</span>
+            <span class="starmap-stars-top">
+                <img class="emo" src="assets/images/icons/star_filled.png" alt="">
+                <span id="starmap-total-stars">0 / 0</span>
+            </span>
+        </header>
+
+        <div class="starmap-content">
+            <!-- 5/16 v10 island.mp4 風 3D 透視縮放海洋 -->
+            <div class="ocean-viewport" id="ocean-viewport">
+                <div class="ocean-world" id="ocean-world">
+
+                    <!-- 背景層 z0 -->
+                    <div class="layer-bg" id="layer-bg" aria-hidden="true">
+                        <svg class="ocean-waves" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                            <path class="wv wv1" d="M0,160 C240,210 480,110 720,150 C960,190 1200,120 1440,160 L1440,320 L0,320 Z"></path>
+                            <path class="wv wv2" d="M0,200 C240,150 480,250 720,200 C960,150 1200,250 1440,200 L1440,320 L0,320 Z"></path>
+                            <path class="wv wv3" d="M0,240 C300,280 600,200 900,240 C1140,270 1320,210 1440,240 L1440,320 L0,320 Z"></path>
+                        </svg>
+                        <span class="bg-cloud c1"></span>
+                        <span class="bg-cloud c2"></span>
+                        <span class="bg-cloud c3"></span>
+                        <span class="bg-cloud c4"></span>
+                    </div>
+
+                    <!-- 主舞台 z10：5 島由上而下 國→英→數→自→社 -->
+                    <div class="layer-stage" id="layer-stage">
+                        <button class="ocean-island" data-subject="chinese" style="top:4%;left:36%;">
+                            <span class="oi-shadow"></span>
+                            <span class="oi-card">
+                                <img class="oi-img" src="assets/images/island_chinese.png" alt="">
+                                <span class="ocean-island-label">國語島</span>
+                                <span class="oi-stars"></span>
+                            </span>
+                        </button>
+                        <button class="ocean-island" data-subject="english" style="top:24%;left:9%;">
+                            <span class="oi-shadow"></span>
+                            <span class="oi-card">
+                                <img class="oi-img" src="assets/images/island_english.png" alt="">
+                                <span class="ocean-island-label">英文島</span>
+                                <span class="oi-stars"></span>
+                            </span>
+                        </button>
+                        <button class="ocean-island" data-subject="math" style="top:44%;left:47%;">
+                            <span class="oi-shadow"></span>
+                            <span class="oi-card">
+                                <img class="oi-img" src="assets/images/island_math.png" alt="">
+                                <span class="ocean-island-label">數學島</span>
+                                <span class="oi-stars"></span>
+                            </span>
+                        </button>
+                        <button class="ocean-island" data-subject="science" style="top:64%;left:11%;">
+                            <span class="oi-shadow"></span>
+                            <span class="oi-card">
+                                <img class="oi-img" src="assets/images/island_science.png" alt="">
+                                <span class="ocean-island-label">自然島</span>
+                                <span class="oi-stars"></span>
+                            </span>
+                        </button>
+                        <button class="ocean-island" data-subject="social" style="top:84%;left:41%;">
+                            <span class="oi-shadow"></span>
+                            <span class="oi-card">
+                                <img class="oi-img" src="assets/images/island_social.png" alt="">
+                                <span class="ocean-island-label">社會島</span>
+                                <span class="oi-stars"></span>
+                            </span>
+                        </button>
+
+                        <!-- 海面裝飾小舟 -->
+                        <div class="ocean-deco" style="top:13%;left:63%;width:15%;">
+                            <img src="assets/images/deco_boat.png" alt="">
+                        </div>
+                        <div class="ocean-deco flip" style="top:35%;left:15%;width:13%;">
+                            <img src="assets/images/deco_boat.png" alt="">
+                        </div>
+                        <div class="ocean-deco" style="top:55%;left:67%;width:12%;">
+                            <img src="assets/images/deco_boat.png" alt="">
+                        </div>
+                        <div class="ocean-deco flip" style="top:78%;left:17%;width:14%;">
+                            <img src="assets/images/deco_boat.png" alt="">
+                        </div>
+                    </div>
+
+                    <!-- 前景層 z20 -->
+                    <div class="layer-fg" id="layer-fg" aria-hidden="true">
+                        <span class="fg-cloud f1"></span>
+                        <span class="fg-cloud f2"></span>
+                        <span class="fg-cloud f3"></span>
+                        <span class="fg-cloud f4"></span>
+                        <span class="fg-cloud f5"></span>
+                        <span class="fg-cloud f6"></span>
+                        <span class="fg-cloud f7"></span>
+                        <span class="fg-cloud f8"></span>
+                    </div>
+                </div>
+
+                <!-- 天空入口：考試（不隨島捲） -->
+                <div class="sky-portals" id="sky-portals">
+                    <img class="sky-gulls" src="assets/images/sky_gulls.png" alt="" aria-hidden="true">
+                    <button class="sky-island" id="sky-island">
+                        <img src="assets/images/island_comprehensive.png" alt="">
+                        <span class="sky-island-label">綜合檢定</span>
+                    </button>
+                    <button class="sky-balloon b-cert" data-exam="cert">
+                        <img src="assets/images/sky_balloon_red.png" alt="">
+                        <span class="sky-balloon-label">檢定考</span>
+                    </button>
+                    <button class="sky-balloon b-mock" data-exam="mock">
+                        <img src="assets/images/sky_balloon_yellow.png" alt="">
+                        <span class="sky-balloon-label">模擬考</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 章節星星進度 -->
+            <details class="starmap-details">
+                <summary>
+                    <img class="emo" src="assets/images/icons/chart.png" alt="">
+                    章節星星進度
+                </summary>
+                <div id="starmap-islands"></div>
+            </details>
+        </div>
+    </div>
+
+    <!-- 假 leaderboard screen：只為了讓 starmap.js init() 找得到 #lb-back 不噴錯 -->
+    <div id="screen-leaderboard" class="screen" aria-hidden="true">
+        <button id="lb-back" style="display:none"></button>
+    </div>
+
+</div>
+
+<!-- ─── Demo Modal（點島彈窗） ───────────────────── -->
+<div id="demo-modal" class="demo-modal">
+    <div class="demo-modal-card">
+        <div class="demo-modal-icon" id="demo-modal-icon">✨</div>
+        <div class="demo-modal-title" id="demo-modal-title">技術 Demo</div>
+        <div class="demo-modal-body" id="demo-modal-body"></div>
+        <button class="demo-modal-close" id="demo-modal-close">了解</button>
+    </div>
+</div>
+
+<!-- ─── Scripts ─────────────────────────────────── -->
+<script src="static/js/mock-eduapi.js"></script>
+<script src="static/js/starmap.js"></script>
+<script>
+    // 啟動：DOM ready 後觸發 starMap.open() 進入海洋地圖
+    function bootDemo() {
+        if (window.starMap && window.starMap.open) {
+            window.starMap.open();
+        }
+        // demo modal 關閉
+        const modal = document.getElementById("demo-modal");
+        const closeBtn = document.getElementById("demo-modal-close");
+        if (closeBtn && modal) {
+            closeBtn.addEventListener("click", function () {
+                modal.classList.remove("show");
+            });
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) modal.classList.remove("show");
+            });
+        }
+        // starmap-back 點下去顯示「技術 demo」彈窗（沒上一頁可回）
+        const backBtn = document.getElementById("starmap-back");
+        if (backBtn) {
+            backBtn.addEventListener("click", function (e) {
+                e.stopImmediatePropagation();
+                window.showDemoModal && window.showDemoModal({
+                    icon: "🗺",
+                    title: "EduArena 地圖技術 Demo",
+                    body: "這是純前端技術展示站，<br>展示海洋地圖的 3D 透視縮放、<br>慣性視差與彈簧物理引擎。<br><br>正式版整合在 EduArena LIFF 內。",
+                });
+            }, true);
+        }
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootDemo);
+    } else {
+        bootDemo();
+    }
+</script>
+
+</body>
+</html>

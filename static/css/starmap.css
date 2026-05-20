@@ -1,0 +1,965 @@
+/* Star Map + Leaderboard */
+
+/* ── Star Map ────────────────────────────────────── */
+.starmap-content {
+    flex: 1;
+    /* 5/16 v6：保留可捲(下方章節星星進度 details 才到得了)。地圖拖曳
+       跳出畫面的 bug 真正修法在 starmap.js pointermove {passive:false}
+       +preventDefault（+ .ocean-viewport touch-action:none）阻止原生
+       去捲/橡皮筋祖先；overscroll:contain 再斷 scroll chaining。 */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px;
+}
+.starmap-stars-top {
+    margin-left: auto;
+    margin-right: 12px;
+    color: var(--accent-yellow, #ffd24d);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* === Phase 1.2：starmap drill-down（5 科 → 年級 → 章節）=== */
+.island-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+.island-card.expanded {
+    background: rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.4);
+}
+.island-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+}
+.island-header:active { transform: scale(0.99); }
+.island-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+}
+.island-star-count {
+    font-size: 12px;
+    color: #fbbf24;
+    font-weight: 700;
+}
+.island-toggle {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+.island-grades-host {
+    padding: 0 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.grade-row {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.grade-row.locked {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0.45;
+    cursor: default;
+}
+.grade-row.expanded {
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+.grade-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+}
+.grade-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    flex: 1;
+}
+.grade-stars {
+    font-size: 12px;
+    color: #fbbf24;
+    font-weight: 700;
+}
+.grade-stars.locked-text { color: rgba(255, 255, 255, 0.4); font-weight: 500; }
+.grade-toggle {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+}
+
+.grade-topics-host {
+    padding: 0 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.star-topic-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    font-size: 12px;
+}
+.star-topic-name {
+    color: rgba(255, 255, 255, 0.85);
+}
+.star-topic-stars {
+    color: #fbbf24;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+.topic-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    padding: 8px;
+}
+
+/* === Phase 1.2：瑪利歐風大地圖 + 5 hotspot === */
+.world-map-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 12px auto;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    background: #4dabf7;
+}
+.world-map-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+.world-hotspot {
+    position: absolute;
+    background: transparent;
+    border: 2px dashed transparent;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+.world-hotspot:hover,
+.world-hotspot:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.7);
+    box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    transform: scale(1.05);
+}
+.world-hotspot:active { transform: scale(0.95); }
+/* hotspot label：島嶼底部貼齊（5/11 派派：原右上角離島太遠，改成「掛在島下」貼近不遮主體）*/
+.hotspot-label {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background:
+        radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.35) 0%, transparent 55%),
+        linear-gradient(180deg, #fef3c7 0%, #fcd34d 55%, #d97706 100%);
+    color: #5a2e0a;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    box-shadow:
+        0 1px 0 #78350f,
+        0 2px 6px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.55);
+    border: 1.5px solid #78350f;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+    opacity: 0.97;
+    transition: transform 0.2s;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 3;
+}
+.hotspot-label .subject-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
+/* 注意：label 已用 translateX(-50%) 居中，hover/focus/active 要保留再 scale */
+.world-hotspot:hover .hotspot-label,
+.world-hotspot:focus .hotspot-label,
+.world-hotspot:active .hotspot-label {
+    transform: translateX(-50%) scale(1.12);
+}
+
+/* 個別島 label 位置微調（5/11 派派：國語/英文/自然 label 擋住島嶼圖）*/
+/* 推到 hotspot 範圍外底部（島嶼下方海域） */
+.world-hotspot[data-subject="chinese"] .hotspot-label,
+.world-hotspot[data-subject="english"] .hotspot-label,
+.world-hotspot[data-subject="science"] .hotspot-label {
+    bottom: -22px;
+}
+
+/* ════════ 5/16 需求方 v4：手寫物理引擎 虛擬慣性視差滾動 ════════
+   原生滾動已廢除：.ocean-viewport overflow:hidden + touch-action:none，
+   wheel/touch 驅動 virtualScrollY，starmap.js 以彈簧(stiffness60/
+   damping25/mass1)積分出 springPos，三層 useTransform 等價映射：
+     背景 .layer-bg  springPos×(200/-1000)  (最慢、反向漂)
+     島嶼 .layer-stage springPos×1           (標準)
+     前景 .layer-fg   springPos×(1500/-1000) (最快、往下掠過)
+   漸層海(無寫實海圖) + SVG 波緩漂；每島地面陰影隨島漂浮；毛玻璃膠囊
+   標籤；吉祥物固定底部不隨滾動。舊 .world-*/.map-world dead 留著。 */
+.ocean-viewport {
+    width: 100%;
+    max-width: 440px;
+    /* v9d→v10：舊 aspect-ratio:9/16 在 LINE 舊 webview 不產生高度→clientHeight=0
+       →RANGE=1 縮放全廢。改實體高度(vh，老 webview 也吃)＋上下限防呆。
+       JS 另有 clientHeight<=1 的 fallback 雙保險。 */
+    height: 74vh;
+    min-height: 440px;
+    max-height: 820px;
+    margin: 8px auto;
+    position: relative;
+    overflow: hidden;            /* 徹底廢除原生滾動 */
+    isolation: isolate;          /* v8：自成堆疊脈絡，::after 霧帶必蓋在 ocean-world 之上 */
+    touch-action: none;          /* 手勢全交給 JS */
+    -webkit-user-select: none;
+    user-select: none;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    /* v11：fallback 底色(海圖載入前) */
+    background: #2f7fc4;
+}
+/* v11：背景換成 Codex 生成的海天圖(色調/畫風對齊 DOGTOR 圖一)。已不需要
+   原本那塊過大的白雲 ::after — 海圖自帶天空+雲，島往上滑到天際線由 JS
+   opacity→0 自然沒入畫好的天空。::after 停用。 */
+.ocean-viewport::after { content: none; }
+.ocean-world {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    /* v11：海天圖撐滿視窗(100% 100%)→畫好的天際線固定在視窗 ~30%，
+       對齊 starmap.js HORIZON_F=0.30，島正好在海天交界消失不穿幫。
+       柔和插畫圖拉伸無感。底色 fallback 防圖未載。 */
+    background:
+        url("assets/images/ocean_bg.png?v=v11") center top / 100% 100% no-repeat,
+        #2f7fc4;
+}
+/* v10c：移除原本鋪滿整片海面的大白雲(那會讓海看起來像天空)。
+   白雲改由上方固定 ::after 天空帶呈現，符合 island.mp4。 */
+.bg-cloud, .fg-cloud { display: none !important; }
+/* 背景層 z0：SVG 波 + 遠雲（springPos×-0.2，最慢反向）*/
+.layer-bg {
+    position: absolute;
+    left: 0;
+    top: -12%;
+    width: 100%;
+    height: 128%;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+.ocean-waves {
+    position: absolute;
+    left: -25%;
+    bottom: 0;
+    width: 150%;
+    height: 46%;
+}
+.ocean-waves .wv { fill: #ffffff; }
+/* v11：海圖已自帶細波紋，這層 SVG 波只留「很淡的緩慢漂動」＝你要的微微波動動畫(降透明度免與海圖打架) */
+.ocean-waves .wv1 { opacity: 0.10; animation: waveDrift 13s ease-in-out infinite; }
+.ocean-waves .wv2 { opacity: 0.07; animation: waveDrift 19s ease-in-out infinite reverse; }
+.ocean-waves .wv3 { opacity: 0.05; animation: waveDrift2 25s ease-in-out infinite; }
+@keyframes waveDrift  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5%); } }
+@keyframes waveDrift2 { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-4%); } }
+.bg-cloud {
+    position: absolute;
+    background: radial-gradient(ellipse at 50% 50%,
+        rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.5) 45%, transparent 72%);
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: 0.5;
+}
+.bg-cloud.c1 { width: 150px; height: 54px; top: 8%;  left: -4%; }
+.bg-cloud.c2 { width: 110px; height: 40px; top: 34%; left: 64%; }
+.bg-cloud.c3 { width: 170px; height: 60px; top: 60%; left: -8%; opacity: .38; }
+.bg-cloud.c4 { width: 120px; height: 44px; top: 84%; left: 60%; opacity: .38; }
+/* 島嶼層 z10：整層由 JS 直接 translateY(springPos) */
+.layer-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 1400px;          /* 5/17 需求方：島間距保守縮一點點(1600→1400)，畫面別太空。深度/手感公式不變(依視窗比例) */
+    z-index: 10;
+    will-change: transform;
+}
+.ocean-island {
+    position: absolute;
+    width: 56%;              /* v10b：35→56，需求方要更大；換回舊精緻島圖(蒸汽朋克大笨鐘等)，3D透視已修好故可放大 */
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform-origin: center center;
+    /* 5/16 v5：由近到遠的 scale/opacity 由 JS 每幀依位置設 inline；
+       短 transition 讓兩幀間滑順(不要 .7s 否則深度跟不上滑動) */
+    opacity: 1;
+    transition: opacity 0.14s linear, transform 0.14s linear;
+    will-change: opacity, transform, filter;  /* v8：render() 每幀也改 filter:blur */
+}
+/* 5/17 需求方：海面裝飾(小舟/無人島)。在 .layer-stage 內隨捲動+吃深度
+   (starmap.js render decos 設 inline scale/opacity/z)；不可點、不擋島。 */
+.ocean-deco {
+    position: absolute;
+    background: transparent;
+    pointer-events: none;
+    transform-origin: center center;
+    opacity: 1;
+    transition: opacity 0.14s linear, transform 0.14s linear;
+    will-change: opacity, transform;
+}
+.ocean-deco img {
+    width: 100%;
+    height: auto;
+    display: block;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.20));
+}
+/* 鏡像小舟增加變化(翻在 img 上，與 JS 給 .ocean-deco 的 scale 不衝突) */
+.ocean-deco.flip img { transform: scaleX(-1); }
+/* 地面橢圓陰影：在島腳下、隨島同步漂浮 */
+.oi-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    width: 60%;
+    height: 7%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 50%,
+        rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.22) 55%, transparent 78%);
+    filter: blur(4px);
+    pointer-events: none;
+    animation: oiFloat 5.4s ease-in-out infinite;
+}
+.oi-card {
+    display: block;
+    position: relative;
+    transform-origin: center bottom;
+    transition: transform 0.12s ease;
+}
+.ocean-island:active .oi-card { transform: scale(0.92); }
+.oi-img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 6px 9px rgba(0, 0, 0, 0.25));
+    animation: oiFloat 5.4s ease-in-out infinite;
+}
+/* 島 + 其陰影 同節奏漂浮（錯開各島）*/
+.ocean-island:nth-child(3n)   .oi-img,
+.ocean-island:nth-child(3n)   .oi-shadow { animation-duration: 6.3s; animation-delay: -1.1s; }
+.ocean-island:nth-child(3n+1) .oi-img,
+.ocean-island:nth-child(3n+1) .oi-shadow { animation-duration: 4.9s; animation-delay: -0.6s; }
+.ocean-island:nth-child(4n)   .oi-img,
+.ocean-island:nth-child(4n)   .oi-shadow { animation-duration: 7.0s; animation-delay: -2.0s; }
+.ocean-island.ocean-boss      .oi-img,
+.ocean-island.ocean-boss      .oi-shadow { animation-duration: 4.5s; }
+.ocean-island.centered .oi-img { animation: oiFloatBig 3.4s ease-in-out infinite; }
+@keyframes oiFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-9px); }
+}
+@keyframes oiFloatBig {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-20px) scale(1.03); }
+}
+/* 前景層 z20：近雲（springPos×-1.5 最快往下掠過）*/
+.layer-fg {
+    position: absolute;
+    left: 0;
+    top: -30%;
+    width: 100%;
+    height: 200%;
+    pointer-events: none;
+    z-index: 20;
+    will-change: transform;
+}
+.fg-cloud {
+    position: absolute;
+    background: radial-gradient(ellipse at 50% 45%,
+        #ffffff 0%, rgba(255, 255, 255, 0.82) 50%, transparent 75%);
+    border-radius: 50%;
+    filter: blur(3px);
+    opacity: 0.78;
+}
+.fg-cloud.f1 { width: 200px; height: 70px; top: 8%;  left: -10%; }
+.fg-cloud.f2 { width: 150px; height: 56px; top: 20%; left: 62%; }
+.fg-cloud.f3 { width: 230px; height: 80px; top: 33%; left: -14%; }
+.fg-cloud.f4 { width: 160px; height: 58px; top: 46%; left: 58%; }
+.fg-cloud.f5 { width: 190px; height: 66px; top: 59%; left: -8%; }
+.fg-cloud.f6 { width: 150px; height: 54px; top: 71%; left: 60%; }
+.fg-cloud.f7 { width: 210px; height: 74px; top: 83%; left: -12%; }
+.fg-cloud.f8 { width: 160px; height: 58px; top: 94%; left: 56%; }
+/* 毛玻璃膠囊學科標籤 */
+/* 5/17 需求方：島名去膠囊→直接文字，靠強描邊陰影在柔和海天上看清楚、字級略大 */
+.ocean-island-label {
+    display: block;
+    margin: -14% auto 0;          /* 貼近島圖(島圖方形下方有透明留白) */
+    width: max-content;
+    max-width: 96%;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-align: center;
+    text-shadow:
+        0 0 3px rgba(0, 0, 0, 0.55),
+        0 1px 2px rgba(0, 0, 0, 0.65),
+        0 0 1px rgba(0, 0, 0, 0.9);
+    -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+.ocean-island-label.boss { color: #ffd0e2; }
+/* 5/16 v7→5/17：星數去膠囊→直接金色文字+強描邊（loadStarMap 填入；空時隱藏）*/
+.oi-stars {
+    display: block;
+    margin: 1px auto 0;
+    width: max-content;
+    max-width: 96%;
+    color: #ffe08a;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    text-align: center;
+    text-shadow:
+        0 0 3px rgba(0, 0, 0, 0.6),
+        0 1px 2px rgba(0, 0, 0, 0.72);
+    -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+.oi-stars:empty { display: none; }
+.oi-stars .emo { width: 11px; height: 11px; vertical-align: -1px; }
+
+/* ════ 5/17 需求方：天空可點熱氣球(考試入口)+海鷗純裝飾 ════
+   .sky-portals 固定在 .ocean-viewport(非 .layer-stage)→不隨島捲動；
+   位於天空帶(島在天際線~30%就消失，這裡 0–26% 是乾淨天空)。
+   容器 pointer-events:none 讓非氣球處的點擊穿透到島；氣球本身可點。 */
+.sky-portals {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 30%;
+    z-index: 25;
+    pointer-events: none;
+}
+/* 5/17 需求方：海鷗被綜合島(左)擋住→移到天空上緣橫飛、z 在島上方(鳥在前) */
+.sky-gulls {
+    position: absolute;
+    top: 3%;
+    left: 50%;
+    width: 30%;
+    max-width: 150px;
+    transform: translateX(-50%);
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 3;
+    animation: skyDrift 14s ease-in-out infinite alternate;
+}
+/* 5/17 需求方：綜合檢定考＝獨立醒目「天空島」(右側、最大、固定不隨島捲) */
+.sky-island {
+    position: absolute;
+    left: 1%;                /* 5/17 需求方：綜合島移左、熱氣球移右，版面較清楚 */
+    top: 0;
+    width: 43%;
+    max-width: 200px;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+    animation: skyFloat 6s ease-in-out infinite;
+}
+.sky-island img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28))
+        drop-shadow(0 0 10px rgba(255, 211, 120, 0.55));
+}
+.sky-island:active { transform: scale(0.95); }
+.sky-island-label {
+    margin-top: -8%;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+    text-shadow:
+        0 0 3px rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.65),
+        0 0 1px rgba(0, 0, 0, 0.9);
+    -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.35);
+}
+.sky-balloon {
+    position: absolute;
+    width: 26%;
+    max-width: 118px;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: skyFloat 5s ease-in-out infinite;
+}
+.sky-balloon img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.22));
+}
+.sky-balloon:active { transform: scale(0.93); }
+/* 5/17 需求方：熱氣球字去膠囊→直接白字+強描邊(蓋在淡藍天上看清楚)、字級略大 */
+.sky-balloon-label {
+    margin-top: -4%;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-shadow:
+        0 0 3px rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.62),
+        0 0 1px rgba(0, 0, 0, 0.85);
+    -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.32);
+}
+/* 5/17 需求方：2 顆放左側天空、一高一低不對稱、可大一點。
+   紅(檢定)大、偏低、最左；黃(模擬)小一點、偏高、左中。回顧無氣球。 */
+/* 5/17：綜合天空島佔右側→2 熱氣球縮小讓位到左側，仍一高一低不對稱 */
+/* 5/17 需求方：綜合島佔左側→2 熱氣球移到右側，仍一高一低不對稱 */
+.sky-balloon.b-cert { right: 2%;  top: 13%; width: 24%; max-width: 104px; animation-delay: -0.4s; }
+.sky-balloon.b-mock { right: 25%; top: 1%;  width: 18.5%; max-width: 82px; animation-delay: -2.4s; }
+@keyframes skyFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes skyDrift { 0% { transform: translateX(-54%); } 100% { transform: translateX(-46%); } }
+
+/* 5/16 v5：吉祥物 .map-mascot 已依需求方移除 */
+/* 頂部「冒險地圖」橫幅：固定分離感 */
+.screen-header--glass {
+    position: relative;
+    z-index: 30;
+    background: rgba(255, 255, 255, 0.30);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+    .oi-img, .oi-shadow, .bg-cloud, .fg-cloud,
+    .ocean-waves .wv, .ocean-island.centered .oi-img,
+    .sky-balloon, .sky-gulls, .sky-island { animation: none; }
+    .ocean-island { opacity: 1; transform: none; transition: none; }
+    /* 注意：不可 !important 鎖 .layer-stage transform — v4 已廢原生滾動，
+       stage 需保留 JS translate 才捲得動(Codex P1)。只關 bg/fg 視差 */
+    .layer-bg, .layer-fg { transform: none !important; }
+}
+
+/* ══════ 舊 island grid（已被 world map 取代，留著向下相容但隱藏）══════ */
+.map-world {
+    display: none !important;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+        "math chinese"
+        "english science"
+        "social social";
+    gap: 12px;
+    padding: 16px 12px;
+    margin-bottom: 18px;
+    background:
+        radial-gradient(ellipse at center top, rgba(0,212,255,0.08), transparent 70%),
+        linear-gradient(175deg, #1a4d7a 0%, #0d2845 60%, #07192e 100%);
+    border-radius: 18px;
+    border: 1px solid rgba(0,212,255,0.18);
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+/* 海浪裝飾 */
+.map-world::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 40%;
+    background: radial-gradient(ellipse at center, rgba(0,212,255,0.12), transparent 70%);
+    pointer-events: none;
+}
+
+.map-island {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 6px 4px 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: mapBreath 4s ease-in-out infinite;
+    animation-delay: calc(var(--d, 0) * 0.4s);
+}
+.map-island:nth-child(1) { grid-area: math;    --d: 0; }
+.map-island:nth-child(2) { grid-area: chinese; --d: 1; }
+.map-island:nth-child(3) { grid-area: english; --d: 2; }
+.map-island:nth-child(4) { grid-area: science; --d: 3; }
+.map-island:nth-child(5) { grid-area: social;  --d: 4; justify-self: center; width: 55%; }
+
+.map-island img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    transition: transform 0.2s;
+}
+.map-island:active img {
+    transform: scale(0.92);
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+}
+.map-island-label {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 0 12px rgba(0,212,255,0.4);
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 999px;
+    backdrop-filter: blur(2px);
+}
+
+@keyframes mapBreath {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+/* 收起的章節進度 */
+.starmap-details {
+    margin-top: 8px;
+}
+.starmap-details summary {
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    list-style: none;
+}
+.starmap-details summary::-webkit-details-marker { display: none; }
+.starmap-details summary::before {
+    content: "▸ ";
+    transition: transform 0.2s;
+    display: inline-block;
+    margin-right: 4px;
+}
+.starmap-details[open] summary::before {
+    transform: rotate(90deg);
+}
+.starmap-details[open] summary {
+    margin-bottom: 10px;
+}
+
+.island-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.island-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.island-header:active {
+    background: rgba(255,255,255,0.08);
+}
+.island-go-arrow {
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    margin-left: 4px;
+}
+.island-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+.island-star-count {
+    font-size: 14px;
+    color: var(--accent-yellow);
+}
+.island-topics {
+    padding: 8px 12px;
+}
+.star-topic-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 4px;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.star-topic-row:last-child { border-bottom: none; }
+.star-topic-name {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-light);
+}
+.star-topic-stars {
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+.star-topic-grade {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.4);
+}
+
+/* Secret passage */
+.secret-passage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(255, 140, 66, 0.1), rgba(0, 212, 255, 0.1));
+    border-top: 1px solid rgba(255, 140, 66, 0.2);
+}
+.secret-passage.locked {
+    opacity: 0.4;
+}
+.secret-icon { font-size: 20px; }
+.secret-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-yellow);
+}
+.secret-text.locked-text {
+    color: rgba(255,255,255,0.4);
+}
+
+/* ── Leaderboard ─────────────────────────────────── */
+.leaderboard-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+.lb-week {
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 12px;
+}
+.lb-me {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(255, 140, 66, 0.08));
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+.lb-me-rank {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--brand-blue);
+}
+.lb-me-stats {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 4px;
+}
+.lb-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 14px;
+}
+.lb-tab {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.lb-tab:active { transform: scale(0.96); }
+.lb-tab.active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.lb-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+}
+.lb-row.me { border: 1px solid rgba(0, 212, 255, 0.3); }
+.lb-rank {
+    width: 28px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+}
+.lb-rank.gold { color: #FFD700; }
+.lb-rank.silver { color: #C0C0C0; }
+.lb-rank.bronze { color: #CD7F32; }
+.lb-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+}
+.lb-coins {
+    font-size: 14px;
+    color: var(--accent-yellow);
+    font-weight: 600;
+}
+
+/* === 5/8 地圖動畫疊層 === */
+.world-map-container {
+    position: relative;
+    overflow: hidden;
+    /* 整體輕呼吸（陽光感）*/
+    animation: mapBreath 5s ease-in-out infinite;
+}
+@keyframes mapBreath {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50%      { filter: brightness(1.07) saturate(1.08); }
+}
+
+.map-fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* 陽光：右上角放射狀光暈呼吸 */
+.fx-sun {
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(255,235,150,0.55) 0%, rgba(255,200,100,0.25) 35%, transparent 65%);
+    border-radius: 50%;
+    animation: sunPulse 4s ease-in-out infinite;
+}
+@keyframes sunPulse {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50%      { transform: scale(1.15); opacity: 1; }
+}
+
+/* 雲、海鷗動畫已拿掉（派派覺得太慢沒意義）*/
+    25%  { transform: translateY(-12px); }
+    50%  { transform: translateY(0); }
+    75%  { transform: translateY(-8px); }
+    100% { left: -50px; transform: translateY(0); }
+}
+
+/* 5 島輕浮動（呼吸 + 略上下）— 各島錯開 phase */
+.world-hotspot {
+    animation: islandFloat 3.6s ease-in-out infinite;
+    z-index: 2;
+}
+.world-hotspot[data-subject="math"]    { animation-delay: 0s; }
+.world-hotspot[data-subject="chinese"] { animation-delay: 0.7s; }
+.world-hotspot[data-subject="english"] { animation-delay: 1.4s; }
+.world-hotspot[data-subject="science"] { animation-delay: 2.1s; }
+.world-hotspot[data-subject="social"]  { animation-delay: 2.8s; }
+@keyframes islandFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+
+/* 波浪 ripple：每個 hotspot 周圍漣漪擴散 */
+.world-hotspot::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    animation: ripple 3.5s ease-out infinite;
+    pointer-events: none;
+}
+.world-hotspot[data-subject="chinese"]::before { animation-delay: 0.5s; }
+.world-hotspot[data-subject="english"]::before { animation-delay: 1s; }
+.world-hotspot[data-subject="science"]::before { animation-delay: 1.5s; }
+.world-hotspot[data-subject="social"]::before  { animation-delay: 2s; }
+@keyframes ripple {
+    0%   { transform: scale(0.92); opacity: 0; }
+    20%  { opacity: 0.7; }
+    100% { transform: scale(1.18); opacity: 0; }
+}
