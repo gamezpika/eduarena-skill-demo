@@ -7,7 +7,7 @@
     <meta name="description" content="EduArena 大場景島嶼地圖技術 Demo — 手繪 2.5D 島嶼村莊風。">
     <title>EduArena 島嶼村莊地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/village.css?v=1">
+    <link rel="stylesheet" href="static/css/village.css?v=2">
 </head>
 <body>
 
@@ -61,50 +61,50 @@
 
             <!-- ── 主場景：背景圖 + hotspots ────── -->
             <div class="village-viewport">
-                <!-- 5 個科目島：藍色泡泡 -->
+                <!-- 5 個科目島：用 EduArena 現有 chibi 島 sprite -->
                 <button class="v-hotspot" style="top:14%;left:24%;" data-tap="chinese">
-                    <span class="v-hot-bubble subject">📖</span>
+                    <img class="v-hot-sprite" src="assets/images/island_chinese.png" alt="">
                     <span class="v-hot-label">國語島</span>
                 </button>
                 <button class="v-hotspot" style="top:14%;left:72%;" data-tap="english">
-                    <span class="v-hot-bubble subject">🔤</span>
+                    <img class="v-hot-sprite" src="assets/images/island_english.png" alt="">
                     <span class="v-hot-label">英文島</span>
                 </button>
                 <button class="v-hotspot" style="top:30%;left:48%;" data-tap="math">
-                    <span class="v-hot-bubble subject">🔢</span>
+                    <img class="v-hot-sprite" src="assets/images/island_math.png" alt="">
                     <span class="v-hot-label">數學島</span>
                 </button>
                 <button class="v-hotspot" style="top:52%;left:24%;" data-tap="science">
-                    <span class="v-hot-bubble subject">🔬</span>
+                    <img class="v-hot-sprite" src="assets/images/island_science.png" alt="">
                     <span class="v-hot-label">自然島</span>
                 </button>
                 <button class="v-hotspot" style="top:52%;left:72%;" data-tap="social">
-                    <span class="v-hot-bubble subject">🌏</span>
+                    <img class="v-hot-sprite" src="assets/images/island_social.png" alt="">
                     <span class="v-hot-label">社會島</span>
                 </button>
 
-                <!-- 5 個建築：分色 -->
+                <!-- 5 個建築：Codex 生 chibi sprite -->
                 <button class="v-hotspot" style="top:70%;left:26%;" data-tap="shop">
                     <span class="v-hot-new">新</span>
-                    <span class="v-hot-bubble shop">🏪</span>
+                    <img class="v-hot-sprite" src="assets/images/village/village_shop.png" alt="">
                     <span class="v-hot-label">商店</span>
                 </button>
                 <button class="v-hotspot" style="top:70%;left:64%;" data-tap="farm">
-                    <span class="v-hot-bubble farm">🐄</span>
+                    <img class="v-hot-sprite" src="assets/images/village/village_farm.png" alt="">
                     <span class="v-hot-label">牧場</span>
                 </button>
                 <button class="v-hotspot" style="top:87%;left:36%;" data-tap="closet">
-                    <span class="v-hot-bubble closet">👕</span>
+                    <img class="v-hot-sprite" src="assets/images/village/village_closet.png" alt="">
                     <span class="v-hot-label">衣櫥</span>
                 </button>
                 <button class="v-hotspot" style="top:87%;left:60%;" data-tap="pvp">
                     <span class="v-hot-lock">🔒 Lv5</span>
-                    <span class="v-hot-bubble pvp">⚔️</span>
+                    <img class="v-hot-sprite" src="assets/images/village/village_pvp.png" alt="">
                     <span class="v-hot-label">PK 大廳</span>
                 </button>
                 <button class="v-hotspot" style="top:36%;left:84%;" data-tap="boss">
                     <span class="v-hot-lock">🔒 Lv10</span>
-                    <span class="v-hot-bubble boss">🏰</span>
+                    <img class="v-hot-sprite" src="assets/images/village/village_boss.png" alt="">
                     <span class="v-hot-label">魔王塔</span>
                 </button>
             </div>
