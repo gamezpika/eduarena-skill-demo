@@ -157,8 +157,8 @@
         $("fg-controls").style.display = "none";
 
         state = STATE.PREVIEW;
-        // 階段 2：5 秒預覽（派派指定）
-        setTimeout(coverCards, 5000);
+        // 階段 2：7 秒預覽（小朋友看 9 個偉人位置）
+        setTimeout(coverCards, 7000);
     }
 
     // ─── 階段 3：全部蓋起來 ──────────────────────
@@ -166,7 +166,7 @@
         state = STATE.COVER;
         $("fg-status").textContent = "卡片蓋上了…";
         cardEls.forEach(c => c.classList.add("flipped"));
-        setTimeout(shuffleCards, 900);
+        setTimeout(shuffleCards, 1500);   // 等翻牌動畫 0.9s + 0.6s 留時間給玩家準備
     }
 
     // ─── 階段 4：洗牌（9 張全部同時滑動到新位置，2 次大洗） ──
@@ -179,11 +179,10 @@
         const totalRounds = 2;
         function doShuffleRound() {
             if (round >= totalRounds) {
-                guessPhase();
+                setTimeout(guessPhase, 800);   // 洗完停 0.8 秒再開放點選
                 return;
             }
             // Fisher-Yates：一次把 9 個位置全部打散
-            // 保證新位置至少有 8 張卡跟舊位置不同（避免無感洗牌）
             do {
                 for (let i = positions.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -192,9 +191,9 @@
             } while (cardEls.every((_, i) => positions[i].row === Math.floor(i / 3) && positions[i].col === i % 3));
             layoutCards();
             round++;
-            setTimeout(doShuffleRound, 900);  // 等 CSS transition (0.45s) 完成再洗下一輪
+            setTimeout(doShuffleRound, 1800);   // 拉長：CSS 移動 0.9s + 0.9s 看停下來
         }
-        setTimeout(doShuffleRound, 500);
+        setTimeout(doShuffleRound, 800);
     }
 
     // ─── 階段 5：玩家可猜 ───────────────────────
@@ -216,13 +215,13 @@
         card.classList.remove("flipped");
 
         if (fig.key === target.key) {
-            // 對！
+            // 對！停 1.5 秒讓玩家看清楚翻對的偉人圖再跳知識卡
             card.classList.add("correct");
             answered[currentTargetIdx] = true;
             state = STATE.RESULT;
-            setTimeout(() => showKnowledgeCard(fig), 700);
+            setTimeout(() => showKnowledgeCard(fig), 1500);
         } else {
-            // 錯！
+            // 錯！停 3 秒讓玩家看清楚錯翻的是誰再翻回去
             card.classList.add("wrong");
             $("fg-status").textContent = `這位是「${fig.name}」，不是 ${target.name}…再試一次！`;
             $("fg-status").className = "fg-status wrong-msg";
@@ -231,7 +230,7 @@
                 card.classList.remove("wrong");
                 $("fg-status").textContent = "你的回合！點一張卡 👆";
                 $("fg-status").className = "fg-status guess";
-            }, 1600);
+            }, 3000);
         }
     }
 
