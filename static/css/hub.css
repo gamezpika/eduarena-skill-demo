@@ -1,0 +1,207 @@
+/* EDUDEMO Hub 首頁 — 4 大卡片菜單 + 數據牆 + 加 Bot CTA */
+
+#screen-hub {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background:
+        radial-gradient(ellipse at top, rgba(0, 212, 255, 0.18) 0%, transparent 60%),
+        linear-gradient(180deg, #0d1424 0%, #16213e 60%, #0d1424 100%);
+    color: white;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding: 14px 16px;
+    font-family: "Noto Sans TC", sans-serif;
+}
+
+/* 星點背景（純 CSS） */
+#screen-hub::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.7), transparent),
+        radial-gradient(1px 1px at 35% 30%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 70% 20%, rgba(0,212,255,0.8), transparent),
+        radial-gradient(1px 1px at 85% 55%, rgba(255,140,66,0.7), transparent),
+        radial-gradient(1px 1px at 50% 75%, rgba(255,255,255,0.4), transparent);
+    animation: hubTwinkle 4s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+@keyframes hubTwinkle {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* ── 頂部品牌 ───────────────────────────── */
+.hub-brand {
+    text-align: center;
+    padding: 8px 0 16px;
+    z-index: 1;
+    position: relative;
+}
+.hub-logo {
+    font-size: 32px;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+.hub-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #00d4ff, #b292ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hub-sub {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 2px;
+    letter-spacing: 1px;
+}
+
+/* ── 數據牆 ────────────────────────────── */
+.hub-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 10px 0 16px;
+    z-index: 1;
+    position: relative;
+}
+.hub-stat {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 4px;
+}
+.hub-stat-num {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fde047;
+    line-height: 1;
+}
+.hub-stat-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+}
+
+/* ── 4 大卡片 ───────────────────────────── */
+.hub-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    z-index: 1;
+    position: relative;
+}
+.hub-card {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(160deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    aspect-ratio: 1 / 1.15;
+    text-align: left;
+    position: relative;
+}
+.hub-card:active { transform: scale(0.97); }
+.hub-card:hover {
+    border-color: rgba(0, 212, 255, 0.5);
+    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.2);
+}
+.hub-card-emoji {
+    font-size: 38px;
+    line-height: 1;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+}
+.hub-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.hub-card-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+    flex: 1;
+}
+.hub-card-tag {
+    align-self: flex-start;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fde047;
+    background: rgba(253, 224, 71, 0.15);
+    border: 1px solid rgba(253, 224, 71, 0.35);
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+/* 各卡主題色 */
+.hub-card[data-theme="ocean"]   { background: linear-gradient(160deg, rgba(0,180,220,0.15), rgba(0,80,140,0.05)); }
+.hub-card[data-theme="village"] { background: linear-gradient(160deg, rgba(255,180,90,0.15), rgba(140,80,0,0.05)); }
+.hub-card[data-theme="figures"] { background: linear-gradient(160deg, rgba(155,89,182,0.15), rgba(80,30,80,0.05)); }
+.hub-card[data-theme="world"]   { background: linear-gradient(160deg, rgba(100,200,100,0.15), rgba(30,80,30,0.05)); }
+
+/* ── 加 LINE Bot CTA ───────────────────── */
+.hub-cta {
+    margin: 18px 0 4px;
+    z-index: 1;
+    position: relative;
+}
+.hub-cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: linear-gradient(135deg, #06c755, #00b900);
+    color: white;
+    border: none;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    box-shadow: 0 6px 16px rgba(6, 199, 85, 0.35);
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.hub-cta-btn:active { transform: scale(0.97); }
+.hub-cta-emoji {
+    font-size: 22px;
+    line-height: 1;
+}
+.hub-cta-hint {
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+}
+
+/* ── Footer ─────────────────────────────── */
+.hub-footer {
+    text-align: center;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+    padding: 16px 0 8px;
+    z-index: 1;
+    position: relative;
+}

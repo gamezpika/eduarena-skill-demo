@@ -27,11 +27,14 @@ DEMO_BASE_URL = os.environ.get(
 
 WELCOME = f"""歡迎來看 EduArena 技術 demo 👋
 
-🌊 海洋地圖
+🎮 整套 demo 入口（4 種地圖）：
 {DEMO_BASE_URL}/
 
-🗺 探索地圖
-{DEMO_BASE_URL}/world.html"""
+或直接看單一 demo：
+🌊 海洋地圖 → {DEMO_BASE_URL}/ocean.html
+🏝 村莊地圖 → {DEMO_BASE_URL}/village.html
+🏛 名人九宮格 → {DEMO_BASE_URL}/figures.html
+🗺 探索地圖 → {DEMO_BASE_URL}/world.html"""
 
 app = FastAPI(title="EduArena Demo Bot")
 
