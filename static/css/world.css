@@ -312,10 +312,54 @@
     z-index: 1;
 }
 
-/* 共用 walk 動畫（X 軸來回 + 翻面） */
-@keyframes wdWalk {
-    0%, 100% { transform: translateX(-30%) scaleX(1); }
-    50%      { transform: translateX(30%)  scaleX(-1); }
+/* 跑步動畫：多 step 帶跳躍感（X 軸位移 + Y 軸跳 + 中段翻面）
+   範圍寫死 200%-300%（相對 sprite 自己寬）看得清「真的在跑」 */
+@keyframes wdRunCow {
+    0%   { transform: translate(0%, 0)   scaleX(1); }
+    8%   { transform: translate(30%, -22%) scaleX(1); }   /* 跳起 */
+    16%  { transform: translate(60%, 0)  scaleX(1); }     /* 落地 */
+    24%  { transform: translate(90%, -22%) scaleX(1); }
+    32%  { transform: translate(120%, 0) scaleX(1); }
+    40%  { transform: translate(150%, -22%) scaleX(1); }
+    48%  { transform: translate(180%, 0) scaleX(1); }
+    50%  { transform: translate(180%, 0) scaleX(-1); }    /* 翻面 */
+    58%  { transform: translate(150%, -22%) scaleX(-1); }
+    66%  { transform: translate(120%, 0)  scaleX(-1); }
+    74%  { transform: translate(80%, -22%) scaleX(-1); }
+    82%  { transform: translate(50%, 0)  scaleX(-1); }
+    90%  { transform: translate(20%, -22%) scaleX(-1); }
+    100% { transform: translate(0%, 0) scaleX(1); }
+}
+@keyframes wdRunChick {
+    0%   { transform: translate(0, 0)    scaleX(1); }
+    5%   { transform: translate(30%, -30%) scaleX(1); }   /* 快又跳很高 */
+    10%  { transform: translate(60%, 0)  scaleX(1); }
+    15%  { transform: translate(90%, -30%) scaleX(1); }
+    20%  { transform: translate(120%, 0) scaleX(1); }
+    25%  { transform: translate(160%, -30%) scaleX(1); }
+    30%  { transform: translate(200%, 0) scaleX(1); }
+    35%  { transform: translate(240%, -30%) scaleX(1); }
+    45%  { transform: translate(270%, 0) scaleX(1); }
+    50%  { transform: translate(270%, 0) scaleX(-1); }
+    55%  { transform: translate(240%, -30%) scaleX(-1); }
+    65%  { transform: translate(200%, 0)  scaleX(-1); }
+    75%  { transform: translate(160%, -30%) scaleX(-1); }
+    80%  { transform: translate(120%, 0)  scaleX(-1); }
+    85%  { transform: translate(80%, -30%) scaleX(-1); }
+    95%  { transform: translate(30%, 0)  scaleX(-1); }
+    100% { transform: translate(0, 0) scaleX(1); }
+}
+@keyframes wdWalkPerson {
+    0%   { transform: translate(0%, 0) scaleX(1); }
+    12%  { transform: translate(30%, -8%) scaleX(1); }    /* 小步伐 */
+    24%  { transform: translate(60%, 0) scaleX(1); }
+    36%  { transform: translate(90%, -8%) scaleX(1); }
+    48%  { transform: translate(120%, 0) scaleX(1); }
+    50%  { transform: translate(120%, 0) scaleX(-1); }
+    62%  { transform: translate(90%, -8%) scaleX(-1); }
+    74%  { transform: translate(60%, 0)  scaleX(-1); }
+    86%  { transform: translate(30%, -8%) scaleX(-1); }
+    100% { transform: translate(0%, 0) scaleX(1); }
 }
 @keyframes wdSway {
     0%, 100% { transform: rotate(-3deg); }
@@ -335,22 +379,22 @@
     100% { transform: translateX(-50%) scale(1.7); opacity: 0; }
 }
 
-/* chibi 角色 sprite (img 取代 emoji) */
+/* chibi 角色 sprite (img 取代 emoji) — 走路有跳躍感 */
 .wd-walker {
     position: absolute;
     bottom: 8%;
-    left: 38%;
+    left: 12%;
     width: 28%;
     height: auto;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
-    animation: wdWalk 6s ease-in-out infinite;
     transform-origin: center bottom;
+    animation: wdWalkPerson 7s linear infinite;
 }
 .walker-exam {
     bottom: 6%;
-    left: 32%;
+    left: 8%;
     width: 32%;
-    animation: wdWalk 8s ease-in-out infinite;
+    animation: wdWalkPerson 9s linear infinite;
 }
 .wd-sparkle-shop {
     position: absolute;
@@ -369,7 +413,7 @@
 .wd-sparkle.sp2 { top: 25%; left: 14%;  animation: wdSparkle 3s ease-in-out infinite -1s; }
 .wd-sparkle.sp3 { top: 42%; right: 25%; animation: wdSparkle 3s ease-in-out infinite -2s; }
 
-/* 農田：chibi 牛 + 雞 + 麥草（img） */
+/* 農田：chibi 牛 + 雞 + 麥草 — 真的會跑來跑去 */
 .wd-pet {
     position: absolute;
     height: auto;
@@ -378,15 +422,15 @@
 }
 .pet-cow {
     bottom: 8%;
-    left: 8%;
+    left: 6%;
     width: 26%;
-    animation: wdWalk 8s ease-in-out infinite;
+    animation: wdRunCow 9s linear infinite;
 }
 .pet-chick {
     bottom: 6%;
-    right: 12%;
+    left: 4%;
     width: 18%;
-    animation: wdWalk 5s ease-in-out infinite -2.5s;
+    animation: wdRunChick 4s linear infinite -1.5s;
 }
 .wd-plant {
     position: absolute;
