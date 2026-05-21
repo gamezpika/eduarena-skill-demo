@@ -52,6 +52,21 @@
     function render() {
         world.style.transform =
             "translate3d(" + posX.toFixed(2) + "px," + posY.toFixed(2) + "px,0)";
+        updateMiniMapYou();
+    }
+
+    // 更新 mini map 玩家位置（玩家固定 viewport 中央 = world 內 -pos + vp 中心）
+    function updateMiniMapYou() {
+        const you = document.getElementById("wd-mm-you");
+        if (!you) return;
+        const wW = world.offsetWidth, wH = world.offsetHeight;
+        if (wW < 1 || wH < 1) return;
+        const playerWorldX = -posX + vp.clientWidth / 2;
+        const playerWorldY = -posY + vp.clientHeight / 2;
+        const px = Math.max(0, Math.min(100, (playerWorldX / wW) * 100));
+        const py = Math.max(0, Math.min(100, (playerWorldY / wH) * 100));
+        you.style.left = px + "%";
+        you.style.top = py + "%";
     }
 
     function step(ts) {
@@ -202,16 +217,23 @@
         }
     }
 
-    // 鏡頭聚焦到 sprite（緩動平移到 viewport 中心），0.85s 後彈窗
+    // 鏡頭聚焦到 sprite + 玩家面向（純視覺）+ 0.85s 後彈窗
     function focusOnSprite(s) {
         const sLeft = parseFloat(s.style.left) || 0;
         const sTop = parseFloat(s.style.top) || 0;
         const sW = parseFloat(s.style.width) || 0;
         const wW = world.offsetWidth, wH = world.offsetHeight;
-        // sprite 中心（相對 world 的 px）— aspect 1:1 所以 height in px = sW% * worldW
         const cx = (sLeft / 100 * wW) + (sW / 100 * wW / 2);
         const cy = (sTop / 100 * wH) + (sW / 100 * wW / 2);
         bounds();
+        // 玩家面向 sprite 方向（cx 在玩家右邊 → 朝右；左邊 → 朝左）
+        const player = document.getElementById("wd-player");
+        if (player) {
+            const playerWorldX = -posX + vp.clientWidth / 2;
+            const right = cx > playerWorldX;
+            player.classList.toggle("face-right", right);
+            player.classList.toggle("face-left", !right);
+        }
         targetX = clampX(vp.clientWidth / 2 - cx);
         targetY = clampY(vp.clientHeight / 2 - cy);
         kick();

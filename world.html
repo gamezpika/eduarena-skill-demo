@@ -7,7 +7,7 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=5">
+    <link rel="stylesheet" href="static/css/world.css?v=6">
 </head>
 <body>
 
@@ -136,6 +136,27 @@
                         <span class="wd-label">社會島</span>
                     </button>
                 </div>
+                <!-- 玩家頭像（固定在 viewport 中央偏下，永遠是「世界中心」） -->
+                <div class="wd-player" id="wd-player" aria-hidden="true">
+                    <span class="wd-player-emoji">🧙</span>
+                    <span class="wd-player-shadow"></span>
+                </div>
+
+                <!-- Mini Map（右上角小地圖） -->
+                <div class="wd-minimap" aria-hidden="true">
+                    <span class="wd-mm-label">🗺</span>
+                    <span class="wd-mm-dot" style="top:8%;left:23%"></span>
+                    <span class="wd-mm-dot" style="top:11%;left:71%"></span>
+                    <span class="wd-mm-dot" style="top:28%;left:49%"></span>
+                    <span class="wd-mm-dot" style="top:42%;left:20%"></span>
+                    <span class="wd-mm-dot wd-mm-island" style="top:50%;left:72%"></span>
+                    <span class="wd-mm-dot wd-mm-island" style="top:64%;left:46%"></span>
+                    <span class="wd-mm-dot wd-mm-island" style="top:68%;left:76%"></span>
+                    <span class="wd-mm-dot wd-mm-island" style="top:82%;left:26%"></span>
+                    <span class="wd-mm-dot wd-mm-island" style="top:86%;left:60%"></span>
+                    <span class="wd-mm-you" id="wd-mm-you"></span>
+                </div>
+
                 <div class="wd-hint">↕ ↔ 拖曳地圖；點建築 / 島嶼進入</div>
             </div>
 
@@ -162,7 +183,7 @@
     </div>
 </div>
 
-<script src="static/js/world.js?v=5"></script>
+<script src="static/js/world.js?v=6"></script>
 
 </body>
 </html>
