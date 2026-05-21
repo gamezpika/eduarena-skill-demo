@@ -12,13 +12,14 @@
     if (!vp || !world) return;
 
     // ─── world 維持地圖原 9:16 比例（width × 1672/941 ≈ 1.776）
-    // 寬 = viewport × 1.15（左右小幅拖曳空間）；高 = 寬 × 地圖 ratio（不變形）
+    // 寬 = viewport × 1.5（左右拖曳空間更大，地圖細節也更大）
+    // 高 = 寬 × 地圖 ratio（不變形）
     const MAP_RATIO = 1672 / 941;
     function fitWorldSize() {
         const w = vp.clientWidth;
         const vpH = vp.clientHeight;
         if (w < 1 || vpH < 1) return;
-        const worldW = w * 1.15;
+        const worldW = w * 1.5;
         world.style.width = worldW + "px";
         world.style.height = (worldW * MAP_RATIO) + "px";
     }
@@ -187,23 +188,10 @@
             s.style.zIndex = String(10 + Math.round(top * 0.9));
             // 2) 進場 stagger delay
             s.style.animationDelay = (0.08 * i) + "s";
-            // 3) ! 提示（沒點過才顯示）
-            const tap = s.dataset.tap;
-            const seenKey = "wd_seen_" + tap;
-            if (!localStorage.getItem(seenKey)) {
-                const bang = document.createElement("span");
-                bang.className = "wd-bang";
-                bang.textContent = "!";
-                bang.setAttribute("aria-hidden", "true");
-                s.appendChild(bang);
-                s.classList.add("has-bang");
-            }
-            // 4) 點擊：squash 反饋 + 聚焦 + zoom-in 過場 + 彈窗
+            // 3) 點擊：squash 反饋 + 聚焦 + zoom-in 過場 + 彈窗
             s.addEventListener("click", e => {
                 if (suppressClick) return;
                 e.stopPropagation();
-                localStorage.setItem(seenKey, "1");
-                s.classList.remove("has-bang");
                 // 點擊 squash 反饋（once）
                 s.classList.add("clicked");
                 setTimeout(() => s.classList.remove("clicked"), 450);

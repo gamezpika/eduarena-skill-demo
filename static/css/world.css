@@ -615,13 +615,14 @@
 .wd-ripple.r2 { animation-delay: -1.5s; }
 
 /* ── Free-roam NPC：自由走動於地圖上（純擺飾不可點） ─── */
-/* 外層：水平移動 + 中段瞬間翻面（用 left + scaleX） */
+/* 外層：水平移動 + 中段瞬間翻面（用 left + scaleX）
+   left 15~78% 限制 NPC 走在中央主陸範圍內，不會走到漂浮島空隙 */
 @keyframes wdRoamPath {
-    0%   { left: 8%;  transform: scaleX(1); }
-    48%  { left: 82%; transform: scaleX(1); }
-    50%  { left: 82%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
-    98%  { left: 8%;  transform: scaleX(-1); }
-    100% { left: 8%;  transform: scaleX(1); }
+    0%   { left: 15%; transform: scaleX(1); }
+    48%  { left: 78%; transform: scaleX(1); }
+    50%  { left: 78%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
+    98%  { left: 15%; transform: scaleX(-1); }
+    100% { left: 15%; transform: scaleX(1); }
 }
 /* 內層：真實走路步態（左右搖擺重心 + 微 Y 顛簸，不像青蛙跳） */
 @keyframes wdRoamHop {
