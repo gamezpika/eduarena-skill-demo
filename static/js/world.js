@@ -119,6 +119,7 @@
 
     vp.addEventListener("pointerdown", e => {
         bounds();
+        stopAutoTour();   // 玩家一動就停 auto tour
         down = true; dragOn = false; suppressClick = false;
         try { vp.setPointerCapture(e.pointerId); } catch (_) {}
         sX = e.clientX; sY = e.clientY;
@@ -165,7 +166,7 @@
         if (down && e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // ─── 初始化：起點在 world 中央上方 + sprite Z 排序 + 點擊彈窗
+    // ─── 初始化：起點在 world 中央上方 + sprite Z 排序 + 點擊彈窗 + 自動 tour
     function init() {
         bounds();
         targetX = (posXMin + posXMax) / 2;   // 水平居中
@@ -173,6 +174,30 @@
         posX = targetX; posY = targetY;
         render();
         setupSprites();
+        startAutoTour();   // 1.5s 後鏡頭自動緩慢往下平移
+    }
+
+    // ─── 自動 tour 模式：沒人操作時鏡頭緩慢平移展示 ───
+    let userInteracted = false;
+    let autoTimer = null;
+    let autoDir = -1;   // -1 往下，+1 往上
+    function startAutoTour() {
+        setTimeout(() => {
+            if (userInteracted) return;
+            autoTimer = setInterval(() => {
+                if (userInteracted) { clearInterval(autoTimer); autoTimer = null; return; }
+                bounds();
+                targetY += autoDir * 1.2;   // 每 30ms 移動 1.2px = ~40px/sec 緩速
+                // 到底就反向
+                if (targetY <= posYMin + 1) { targetY = posYMin; autoDir = 1; }
+                else if (targetY >= posYMax - 1) { targetY = posYMax; autoDir = -1; }
+                kick();
+            }, 30);
+        }, 1500);
+    }
+    function stopAutoTour() {
+        userInteracted = true;
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
     }
 
     // ─── Sprite Z 排序：按 top% 排（越下面 z 越高 = 遮擋前面的） ──
@@ -196,12 +221,15 @@
                 s.appendChild(bang);
                 s.classList.add("has-bang");
             }
-            // 4) 點擊：聚焦 + 彈窗
+            // 4) 點擊：squash 反饋 + 聚焦 + 彈窗
             s.addEventListener("click", e => {
                 if (suppressClick) return;
                 e.stopPropagation();
                 localStorage.setItem(seenKey, "1");
                 s.classList.remove("has-bang");
+                // 點擊 squash 反饋（once）
+                s.classList.add("clicked");
+                setTimeout(() => s.classList.remove("clicked"), 450);
                 focusOnSprite(s);
             });
         });
