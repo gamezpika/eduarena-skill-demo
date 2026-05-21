@@ -650,6 +650,24 @@
     width: 100%;
     height: auto;
 }
+
+/* ── Codex i2i 2 幀 sprite sheet（cow）真禎數 walk cycle ──
+   cow_walk.png 512x256：左格站姿、右格抬腳，steps(2) 切換 = 腳真的在動 */
+.cow-sprite {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-image: url('../../assets/images/world/cow_walk.png?v=1');
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    animation: cowStepsFrames 0.5s steps(2) infinite;
+}
+@keyframes cowStepsFrames {
+    from { background-position: 0% 0; }
+    to   { background-position: 100% 0; }
+}
+
 /* 各 NPC 速度錯時 + 寬度個性化 */
 .fr-cow      { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
 .fr-cow2     { animation-duration: 55s; animation-delay: -18s; width: 8%; }
