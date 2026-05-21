@@ -163,8 +163,8 @@
 .wd-world {
     position: relative;
     width: 100%;
-    /* JS 設 height = viewport × 2.5 確保有拖曳空間 */
-    background: url("../../assets/images/world_bg.jpg?v=2") center top / cover no-repeat;
+    /* JS 設 width × MAP_RATIO（地圖 9:16 比例）+ background-size 100% 100% 不變形 */
+    background: url("../../assets/images/world_map_v2.png?v=1") center / 100% 100% no-repeat;
     will-change: transform;
 }
 
@@ -733,15 +733,27 @@
     50%      { transform: translateY(-10px) scale(1.08); }
 }
 
-/* ── 點建築 zoom-in 過場（被點建築放大發光，0.4s 後開 modal） ─── */
+/* ── 點建築 zoom-in 過場（透明 hotspot：光暈擴散反饋 0.45s） ─── */
 .wd-sprite.zooming-in {
-    transform: scale(1.5) !important;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                filter 0.4s ease-out !important;
     z-index: 999 !important;
-    filter: brightness(1.15) drop-shadow(0 0 28px rgba(255, 230, 100, 0.9))
-            drop-shadow(0 0 50px rgba(255, 200, 100, 0.55)) !important;
     animation: none !important;
+}
+.wd-sprite.zooming-in::after {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    border-radius: 22%;
+    background: radial-gradient(ellipse,
+        rgba(255, 230, 100, 0.7) 0%,
+        rgba(255, 200, 100, 0.3) 40%,
+        rgba(255, 200, 100, 0) 70%);
+    pointer-events: none;
+    animation: wdHotspotPulse 0.45s ease-out forwards;
+}
+@keyframes wdHotspotPulse {
+    0%   { transform: scale(0.5); opacity: 0; }
+    50%  { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(1.8); opacity: 0; }
 }
 
 /* ── 小白鳥飛過畫面（雙層：wrapper path + inner flap） ── */

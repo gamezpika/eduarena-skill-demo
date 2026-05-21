@@ -13,7 +13,7 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=18">
+    <link rel="stylesheet" href="static/css/world.css?v=19">
 </head>
 <body>
 
@@ -64,115 +64,24 @@
             <!-- ── 主場景：大背景可上下滑動 + sprite hotspot ──── -->
             <div class="wd-viewport" id="wd-viewport">
                 <div class="wd-world" id="wd-world">
-                    <!-- 5 個建築 + 5 科目島散佈在背景平台上 -->
-                    <button class="wd-sprite" data-tap="shop" style="top:8%;left:14%;width:18%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/village/village_shop.png" alt="商店">
-                        <!-- 商店動畫：chibi 顧客走來走去 -->
-                        <span class="wd-anim" aria-hidden="true">
-                            <img class="wd-walker walker-shop" src="assets/images/world/shopper.png" alt="">
-                            <span class="wd-sparkle wd-sparkle-shop">✨</span>
-                        </span>
-                        <span class="wd-label">商店</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="exam" style="top:11%;left:62%;width:18%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/academy.png" alt="考試中心">
-                        <!-- 考試中心動畫：chibi 學者站門口 + 星星閃光 -->
-                        <span class="wd-anim" aria-hidden="true">
-                            <img class="wd-walker walker-exam" src="assets/images/world/scholar.png" alt="">
-                            <span class="wd-sparkle sp1">✨</span>
-                            <span class="wd-sparkle sp2">⭐</span>
-                        </span>
-                        <span class="wd-label">考試中心</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="farm" style="top:28%;left:40%;width:18%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/village/village_farm.png" alt="農田">
-                        <!-- 農田動畫：chibi 牛/雞走 + 麥草搖 -->
-                        <span class="wd-anim" aria-hidden="true">
-                            <img class="wd-pet pet-cow" src="assets/images/world/cow.png" alt="">
-                            <img class="wd-pet pet-chick" src="assets/images/world/chick.png" alt="">
-                            <img class="wd-plant" src="assets/images/world/wheat.png" alt="">
-                        </span>
-                        <span class="wd-label">農田</span>
-                    </button>
-                    <!-- F1: PK 競技場 + 魔王塔（重用既有 village sprite） -->
-                    <button class="wd-sprite" data-tap="pvp" style="top:20%;left:30%;width:14%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/village/village_pvp.png" alt="PK 競技場">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">⚔️</span></span>
-                        <span class="wd-label">PK 競技場</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="boss" style="top:4%;left:82%;width:14%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/village/village_boss.png" alt="魔王塔">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">👹</span></span>
-                        <span class="wd-label">魔王塔</span>
-                    </button>
+                    <!-- 12 個透明 hotspot button（地圖背景 world_map_v2.png 已含建築畫） -->
+                    <!-- 主陸 7 個 -->
+                    <button class="wd-sprite" data-tap="boss"    style="top:2%;  left:38%; width:24%; height:18%;" aria-label="魔王塔"></button>
+                    <button class="wd-sprite" data-tap="shop"    style="top:26%; left:4%;  width:28%; height:16%;" aria-label="商店"></button>
+                    <button class="wd-sprite" data-tap="exam"    style="top:24%; left:36%; width:28%; height:22%;" aria-label="考試中心"></button>
+                    <button class="wd-sprite" data-tap="museum"  style="top:26%; left:66%; width:26%; height:18%;" aria-label="偉人館"></button>
+                    <button class="wd-sprite" data-tap="pvp"     style="top:46%; left:4%;  width:24%; height:18%;" aria-label="PK 競技場"></button>
+                    <button class="wd-sprite" data-tap="farm"    style="top:46%; left:30%; width:34%; height:20%;" aria-label="農田"></button>
+                    <button class="wd-sprite" data-tap="quest"   style="top:46%; left:66%; width:26%; height:18%;" aria-label="任務告示板"></button>
+                    <!-- 5 科目漂浮島 -->
+                    <button class="wd-sprite" data-tap="chinese" style="top:4%;  left:2%;  width:28%; height:18%;" aria-label="國語島"></button>
+                    <button class="wd-sprite" data-tap="english" style="top:4%;  left:66%; width:30%; height:18%;" aria-label="英文島"></button>
+                    <button class="wd-sprite" data-tap="math"    style="top:70%; left:2%;  width:28%; height:18%;" aria-label="數學島"></button>
+                    <button class="wd-sprite" data-tap="social"  style="top:72%; left:30%; width:40%; height:22%;" aria-label="社會島"></button>
+                    <button class="wd-sprite" data-tap="science" style="top:70%; left:70%; width:28%; height:20%;" aria-label="自然島"></button>
 
-                    <!-- F2+F3: 8 個 Codex 生新 sprite -->
-                    <button class="wd-sprite" data-tap="museum" style="top:22%;left:6%;width:14%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/museum.png" alt="偉人館">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">✨</span></span>
-                        <span class="wd-label">偉人館</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="ranking" style="top:32%;left:84%;width:12%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/ranking.png" alt="排行榜">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">🏆</span></span>
-                        <span class="wd-label">排行榜</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="quest" style="top:36%;left:30%;width:11%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/quest.png" alt="任務告示板">
-                        <span class="wd-label">任務</span>
-                    </button>
                     <!-- 任務指引箭頭：浮在任務告示板正上方 pulse -->
-                    <div class="quest-arrow" style="top:26%;left:32%;" aria-hidden="true"></div>
-                    <button class="wd-sprite" data-tap="career" style="top:14%;left:46%;width:14%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/career.png" alt="職業學院">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">👔</span></span>
-                        <span class="wd-label">職業學院</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="whack" style="top:44%;left:64%;width:13%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/whack.png" alt="打地鼠">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">🔨</span></span>
-                        <span class="wd-label">打地鼠</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="spell" style="top:38%;left:48%;width:11%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/spell.png" alt="拼字塔">
-                        <span class="wd-label">拼字塔</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="treasure" style="top:46%;left:34%;width:9%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/treasure.png" alt="寶箱">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">✨</span></span>
-                        <span class="wd-label">每日寶箱</span>
-                    </button>
-                    <button class="wd-sprite" data-tap="bulletin" style="top:24%;left:78%;width:10%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/bulletin.png" alt="公告板">
-                        <span class="wd-label">公告板</span>
-                    </button>
-
-                    <button class="wd-sprite" data-tap="cottage" style="top:42%;left:12%;width:17%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/world/cottage.png" alt="個人小屋">
-                        <!-- 小屋動畫：煙囪冒煙 -->
-                        <span class="wd-anim" aria-hidden="true">
-                            <span class="wd-smoke s1"></span>
-                            <span class="wd-smoke s2"></span>
-                            <span class="wd-smoke s3"></span>
-                        </span>
-                        <span class="wd-label">個人小屋</span>
-                    </button>
-
-                    <!-- 5 科目島散佈在右半 / 海上 -->
+                    <div class="quest-arrow" style="top:38%;left:75%;" aria-hidden="true"></div>
 
                     <!-- ── 自由走動 NPC（散步在地圖上，10 隻可點對話） ── -->
                     <div class="wd-freeroam fr-cow"     style="top:18%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
@@ -186,37 +95,6 @@
                     <div class="wd-freeroam fr-scholar2" style="top:28%;"><div class="wd-freeroam-inner"><img src="assets/images/world/scholar.png" alt=""></div></div>
                     <div class="wd-freeroam fr-cow3"    style="top:80%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
 
-                    <!-- 5 科目島：含水波漣漪動畫 -->
-                    <button class="wd-sprite wd-island" data-tap="chinese" style="top:50%;left:64%;width:16%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/island_chinese.png" alt="國語島">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-ripple r1"></span><span class="wd-ripple r2"></span></span>
-                        <span class="wd-label">國語島</span>
-                    </button>
-                    <button class="wd-sprite wd-island" data-tap="english" style="top:64%;left:38%;width:16%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/island_english.png" alt="英文島">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-ripple r1"></span><span class="wd-ripple r2"></span></span>
-                        <span class="wd-label">英文島</span>
-                    </button>
-                    <button class="wd-sprite wd-island" data-tap="math" style="top:68%;left:68%;width:16%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/island_math.png" alt="數學島">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-ripple r1"></span><span class="wd-ripple r2"></span></span>
-                        <span class="wd-label">數學島</span>
-                    </button>
-                    <button class="wd-sprite wd-island" data-tap="science" style="top:82%;left:18%;width:16%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/island_science.png" alt="自然島">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-ripple r1"></span><span class="wd-ripple r2"></span></span>
-                        <span class="wd-label">自然島</span>
-                    </button>
-                    <button class="wd-sprite wd-island" data-tap="social" style="top:86%;left:52%;width:16%;">
-                        <span class="wd-shadow"></span>
-                        <img src="assets/images/island_social.png" alt="社會島">
-                        <span class="wd-anim" aria-hidden="true"><span class="wd-ripple r1"></span><span class="wd-ripple r2"></span></span>
-                        <span class="wd-label">社會島</span>
-                    </button>
                 </div>
                 <!-- 晝夜變化 overlay（60 秒一循環：晨→日→晚→夜） -->
                 <div class="wd-daynight" aria-hidden="true"></div>
@@ -261,7 +139,7 @@
     </div>
 </div>
 
-<script src="static/js/world.js?v=10"></script>
+<script src="static/js/world.js?v=11"></script>
 
 </body>
 </html>

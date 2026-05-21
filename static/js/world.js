@@ -11,15 +11,16 @@
     const world = document.getElementById("wd-world");
     if (!vp || !world) return;
 
-    // ─── world 寬高都比 viewport 大，讓 2D 拖曳（X+Y）都有空間
-    // 寬 = viewport × 1.5（左右拖 0.5x viewport 寬）
-    // 高 = viewport × 2.5（上下拖 1.5x viewport 高）
+    // ─── world 維持地圖原 9:16 比例（width × 1672/941 ≈ 1.776）
+    // 寬 = viewport × 1.15（左右小幅拖曳空間）；高 = 寬 × 地圖 ratio（不變形）
+    const MAP_RATIO = 1672 / 941;
     function fitWorldSize() {
         const w = vp.clientWidth;
         const vpH = vp.clientHeight;
         if (w < 1 || vpH < 1) return;
-        world.style.width = (w * 1.5) + "px";
-        world.style.height = (vpH * 2.5) + "px";
+        const worldW = w * 1.15;
+        world.style.width = worldW + "px";
+        world.style.height = (worldW * MAP_RATIO) + "px";
     }
     fitWorldSize();
     window.addEventListener("resize", () => {
@@ -295,17 +296,10 @@
         shop: { icon: "🏪", title: "商店", body: "服裝/職業道具/節日造型<br>多主題輪換上架" },
         exam: { icon: "🎓", title: "考試中心", body: "5 科檢定考與模擬考<br>通過獲得認證證書" },
         farm: { icon: "🐄", title: "農田", body: "養動物、收穫資源<br>每日任務獎勵金幣" },
-        cottage: { icon: "🏡", title: "個人小屋", body: "換造型、看圖鑑、整理你的成就" },
         pvp: { icon: "⚔️", title: "PK 競技場", body: "三種模式：同年級對戰<br>大亂鬥 / 朋友房間" },
         boss: { icon: "🏰", title: "魔王塔", body: "5 科魔王戰 T1 / T2 / T3<br>累積學習換取榮譽勳章" },
         museum: { icon: "🏛", title: "偉人館", body: "25 chibi 偉人圖鑑<br>+ 名人九宮格遊戲" },
-        ranking: { icon: "🏆", title: "排行榜紀念碑", body: "週答題冠軍榜<br>+ PK 王榜" },
         quest: { icon: "📋", title: "任務告示板", body: "每日任務 / 成就 / 限時挑戰<br>共 10 種類型" },
-        career: { icon: "👔", title: "職業學院", body: "25 個職業系統<br>+ Tier 4 偉人變身" },
-        whack: { icon: "🔨", title: "打地鼠遊戲場", body: "限時打地鼠抓答案<br>5 科都能玩" },
-        spell: { icon: "🔤", title: "拼字塔", body: "接字母拼單字<br>+ 英文 puzzle 字配圖" },
-        treasure: { icon: "🎁", title: "每日寶箱", body: "連續登入獎勵<br>累積天數開更好的寶物" },
-        bulletin: { icon: "📢", title: "公告板", body: "活動公告 / 版本更新<br>+ 客服訊息" },
         chinese: { icon: "📖", title: "國語島", body: "讀寫、注音、閱讀、成語<br>6 個年級 36 章節" },
         english: { icon: "🔤", title: "英文島", body: "單字、文法、聽力、口說<br>含 ABC 字母與聽力重組" },
         math: { icon: "🔢", title: "數學島", body: "加減乘除、分數、幾何<br>6 個年級 36 章節" },
