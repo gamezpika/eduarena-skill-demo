@@ -166,7 +166,8 @@
         if (down && e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // ─── 初始化：起點在 world 中央上方 + sprite Z 排序 + 點擊彈窗 + 自動 tour
+    // ─── 初始化：起點在 world 中央上方 + sprite Z 排序 + 點擊彈窗
+    // 派派 5/21：不要自動往下滑動
     function init() {
         bounds();
         targetX = (posXMin + posXMax) / 2;   // 水平居中
@@ -174,30 +175,6 @@
         posX = targetX; posY = targetY;
         render();
         setupSprites();
-        startAutoTour();   // 1.5s 後鏡頭自動緩慢往下平移
-    }
-
-    // ─── 自動 tour 模式：沒人操作時鏡頭緩慢平移展示 ───
-    let userInteracted = false;
-    let autoTimer = null;
-    let autoDir = -1;   // -1 往下，+1 往上
-    function startAutoTour() {
-        setTimeout(() => {
-            if (userInteracted) return;
-            autoTimer = setInterval(() => {
-                if (userInteracted) { clearInterval(autoTimer); autoTimer = null; return; }
-                bounds();
-                targetY += autoDir * 1.2;   // 每 30ms 移動 1.2px = ~40px/sec 緩速
-                // 到底就反向
-                if (targetY <= posYMin + 1) { targetY = posYMin; autoDir = 1; }
-                else if (targetY >= posYMax - 1) { targetY = posYMax; autoDir = -1; }
-                kick();
-            }, 30);
-        }, 1500);
-    }
-    function stopAutoTour() {
-        userInteracted = true;
-        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
     }
 
     // ─── Sprite Z 排序：按 top% 排（越下面 z 越高 = 遮擋前面的） ──

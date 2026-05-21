@@ -614,6 +614,57 @@
 }
 .wd-ripple.r2 { animation-delay: -1.5s; }
 
+/* ── Free-roam NPC：自由走動於地圖上（純擺飾不可點） ─── */
+/* 外層：水平移動 + 中段瞬間翻面（用 left + scaleX） */
+@keyframes wdRoamPath {
+    0%   { left: 8%;  transform: scaleX(1); }
+    48%  { left: 82%; transform: scaleX(1); }
+    50%  { left: 82%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
+    98%  { left: 8%;  transform: scaleX(-1); }
+    100% { left: 8%;  transform: scaleX(1); }
+}
+/* 內層：彈跳步態（用 transform translate + scale，跟外層獨立） */
+@keyframes wdRoamHop {
+    0%   { transform: translateY(0) scale(1, 1); }
+    20%  { transform: translateY(0) scale(1.1, 0.85); }    /* 蹲 */
+    40%  { transform: translateY(-12px) scale(0.9, 1.15); } /* 跳 */
+    60%  { transform: translateY(0) scale(1.05, 0.95); }   /* 落 */
+    80%  { transform: translateY(0) scale(1.1, 0.85); }    /* 又蹲 */
+    100% { transform: translateY(0) scale(1, 1); }
+}
+.wd-freeroam {
+    position: absolute;
+    width: 6%;
+    height: auto;
+    pointer-events: none;
+    z-index: 15;
+    /* path 動畫 */
+    animation: wdRoamPath 40s linear infinite;
+}
+.wd-freeroam-inner {
+    transform-origin: center bottom;
+    animation: wdRoamHop 1.4s ease-in-out infinite;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
+}
+.wd-freeroam img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+/* 各 NPC 速度錯時 */
+.fr-cow     { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
+.fr-chick   { animation-duration: 22s; animation-delay: -7s;  width: 5%; }
+.fr-chick2  { animation-duration: 28s; animation-delay: -14s; width: 5%; }
+.fr-shopper { animation-duration: 38s; animation-delay: -12s; width: 7%; }
+.fr-scholar { animation-duration: 50s; animation-delay: -22s; width: 8%; }
+
+/* 不同 NPC hop 速度也錯 */
+.fr-chick  .wd-freeroam-inner { animation-duration: 0.9s; }
+.fr-chick2 .wd-freeroam-inner { animation-duration: 1.0s; }
+.fr-cow    .wd-freeroam-inner { animation-duration: 1.8s; }
+.fr-shopper .wd-freeroam-inner { animation-duration: 1.5s; }
+.fr-scholar .wd-freeroam-inner { animation-duration: 1.6s; }
+
 /* ── Phase E1：晝夜變化（60 秒一循環） ──────── */
 .wd-daynight {
     position: absolute;
