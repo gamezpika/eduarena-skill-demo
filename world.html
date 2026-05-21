@@ -13,7 +13,7 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=6">
+    <link rel="stylesheet" href="static/css/world.css?v=7">
 </head>
 <body>
 
@@ -142,6 +142,16 @@
                         <span class="wd-label">社會島</span>
                     </button>
                 </div>
+                <!-- 晝夜變化 overlay（60 秒一循環：晨→日→晚→夜） -->
+                <div class="wd-daynight" aria-hidden="true"></div>
+
+                <!-- 飄雲（前景，跨頂部緩慢飄過） -->
+                <div class="wd-clouds" aria-hidden="true">
+                    <span class="wd-cloud c1">☁️</span>
+                    <span class="wd-cloud c2">☁️</span>
+                    <span class="wd-cloud c3">⛅</span>
+                </div>
+
                 <!-- 玩家頭像（固定在 viewport 中央偏下，永遠是「世界中心」） -->
                 <div class="wd-player" id="wd-player" aria-hidden="true">
                     <span class="wd-player-emoji">🧙</span>

@@ -415,6 +415,47 @@
 }
 .wd-ripple.r2 { animation-delay: -1.5s; }
 
+/* ── Phase E1：晝夜變化（60 秒一循環） ──────── */
+.wd-daynight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: overlay;
+    animation: wdDayNight 60s ease-in-out infinite;
+}
+@keyframes wdDayNight {
+    0%   { background: rgba(255, 180, 100, 0.25); }  /* 晨曦橙 */
+    25%  { background: rgba(255, 255, 255, 0);    }  /* 日中通透 */
+    50%  { background: rgba(255, 140, 80,  0.30); }  /* 黃昏紅 */
+    75%  { background: rgba(30,  30,  100, 0.42); }  /* 夜深藍 */
+    100% { background: rgba(255, 180, 100, 0.25); }  /* 循環回晨 */
+}
+
+/* ── Phase E2：飄雲（從左到右） ────────────── */
+.wd-clouds {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 30;
+    overflow: hidden;
+}
+.wd-cloud {
+    position: absolute;
+    font-size: 38px;
+    opacity: 0.85;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+    line-height: 1;
+    animation: wdCloudDrift linear infinite;
+}
+.wd-cloud.c1 { top: 4%;  animation-duration: 55s; animation-delay: 0s;   }
+.wd-cloud.c2 { top: 14%; animation-duration: 80s; animation-delay: -25s; }
+.wd-cloud.c3 { top: 8%;  animation-duration: 70s; animation-delay: -50s; font-size: 32px; }
+@keyframes wdCloudDrift {
+    from { transform: translateX(-15%); }
+    to   { transform: translateX(115vw); }
+}
+
 /* ── 玩家頭像（固定 viewport 中央偏下） ──────── */
 .wd-player {
     position: absolute;
