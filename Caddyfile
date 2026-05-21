@@ -1,0 +1,15 @@
+# Railway 注入 $PORT；本地測試 fallback 到 80
+:{$PORT:80} {
+    root * /srv
+    file_server
+    encode gzip zstd
+
+    # 靜態資源 cache 短期（10 分鐘），方便派派改檔 cache-bust ?v=N 強刷
+    header Cache-Control "public, max-age=600"
+
+    # 不公開 git / dockerfile / caddyfile 自己
+    @hidden {
+        path /.git/* /Dockerfile /Caddyfile /.dockerignore
+    }
+    respond @hidden 404
+}
