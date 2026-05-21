@@ -119,7 +119,6 @@
 
     vp.addEventListener("pointerdown", e => {
         bounds();
-        stopAutoTour();   // 玩家一動就停 auto tour
         down = true; dragOn = false; suppressClick = false;
         try { vp.setPointerCapture(e.pointerId); } catch (_) {}
         sX = e.clientX; sY = e.clientY;
