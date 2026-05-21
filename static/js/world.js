@@ -197,7 +197,7 @@
                 s.appendChild(bang);
                 s.classList.add("has-bang");
             }
-            // 4) 點擊：squash 反饋 + 聚焦 + 彈窗
+            // 4) 點擊：squash 反饋 + 聚焦 + zoom-in 過場 + 彈窗
             s.addEventListener("click", e => {
                 if (suppressClick) return;
                 e.stopPropagation();
@@ -206,17 +206,64 @@
                 // 點擊 squash 反饋（once）
                 s.classList.add("clicked");
                 setTimeout(() => s.classList.remove("clicked"), 450);
+                // 5/21: zoom-in 過場（squash 完接著 0.4s scale 1.5 + 發光）
+                setTimeout(() => s.classList.add("zooming-in"), 470);
                 focusOnSprite(s);
             });
         });
 
-        // Modal 關閉
+        // NPC 對話泡泡（10 隻自由走動 NPC 各自台詞）
+        const NPC_LINES = {
+            "fr-cow":     "哞～歡迎！",
+            "fr-cow2":    "今天好餓喔",
+            "fr-cow3":    "草地真好吃",
+            "fr-chick":   "啾啾～",
+            "fr-chick2":  "啾啾啾！",
+            "fr-chick3":  "找蟲蟲吃",
+            "fr-shopper": "歡迎光臨！",
+            "fr-shopper2": "今日特價中",
+            "fr-scholar": "快去考試呀",
+            "fr-scholar2": "加油讀書！"
+        };
+        world.querySelectorAll(".wd-freeroam").forEach(npc => {
+            npc.addEventListener("click", e => {
+                if (suppressClick) return;
+                e.stopPropagation();
+                const cls = [...npc.classList].find(c => c.startsWith("fr-"));
+                const line = NPC_LINES[cls] || "...";
+                npc.querySelectorAll(".npc-bubble").forEach(b => b.remove());
+                const bubble = document.createElement("div");
+                bubble.className = "npc-bubble";
+                const text = document.createElement("div");
+                text.className = "npc-bubble-text";
+                text.textContent = line;
+                bubble.appendChild(text);
+                npc.appendChild(bubble);
+                requestAnimationFrame(() => bubble.classList.add("show"));
+                setTimeout(() => {
+                    bubble.classList.remove("show");
+                    setTimeout(() => bubble.remove(), 350);
+                }, 2500);
+            });
+        });
+
+        // Modal 關閉（順手清 zoom-in）
         const modal = document.getElementById("demo-modal");
         const closeBtn = document.getElementById("demo-modal-close");
+        function clearZoom() {
+            document.querySelectorAll(".wd-sprite.zooming-in")
+                .forEach(s => s.classList.remove("zooming-in"));
+        }
         if (closeBtn && modal) {
-            closeBtn.addEventListener("click", () => modal.classList.remove("show"));
+            closeBtn.addEventListener("click", () => {
+                modal.classList.remove("show");
+                clearZoom();
+            });
             modal.addEventListener("click", e => {
-                if (e.target === modal) modal.classList.remove("show");
+                if (e.target === modal) {
+                    modal.classList.remove("show");
+                    clearZoom();
+                }
             });
         }
     }
