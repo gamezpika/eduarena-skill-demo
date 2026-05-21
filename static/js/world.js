@@ -161,17 +161,33 @@
     }
 
     // ─── Sprite Z 排序：按 top% 排（越下面 z 越高 = 遮擋前面的） ──
-    // ─── + 點擊 sprite 顯示 demo modal
+    // ─── + 進場 stagger + ! 提示 + 點擊聚焦 + 彈窗
     function setupSprites() {
         const sprites = world.querySelectorAll(".wd-sprite");
-        sprites.forEach(s => {
-            // 從 top% 算 z-index：top:0%→z:10, top:100%→z:100
+        sprites.forEach((s, i) => {
+            // 1) Z 排序：top% 越大越前面
             const top = parseFloat(s.style.top) || 0;
             s.style.zIndex = String(10 + Math.round(top * 0.9));
+            // 2) 進場 stagger delay
+            s.style.animationDelay = (0.08 * i) + "s";
+            // 3) ! 提示（沒點過才顯示）
+            const tap = s.dataset.tap;
+            const seenKey = "wd_seen_" + tap;
+            if (!localStorage.getItem(seenKey)) {
+                const bang = document.createElement("span");
+                bang.className = "wd-bang";
+                bang.textContent = "!";
+                bang.setAttribute("aria-hidden", "true");
+                s.appendChild(bang);
+                s.classList.add("has-bang");
+            }
+            // 4) 點擊：聚焦 + 彈窗
             s.addEventListener("click", e => {
                 if (suppressClick) return;
                 e.stopPropagation();
-                showDemoModal(s.dataset.tap);
+                localStorage.setItem(seenKey, "1");
+                s.classList.remove("has-bang");
+                focusOnSprite(s);
             });
         });
 
@@ -184,6 +200,22 @@
                 if (e.target === modal) modal.classList.remove("show");
             });
         }
+    }
+
+    // 鏡頭聚焦到 sprite（緩動平移到 viewport 中心），0.85s 後彈窗
+    function focusOnSprite(s) {
+        const sLeft = parseFloat(s.style.left) || 0;
+        const sTop = parseFloat(s.style.top) || 0;
+        const sW = parseFloat(s.style.width) || 0;
+        const wW = world.offsetWidth, wH = world.offsetHeight;
+        // sprite 中心（相對 world 的 px）— aspect 1:1 所以 height in px = sW% * worldW
+        const cx = (sLeft / 100 * wW) + (sW / 100 * wW / 2);
+        const cy = (sTop / 100 * wH) + (sW / 100 * wW / 2);
+        bounds();
+        targetX = clampX(vp.clientWidth / 2 - cx);
+        targetY = clampY(vp.clientHeight / 2 - cy);
+        kick();
+        setTimeout(() => showDemoModal(s.dataset.tap), 850);
     }
 
     const POPUPS = {

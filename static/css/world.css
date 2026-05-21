@@ -205,7 +205,40 @@
     align-items: center;
     aspect-ratio: 1 / 1;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* 進場：從模糊浮現（不動 transform 才不撞 hover/Z 排序） */
+    animation: wdEntry 0.7s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     /* Z 排序由 JS 按 top% 動態算（越下面 z 越高 → 遮擋前面的） */
+}
+@keyframes wdEntry {
+    from { opacity: 0; filter: blur(8px); }
+    to   { opacity: 1; filter: blur(0); }
+}
+
+/* ! 提示圖示（沒點過的 sprite 才顯示） */
+.wd-bang {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    font-size: 15px;
+    font-weight: 900;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    animation: wdBang 1.4s ease-in-out infinite;
+    z-index: 20;
+    pointer-events: none;
+}
+.wd-sprite.has-bang .wd-bang { display: flex; }
+@keyframes wdBang {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50%      { transform: scale(1.15) translateY(-4px); }
 }
 .wd-sprite:active { transform: scale(0.93); }
 .wd-sprite:hover { transform: scale(1.05); }
@@ -269,6 +302,118 @@
     color: #bfdbfe;
     border-color: rgba(96, 165, 250, 0.5);
 }
+
+/* ── Sprite 動畫部件（純 CSS，不阻擋點擊） ────── */
+.wd-anim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 共用 walk 動畫（X 軸來回 + 翻面） */
+@keyframes wdWalk {
+    0%, 100% { transform: translateX(-30%) scaleX(1); }
+    50%      { transform: translateX(30%)  scaleX(-1); }
+}
+@keyframes wdSway {
+    0%, 100% { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+}
+@keyframes wdSparkle {
+    0%, 100% { opacity: 0.25; transform: scale(0.7); }
+    50%      { opacity: 1;    transform: scale(1.2); }
+}
+@keyframes wdSmoke {
+    0%   { transform: translate(0, 0)      scale(0.4); opacity: 0.7; }
+    50%  { opacity: 0.5; }
+    100% { transform: translate(10px, -55px) scale(1.9); opacity: 0; }
+}
+@keyframes wdRipple {
+    0%   { transform: translateX(-50%) scale(0.5); opacity: 0.7; }
+    100% { transform: translateX(-50%) scale(1.7); opacity: 0; }
+}
+
+/* 商店：小人走來走去 + 招牌閃 */
+.wd-walker {
+    position: absolute;
+    bottom: 12%;
+    left: 40%;
+    font-size: 13px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+    animation: wdWalk 6s ease-in-out infinite;
+}
+.wd-sparkle-shop {
+    position: absolute;
+    top: 22%;
+    right: 18%;
+    font-size: 11px;
+    animation: wdSparkle 2.5s ease-in-out infinite;
+}
+
+/* 考試中心：3 顆閃光環繞 */
+.wd-sparkle {
+    position: absolute;
+    font-size: 12px;
+}
+.wd-sparkle.sp1 { top: 8%;  right: 18%; animation: wdSparkle 3s ease-in-out infinite; }
+.wd-sparkle.sp2 { top: 25%; left: 14%;  animation: wdSparkle 3s ease-in-out infinite -1s; }
+.wd-sparkle.sp3 { top: 42%; right: 25%; animation: wdSparkle 3s ease-in-out infinite -2s; }
+
+/* 農田：牛 + 雞 + 植物搖 */
+.wd-pet {
+    position: absolute;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+.pet-cow {
+    bottom: 16%;
+    left: 18%;
+    font-size: 13px;
+    animation: wdWalk 8s ease-in-out infinite;
+}
+.pet-chick {
+    bottom: 14%;
+    right: 22%;
+    font-size: 10px;
+    animation: wdWalk 5s ease-in-out infinite -2.5s;
+}
+.wd-plant {
+    position: absolute;
+    bottom: 17%;
+    left: 50%;
+    transform-origin: bottom center;
+    font-size: 11px;
+    animation: wdSway 4s ease-in-out infinite;
+}
+
+/* 個人小屋：煙囪冒煙（3 顆白球錯時上飄） */
+.wd-smoke {
+    position: absolute;
+    top: 18%;
+    left: 68%;   /* 煙囪在 closet 右上 */
+    width: 7px;
+    height: 7px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    filter: blur(2.5px);
+}
+.wd-smoke.s1 { animation: wdSmoke 3s linear infinite; }
+.wd-smoke.s2 { animation: wdSmoke 3s linear infinite -1s; }
+.wd-smoke.s3 { animation: wdSmoke 3s linear infinite -2s; }
+
+/* 5 科目島：水波漣漪（島下方擴散圓圈） */
+.wd-ripple {
+    position: absolute;
+    bottom: -4%;
+    left: 50%;
+    width: 78%;
+    height: 10px;
+    border: 1.5px solid rgba(173, 216, 230, 0.65);
+    border-radius: 50%;
+    transform: translateX(-50%);
+    animation: wdRipple 3s ease-out infinite;
+}
+.wd-ripple.r2 { animation-delay: -1.5s; }
 
 /* ── 滑動提示（首次浮現，4 秒淡出） ────────── */
 .wd-hint {
