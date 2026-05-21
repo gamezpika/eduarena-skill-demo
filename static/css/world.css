@@ -623,14 +623,13 @@
     98%  { left: 8%;  transform: scaleX(-1); }
     100% { left: 8%;  transform: scaleX(1); }
 }
-/* 內層：彈跳步態（用 transform translate + scale，跟外層獨立） */
+/* 內層：真實走路步態（左右搖擺重心 + 微 Y 顛簸，不像青蛙跳） */
 @keyframes wdRoamHop {
-    0%   { transform: translateY(0) scale(1, 1); }
-    20%  { transform: translateY(0) scale(1.1, 0.85); }    /* 蹲 */
-    40%  { transform: translateY(-12px) scale(0.9, 1.15); } /* 跳 */
-    60%  { transform: translateY(0) scale(1.05, 0.95); }   /* 落 */
-    80%  { transform: translateY(0) scale(1.1, 0.85); }    /* 又蹲 */
-    100% { transform: translateY(0) scale(1, 1); }
+    0%   { transform: translateY(0)   scale(1, 1)        rotate(0); }
+    25%  { transform: translateY(-4%) scale(1.02, 0.98)  rotate(-2deg); }   /* 左腳踩 */
+    50%  { transform: translateY(0)   scale(0.98, 1.02)  rotate(0); }
+    75%  { transform: translateY(-4%) scale(1.02, 0.98)  rotate(2deg); }    /* 右腳踩 */
+    100% { transform: translateY(0)   scale(1, 1)        rotate(0); }
 }
 .wd-freeroam {
     position: absolute;
@@ -651,19 +650,73 @@
     width: 100%;
     height: auto;
 }
-/* 各 NPC 速度錯時 */
-.fr-cow     { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
-.fr-chick   { animation-duration: 22s; animation-delay: -7s;  width: 5%; }
-.fr-chick2  { animation-duration: 28s; animation-delay: -14s; width: 5%; }
-.fr-shopper { animation-duration: 38s; animation-delay: -12s; width: 7%; }
-.fr-scholar { animation-duration: 50s; animation-delay: -22s; width: 8%; }
+/* 各 NPC 速度錯時 + 寬度個性化 */
+.fr-cow      { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
+.fr-cow2     { animation-duration: 55s; animation-delay: -18s; width: 8%; }
+.fr-cow3     { animation-duration: 40s; animation-delay: -28s; width: 7%; }
+.fr-chick    { animation-duration: 22s; animation-delay: -7s;  width: 5%; }
+.fr-chick2   { animation-duration: 28s; animation-delay: -14s; width: 5%; }
+.fr-chick3   { animation-duration: 18s; animation-delay: -3s;  width: 4%; }
+.fr-shopper  { animation-duration: 38s; animation-delay: -12s; width: 7%; }
+.fr-shopper2 { animation-duration: 46s; animation-delay: -30s; width: 7%; }
+.fr-scholar  { animation-duration: 50s; animation-delay: -22s; width: 8%; }
+.fr-scholar2 { animation-duration: 42s; animation-delay: -8s;  width: 7%; }
 
-/* 不同 NPC hop 速度也錯 */
-.fr-chick  .wd-freeroam-inner { animation-duration: 0.9s; }
-.fr-chick2 .wd-freeroam-inner { animation-duration: 1.0s; }
-.fr-cow    .wd-freeroam-inner { animation-duration: 1.8s; }
-.fr-shopper .wd-freeroam-inner { animation-duration: 1.5s; }
-.fr-scholar .wd-freeroam-inner { animation-duration: 1.6s; }
+/* 不同 NPC 走路節奏錯（內層 hop animation-duration） */
+.fr-cow .wd-freeroam-inner,
+.fr-cow2 .wd-freeroam-inner,
+.fr-cow3 .wd-freeroam-inner { animation-duration: 1.4s; }
+.fr-chick .wd-freeroam-inner,
+.fr-chick2 .wd-freeroam-inner,
+.fr-chick3 .wd-freeroam-inner { animation-duration: 0.6s; }
+.fr-shopper .wd-freeroam-inner,
+.fr-shopper2 .wd-freeroam-inner { animation-duration: 0.9s; }
+.fr-scholar .wd-freeroam-inner,
+.fr-scholar2 .wd-freeroam-inner { animation-duration: 1.0s; }
+
+/* ── 小白鳥飛過畫面（雙層：wrapper path + inner flap） ── */
+.wd-birds {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    overflow: hidden;
+}
+/* 外層：path（用 left + top 避免跟 inner 的 transform 衝突） */
+.wd-bird-wrap {
+    position: absolute;
+    left: -10%;
+    top: 25%;
+    animation: wdBirdFly 14s linear infinite;
+}
+.wd-bird-wrap.b1 { animation-delay: 0s; animation-duration: 14s; }
+.wd-bird-wrap.b2 { animation-delay: -6s; animation-duration: 11s; top: 38%; }
+.wd-bird-wrap.b3 { animation-delay: -12s; animation-duration: 17s; top: 18%; }
+/* 內層：拍翅（用 transform scaleY） */
+.wd-bird {
+    display: inline-block;
+    font-size: 22px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+    transform-origin: center;
+    animation: wdBirdFlap 0.4s ease-in-out infinite;
+}
+.b1 .wd-bird { font-size: 22px; }
+.b2 .wd-bird { font-size: 18px; animation-duration: 0.35s; }
+.b3 .wd-bird { font-size: 24px; animation-duration: 0.45s; }
+@keyframes wdBirdFly {
+    0%   { left: -10%; opacity: 0; }
+    5%   { opacity: 1; }
+    25%  { top: 18%; }
+    50%  { top: 28%; }
+    75%  { top: 22%; }
+    95%  { opacity: 1; }
+    100% { left: 110%; top: 26%; opacity: 0; }
+}
+@keyframes wdBirdFlap {
+    0%, 100% { transform: scaleY(1); }
+    50%      { transform: scaleY(0.55); }
+}
 
 /* ── Phase E1：晝夜變化（60 秒一循環） ──────── */
 .wd-daynight {
