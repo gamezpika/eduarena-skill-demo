@@ -242,7 +242,8 @@
 }
 .wd-sprite:active { transform: scale(0.93); }
 .wd-sprite:hover { transform: scale(1.05); }
-.wd-sprite img {
+/* 只 match sprite 主圖（直接子元素），不影響 .wd-anim 內的動畫 img */
+.wd-sprite > img {
     width: 100%;
     height: 100%;
     object-fit: contain;
