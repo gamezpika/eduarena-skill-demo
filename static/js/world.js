@@ -150,14 +150,65 @@
         if (down && e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // ─── 初始化：起點在 world 中央上方（上半中央，露最多有趣內容） ─
+    // ─── 初始化：起點在 world 中央上方 + sprite Z 排序 + 點擊彈窗
     function init() {
         bounds();
         targetX = (posXMin + posXMax) / 2;   // 水平居中
         targetY = posYMax;                    // 頂部對齊
         posX = targetX; posY = targetY;
         render();
+        setupSprites();
     }
+
+    // ─── Sprite Z 排序：按 top% 排（越下面 z 越高 = 遮擋前面的） ──
+    // ─── + 點擊 sprite 顯示 demo modal
+    function setupSprites() {
+        const sprites = world.querySelectorAll(".wd-sprite");
+        sprites.forEach(s => {
+            // 從 top% 算 z-index：top:0%→z:10, top:100%→z:100
+            const top = parseFloat(s.style.top) || 0;
+            s.style.zIndex = String(10 + Math.round(top * 0.9));
+            s.addEventListener("click", e => {
+                if (suppressClick) return;
+                e.stopPropagation();
+                showDemoModal(s.dataset.tap);
+            });
+        });
+
+        // Modal 關閉
+        const modal = document.getElementById("demo-modal");
+        const closeBtn = document.getElementById("demo-modal-close");
+        if (closeBtn && modal) {
+            closeBtn.addEventListener("click", () => modal.classList.remove("show"));
+            modal.addEventListener("click", e => {
+                if (e.target === modal) modal.classList.remove("show");
+            });
+        }
+    }
+
+    const POPUPS = {
+        shop: { icon: "🏪", title: "商店", body: "服裝/職業道具/節日造型<br>多主題輪換上架" },
+        exam: { icon: "🎓", title: "考試中心", body: "5 科檢定考與模擬考<br>通過獲得認證證書" },
+        farm: { icon: "🐄", title: "農田", body: "養動物、收穫資源<br>每日任務獎勵金幣" },
+        cottage: { icon: "🏡", title: "個人小屋", body: "換造型、看圖鑑、整理你的成就" },
+        chinese: { icon: "📖", title: "國語島", body: "讀寫、注音、閱讀、成語<br>6 個年級 36 章節" },
+        english: { icon: "🔤", title: "英文島", body: "單字、文法、聽力、口說<br>含 ABC 字母與聽力重組" },
+        math: { icon: "🔢", title: "數學島", body: "加減乘除、分數、幾何<br>6 個年級 36 章節" },
+        science: { icon: "🔬", title: "自然島", body: "生物、物質、能量、地球<br>含實驗題與圖示題" },
+        social: { icon: "🌏", title: "社會島", body: "歷史、地理、公民<br>含台灣社會與世界文化" },
+    };
+
+    function showDemoModal(key) {
+        const opts = POPUPS[key];
+        if (!opts) return;
+        const modal = document.getElementById("demo-modal");
+        if (!modal) return;
+        document.getElementById("demo-modal-icon").textContent = opts.icon;
+        document.getElementById("demo-modal-title").textContent = opts.title;
+        document.getElementById("demo-modal-body").innerHTML = opts.body;
+        modal.classList.add("show");
+    }
+
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", init);
     } else {

@@ -193,6 +193,83 @@
 }
 .wd-pet:active { transform: scale(0.92); }
 
+/* ── Sprite 散佈在 world 上 ────────────────── */
+.wd-sprite {
+    position: absolute;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Z 排序由 JS 按 top% 動態算（越下面 z 越高 → 遮擋前面的） */
+}
+.wd-sprite:active { transform: scale(0.93); }
+.wd-sprite:hover { transform: scale(1.05); }
+.wd-sprite img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
+    animation: wdBob 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+.wd-sprite:nth-child(2n) img { animation-delay: -1.2s; }
+.wd-sprite:nth-child(3n) img { animation-delay: -2.3s; }
+@keyframes wdBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* 地面陰影（橢圓深色，sprite 底下，跟 sprite 同 bob 但反向 */
+.wd-shadow {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    width: 60%;
+    height: 6%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
+    z-index: -1;
+    animation: wdShadow 3.2s ease-in-out infinite;
+}
+.wd-sprite:nth-child(2n) .wd-shadow { animation-delay: -1.2s; }
+.wd-sprite:nth-child(3n) .wd-shadow { animation-delay: -2.3s; }
+@keyframes wdShadow {
+    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.55; }
+    50% { transform: translateX(-50%) scale(0.85); opacity: 0.35; }
+}
+
+/* Label：sprite 底下浮起小膠囊 */
+.wd-label {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fde68a;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 200, 80, 0.5);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* 5 科目島：藍色標籤呼應海 */
+.wd-island .wd-label {
+    color: #bfdbfe;
+    border-color: rgba(96, 165, 250, 0.5);
+}
+
 /* ── 滑動提示（首次浮現，4 秒淡出） ────────── */
 .wd-hint {
     position: absolute;
