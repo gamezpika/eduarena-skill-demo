@@ -1,28 +1,19 @@
-"""EduArena Demo Bot — 加好友自動發 demo 連結；收任何文字也回連結。
+"""EduArena Demo Bot — 手動 parse webhook（不依賴 SDK handler，更穩）
 
 環境變數：
 - LINE_CHANNEL_SECRET
 - LINE_CHANNEL_ACCESS_TOKEN
-- DEMO_BASE_URL (optional, default eduarena-skill-demo Railway URL)
+- DEMO_BASE_URL (optional)
 """
+import base64
+import hashlib
+import hmac
+import json
 import logging
 import os
+import urllib.request
 
-from fastapi import FastAPI, Request, HTTPException
-from linebot.v3 import WebhookHandler
-from linebot.v3.exceptions import InvalidSignatureError
-from linebot.v3.messaging import (
-    ApiClient,
-    Configuration,
-    MessagingApi,
-    ReplyMessageRequest,
-    TextMessage,
-)
-from linebot.v3.webhooks import (
-    FollowEvent,
-    MessageEvent,
-    TextMessageContent,
-)
+from fastapi import FastAPI, HTTPException, Request
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("eduarena-demo-bot")
@@ -42,9 +33,6 @@ WELCOME = f"""歡迎來看 EduArena 技術 demo 👋
 🗺 探索地圖
 {DEMO_BASE_URL}/world.html"""
 
-config = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
-handler = WebhookHandler(CHANNEL_SECRET)
-
 app = FastAPI(title="EduArena Demo Bot")
 
 
@@ -53,37 +41,57 @@ def health():
     return {"status": "ok", "service": "eduarena-demo-bot"}
 
 
+def verify_signature(body: bytes, signature: str) -> bool:
+    mac = hmac.new(CHANNEL_SECRET.encode(), body, hashlib.sha256).digest()
+    expected = base64.b64encode(mac).decode()
+    return hmac.compare_digest(expected, signature)
+
+
+def reply(reply_token: str, text: str) -> None:
+    req = urllib.request.Request(
+        "https://api.line.me/v2/bot/message/reply",
+        data=json.dumps(
+            {
+                "replyToken": reply_token,
+                "messages": [{"type": "text", "text": text}],
+            },
+            ensure_ascii=False,
+        ).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}",
+        },
+    )
+    try:
+        resp = urllib.request.urlopen(req, timeout=10)
+        log.info("[reply] %d", resp.status)
+    except Exception as e:
+        log.error("[reply] failed: %s", e)
+
+
 @app.post("/webhook")
 async def webhook(request: Request):
     signature = request.headers.get("X-Line-Signature", "")
-    body = (await request.body()).decode("utf-8")
-    log.info("[webhook] %s bytes", len(body))
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        log.warning("[webhook] invalid signature")
+    body = await request.body()
+    if not verify_signature(body, signature):
+        log.warning("[webhook] signature invalid (len=%d)", len(body))
         raise HTTPException(status_code=400, detail="Invalid signature")
+    try:
+        payload = json.loads(body)
+    except Exception as e:
+        log.error("[webhook] bad json: %s", e)
+        return "OK"
+
+    for event in payload.get("events", []):
+        et = event.get("type")
+        rt = event.get("replyToken")
+        log.info("[event] type=%s", et)
+        if et == "follow" and rt:
+            reply(rt, WELCOME)
+        elif et == "message" and rt:
+            mt = event.get("message", {}).get("type")
+            log.info("[event.message] type=%s", mt)
+            reply(rt, WELCOME)  # 任何訊息類型都回歡迎
+        else:
+            log.info("[event] ignored type=%s", et)
     return "OK"
-
-
-def _reply(reply_token: str, text: str) -> None:
-    with ApiClient(config) as api:
-        MessagingApi(api).reply_message(
-            ReplyMessageRequest(
-                reply_token=reply_token,
-                messages=[TextMessage(text=text)],
-            )
-        )
-
-
-@handler.add(FollowEvent)
-def on_follow(event: FollowEvent):
-    log.info("[follow] user=%s", event.source.user_id)
-    _reply(event.reply_token, WELCOME)
-
-
-@handler.add(MessageEvent, message=TextMessageContent)
-def on_text(event: MessageEvent):
-    log.info("[text] user=%s msg=%r",
-             event.source.user_id, event.message.text)
-    _reply(event.reply_token, WELCOME)
