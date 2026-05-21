@@ -11,35 +11,47 @@
     const world = document.getElementById("wd-world");
     if (!vp || !world) return;
 
-    // ─── world 高度 = viewport × 2.5，確保有大範圍可上下拖
-    // （原本按圖比例算 720:1280 在 iPhone 殼內框會跟 viewport 差不多大，拖不動）
+    // ─── world 寬高都比 viewport 大，讓 2D 拖曳（X+Y）都有空間
+    // 寬 = viewport × 1.5（左右拖 0.5x viewport 寬）
+    // 高 = viewport × 2.5（上下拖 1.5x viewport 高）
     function fitWorldSize() {
         const w = vp.clientWidth;
         const vpH = vp.clientHeight;
         if (w < 1 || vpH < 1) return;
-        world.style.width = w + "px";
-        world.style.height = (vpH * 2.5) + "px";   // 2.5 倍視窗 = 拖曳範圍 1.5x viewport
+        world.style.width = (w * 1.5) + "px";
+        world.style.height = (vpH * 2.5) + "px";
     }
     fitWorldSize();
-    window.addEventListener("resize", () => { fitWorldSize(); bounds(); pos = clamp(pos); render(); });
+    window.addEventListener("resize", () => {
+        fitWorldSize();
+        bounds();
+        posX = clampX(posX); posY = clampY(posY);
+        render();
+    });
 
-    // ─── 物理引擎參數 ─────────────────────────────
+    // ─── 物理引擎參數（2D：X + Y 雙軸彈簧） ──────
     const STIFF = 50, DAMP = 20, MASS = 1;
-    let target = 0, pos = 0, vel = 0;
-    let posMin = 0, posMax = 0;
+    let targetX = 0, posX = 0, velX = 0;
+    let targetY = 0, posY = 0, velY = 0;
+    let posXMin = 0, posXMax = 0, posYMin = 0, posYMax = 0;
     let raf = 0, last = 0;
 
     function bounds() {
-        const vpH = vp.clientHeight;
-        const worldH = world.offsetHeight;
-        posMin = vpH - worldH;   // 拖到底（world 底部對齊 viewport 底部）
-        posMax = 0;               // 拖到頂（world 頂部對齊 viewport 頂部）
-        if (posMin > posMax) posMin = posMax;
+        const vpW = vp.clientWidth, vpH = vp.clientHeight;
+        const worldW = world.offsetWidth, worldH = world.offsetHeight;
+        posXMin = vpW - worldW;   // 拖到右（world 右邊對齊 viewport 右邊）
+        posXMax = 0;
+        posYMin = vpH - worldH;
+        posYMax = 0;
+        if (posXMin > posXMax) posXMin = posXMax;
+        if (posYMin > posYMax) posYMin = posYMax;
     }
-    function clamp(v) { return v < posMin ? posMin : (v > posMax ? posMax : v); }
+    function clampX(v) { return v < posXMin ? posXMin : (v > posXMax ? posXMax : v); }
+    function clampY(v) { return v < posYMin ? posYMin : (v > posYMax ? posYMax : v); }
 
     function render() {
-        world.style.transform = "translate3d(0," + pos.toFixed(2) + "px,0)";
+        world.style.transform =
+            "translate3d(" + posX.toFixed(2) + "px," + posY.toFixed(2) + "px,0)";
     }
 
     function step(ts) {
@@ -51,29 +63,39 @@
         while (rem > 0) {
             const h = rem > 1 / 120 ? 1 / 120 : rem;
             rem -= h;
-            const a = (-STIFF * (pos - target) - DAMP * vel) / MASS;
-            vel += a * h;
-            pos += vel * h;
+            // X 軸彈簧
+            const aX = (-STIFF * (posX - targetX) - DAMP * velX) / MASS;
+            velX += aX * h; posX += velX * h;
+            // Y 軸彈簧
+            const aY = (-STIFF * (posY - targetY) - DAMP * velY) / MASS;
+            velY += aY * h; posY += velY * h;
         }
         render();
-        if (Math.abs(pos - target) > 0.12 || Math.abs(vel) > 0.12) {
+        const settled = Math.abs(posX - targetX) < 0.12 && Math.abs(velX) < 0.12
+                     && Math.abs(posY - targetY) < 0.12 && Math.abs(velY) < 0.12;
+        if (!settled) {
             raf = requestAnimationFrame(step);
         } else {
-            pos = target; vel = 0; render();
+            posX = targetX; velX = 0;
+            posY = targetY; velY = 0;
+            render();
         }
     }
     function kick() { if (!raf) { last = 0; raf = requestAnimationFrame(step); } }
 
-    // ─── Wheel（桌面試玩用） ────────────────────
+    // ─── Wheel（桌面試玩：垂直 = 上下；shift+wheel = 左右） ──
     vp.addEventListener("wheel", e => {
         e.preventDefault();
         bounds();
-        target = clamp(target - e.deltaY);
+        if (e.shiftKey) targetX = clampX(targetX - e.deltaY);
+        else targetY = clampY(targetY - e.deltaY);
         kick();
     }, { passive: false });
 
-    // ─── Pointer 拖曳 + flick 慣性 ──────────────
-    let down = false, dragOn = false, sY = 0, sT = 0, lY = 0, lT = 0, fv = 0;
+    // ─── Pointer 2D 拖曳 + flick 慣性 ──────────────
+    let down = false, dragOn = false;
+    let sX = 0, sY = 0, sTX = 0, sTY = 0;
+    let lX = 0, lY = 0, lT = 0, fvX = 0, fvY = 0;
     let suppressClick = false;
 
     vp.addEventListener("click", e => {
@@ -84,21 +106,29 @@
         bounds();
         down = true; dragOn = false; suppressClick = false;
         try { vp.setPointerCapture(e.pointerId); } catch (_) {}
-        sY = e.clientY; sT = target;
-        lY = e.clientY; lT = e.timeStamp || performance.now(); fv = 0;
+        sX = e.clientX; sY = e.clientY;
+        sTX = targetX; sTY = targetY;
+        lX = e.clientX; lY = e.clientY;
+        lT = e.timeStamp || performance.now();
+        fvX = 0; fvY = 0;
     });
 
     vp.addEventListener("pointermove", e => {
         if (!down) return;
         if (e.cancelable) e.preventDefault();
+        const dx = e.clientX - sX;
         const dy = e.clientY - sY;
-        if (!dragOn && Math.abs(dy) < 6) return;
+        if (!dragOn && (dx * dx + dy * dy) < 36) return;   // < 6px 算點擊不攔
         dragOn = true;
-        target = clamp(sT + dy);
+        targetX = clampX(sTX + dx);
+        targetY = clampY(sTY + dy);
         const now = e.timeStamp || performance.now();
         const dtm = now - lT;
-        if (dtm > 0) fv = (e.clientY - lY) / dtm;
-        lY = e.clientY; lT = now;
+        if (dtm > 0) {
+            fvX = (e.clientX - lX) / dtm;
+            fvY = (e.clientY - lY) / dtm;
+        }
+        lX = e.clientX; lY = e.clientY; lT = now;
         kick();
     }, { passive: false });
 
@@ -108,22 +138,24 @@
         try { if (e) vp.releasePointerCapture(e.pointerId); } catch (_) {}
         if (dragOn) {
             suppressClick = true;
-            target = clamp(target + fv * 220);   // flick 慣性
+            targetX = clampX(targetX + fvX * 220);
+            targetY = clampY(targetY + fvY * 220);
             kick();
         }
     }
     vp.addEventListener("pointerup", endDrag);
     vp.addEventListener("pointercancel", endDrag);
 
-    // touchmove preventDefault（iOS 阻祖先原生捲動）
     vp.addEventListener("touchmove", e => {
         if (down && e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // ─── 初始化：起點在最上方（顯示叢林） ─────
+    // ─── 初始化：起點在 world 中央上方（上半中央，露最多有趣內容） ─
     function init() {
         bounds();
-        target = posMax; pos = posMax;
+        targetX = (posXMin + posXMax) / 2;   // 水平居中
+        targetY = posYMax;                    // 頂部對齊
+        posX = targetX; posY = targetY;
         render();
     }
     if (document.readyState === "loading") {

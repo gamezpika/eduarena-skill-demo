@@ -193,7 +193,7 @@
 }
 .wd-pet:active { transform: scale(0.92); }
 
-/* ── 滑動提示（首次浮現，3 秒淡出） ────────── */
+/* ── 滑動提示（首次浮現，4 秒淡出） ────────── */
 .wd-hint {
     position: absolute;
     bottom: 80px;
@@ -207,6 +207,7 @@
     pointer-events: none;
     z-index: 30;
     animation: wdHintFade 4s ease-out forwards;
+    white-space: nowrap;
 }
 @keyframes wdHintFade {
     0%, 60% { opacity: 1; }
