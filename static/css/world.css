@@ -744,41 +744,6 @@
     animation: none !important;
 }
 
-/* ── OGA chibi 真禎數 walk cycle（3 幀 steps 切換 = 真的腳在動） ──
-   CC0 授權 from opengameart.org/content/hand-drawn-chibi-walking-bases
-   每張 sprite sheet 195x128 含 3 幀（每幀 65x128） */
-.wd-walker-anim {
-    position: absolute;
-    width: 65px;
-    height: 128px;
-    background-repeat: no-repeat;
-    background-size: 195px 128px;
-    pointer-events: none;
-    z-index: 18;
-    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35));
-    /* 雙動畫：path 跨地圖走 + steps 切幀（真禎數） */
-    animation: wdWalkerPath 22s linear infinite,
-               wdWalkerSteps 0.6s steps(3) infinite;
-}
-.wd-walker-anim.wa-male    { background-image: url("../../assets/images/walk/male_east.png"); }
-.wd-walker-anim.wa-female  { background-image: url("../../assets/images/walk/female_east.png"); }
-.wd-walker-anim.wa-male2   { background-image: url("../../assets/images/walk/male_east.png");
-    animation-duration: 28s, 0.55s; animation-delay: -10s, -0.2s; }
-.wd-walker-anim.wa-female2 { background-image: url("../../assets/images/walk/female_east.png");
-    animation-duration: 32s, 0.7s; animation-delay: -18s, -0.1s; }
-
-@keyframes wdWalkerPath {
-    0%   { left: -8%;  transform: scaleX(1); }
-    48%  { left: 96%;  transform: scaleX(1); }
-    50%  { left: 96%;  transform: scaleX(-1); }    /* 走到右邊瞬間翻面 */
-    98%  { left: -8%;  transform: scaleX(-1); }
-    100% { left: -8%;  transform: scaleX(1); }
-}
-@keyframes wdWalkerSteps {
-    from { background-position: 0 0; }
-    to   { background-position: -195px 0; }   /* 3 幀 = 195px */
-}
-
 /* ── 小白鳥飛過畫面（雙層：wrapper path + inner flap） ── */
 .wd-birds {
     position: absolute;
