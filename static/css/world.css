@@ -383,7 +383,47 @@
     100% { transform: scale(1, 1); }
 }
 
-/* 動物站立呼吸（取代亂跑），含「偶爾大喘氣」 */
+/* ─── 派派 spec 3（人物走動與定點律動）───
+   彈跳步態 walk cycle：每步壓→跳→落地 + 中段瞬間 scaleX 翻轉 */
+@keyframes wdWalkBouncy {
+    0%   { transform: translate(0%, 0)    scaleX(1)  scaleY(1); }
+    5%   { transform: translate(3%, 0)    scaleX(1.1) scaleY(0.85); }   /* 壓 */
+    10%  { transform: translate(8%, -22%) scaleX(0.92) scaleY(1.12); }  /* 跳起拉長 */
+    14%  { transform: translate(12%, 0)   scaleX(1.05) scaleY(0.95); }  /* 落 */
+    18%  { transform: translate(16%, 0)   scaleX(1.1) scaleY(0.85); }
+    23%  { transform: translate(22%, -22%) scaleX(0.92) scaleY(1.12); }
+    27%  { transform: translate(26%, 0)   scaleX(1.05) scaleY(0.95); }
+    31%  { transform: translate(30%, 0)   scaleX(1.1) scaleY(0.85); }
+    36%  { transform: translate(36%, -22%) scaleX(0.92) scaleY(1.12); }
+    40%  { transform: translate(40%, 0)   scaleX(1.05) scaleY(0.95); }
+    45%  { transform: translate(45%, 0)   scaleX(1.1) scaleY(0.85); }
+    49%  { transform: translate(50%, -22%) scaleX(0.92) scaleY(1.12); }
+    50%  { transform: translate(50%, 0)   scaleX(-1) scaleY(1); }       /* 瞬間翻轉 ↔ */
+    55%  { transform: translate(45%, 0)   scaleX(-1.1) scaleY(0.85); }
+    60%  { transform: translate(38%, -22%) scaleX(-0.92) scaleY(1.12); }
+    64%  { transform: translate(34%, 0)   scaleX(-1.05) scaleY(0.95); }
+    68%  { transform: translate(28%, 0)   scaleX(-1.1) scaleY(0.85); }
+    73%  { transform: translate(22%, -22%) scaleX(-0.92) scaleY(1.12); }
+    77%  { transform: translate(18%, 0)   scaleX(-1.05) scaleY(0.95); }
+    81%  { transform: translate(14%, 0)   scaleX(-1.1) scaleY(0.85); }
+    86%  { transform: translate(8%, -22%) scaleX(-0.92) scaleY(1.12); }
+    90%  { transform: translate(4%, 0)    scaleX(-1.05) scaleY(0.95); }
+    95%  { transform: translate(2%, 0)    scaleX(-1.1) scaleY(0.85); }
+    100% { transform: translate(0%, 0)    scaleX(1) scaleY(1); }
+}
+
+/* 定點高頻 idle hop：蹲 → 跳起拉長 → 落地，連續高頻率 */
+@keyframes wdIdleHop {
+    0%, 100% { transform: scale(1, 1)      translateY(0); }
+    18%      { transform: scale(1.15, 0.82) translateY(0); }    /* 蹲 */
+    33%      { transform: scale(0.88, 1.18) translateY(-16%); } /* 跳起拉長 */
+    48%      { transform: scale(1.05, 0.95) translateY(0); }    /* 落地壓扁 */
+    66%      { transform: scale(1.15, 0.82) translateY(0); }    /* 又蹲 */
+    80%      { transform: scale(0.88, 1.18) translateY(-16%); } /* 又跳 */
+    95%      { transform: scale(1, 1)      translateY(0); }
+}
+
+/* 舊 wdIdleBreath 保留給 wd-player 主視覺等其他元素 */
 @keyframes wdIdleBreath {
     0%, 100% { transform: scale(1); }
     8%       { transform: scale(1.08, 0.92); }
@@ -475,7 +515,7 @@
     100% { transform: translateX(-50%) scale(1.7); opacity: 0; }
 }
 
-/* chibi 角色 sprite (img 取代 emoji) — 站著呼吸（map.mp4 風） */
+/* chibi 角色 sprite (img 取代 emoji) — 站著高頻 idle hop（彈簧黏土感） */
 .wd-walker {
     position: absolute;
     bottom: 8%;
@@ -484,13 +524,13 @@
     height: auto;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
     transform-origin: center bottom;
-    animation: wdIdleBreath 5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    animation: wdIdleHop 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 .walker-exam {
     bottom: 6%;
     left: 34%;
     width: 32%;
-    animation: wdIdleBreath 6s cubic-bezier(0.45, 0, 0.55, 1) infinite -2s;
+    animation: wdIdleHop 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite -0.6s;
 }
 .wd-sparkle-shop {
     position: absolute;
@@ -521,17 +561,17 @@
 }
 .pet-cow {
     bottom: 8%;
-    left: 14%;
+    left: 6%;
     width: 28%;
-    /* 站著呼吸，8s 一週期含「偶爾大喘氣」 */
-    animation: wdIdleBreath 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    /* 牛走來走去 + 彈跳步態（慢悠悠） */
+    animation: wdWalkBouncy 8s linear infinite;
 }
 .pet-chick {
     bottom: 6%;
-    right: 12%;
+    left: 4%;
     width: 22%;
-    /* 雞快一點 */
-    animation: wdIdleBreath 4s cubic-bezier(0.45, 0, 0.55, 1) infinite -1s;
+    /* 雞快又彈，每步跳更高 */
+    animation: wdWalkBouncy 4.5s linear infinite -1.5s;
 }
 .wd-plant {
     position: absolute;
