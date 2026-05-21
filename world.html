@@ -13,7 +13,7 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=20">
+    <link rel="stylesheet" href="static/css/world.css?v=21">
 </head>
 <body>
 
@@ -64,36 +64,37 @@
             <!-- ── 主場景：大背景可上下滑動 + sprite hotspot ──── -->
             <div class="wd-viewport" id="wd-viewport">
                 <div class="wd-world" id="wd-world">
-                    <!-- 12 個透明 hotspot button（地圖背景 world_map_v2.png 已含建築畫） -->
-                    <!-- 主陸 7 個 -->
-                    <button class="wd-sprite" data-tap="boss"    style="top:2%;  left:38%; width:24%; height:18%;" aria-label="魔王塔"></button>
-                    <button class="wd-sprite" data-tap="shop"    style="top:26%; left:4%;  width:28%; height:16%;" aria-label="商店"></button>
-                    <button class="wd-sprite" data-tap="exam"    style="top:24%; left:36%; width:28%; height:22%;" aria-label="考試中心"></button>
-                    <button class="wd-sprite" data-tap="museum"  style="top:26%; left:66%; width:26%; height:18%;" aria-label="偉人館"></button>
-                    <button class="wd-sprite" data-tap="pvp"     style="top:46%; left:4%;  width:24%; height:18%;" aria-label="PK 競技場"></button>
-                    <button class="wd-sprite" data-tap="farm"    style="top:46%; left:30%; width:34%; height:20%;" aria-label="農田"></button>
-                    <button class="wd-sprite" data-tap="quest"   style="top:46%; left:66%; width:26%; height:18%;" aria-label="任務告示板"></button>
-                    <!-- 5 科目漂浮島 -->
-                    <button class="wd-sprite" data-tap="chinese" style="top:4%;  left:2%;  width:28%; height:18%;" aria-label="國語島"></button>
-                    <button class="wd-sprite" data-tap="english" style="top:4%;  left:66%; width:30%; height:18%;" aria-label="英文島"></button>
-                    <button class="wd-sprite" data-tap="math"    style="top:70%; left:2%;  width:28%; height:18%;" aria-label="數學島"></button>
-                    <button class="wd-sprite" data-tap="social"  style="top:72%; left:30%; width:40%; height:22%;" aria-label="社會島"></button>
-                    <button class="wd-sprite" data-tap="science" style="top:70%; left:70%; width:28%; height:20%;" aria-label="自然島"></button>
+                    <!-- 12 個透明 hotspot button（地圖背景 world_map_v3.png 已含建築畫） -->
+                    <!-- 頂部 3 個漂浮島（緊貼天花板）-->
+                    <button class="wd-sprite" data-tap="chinese" style="top:0%;  left:0%;  width:30%; height:24%;" aria-label="國語島"></button>
+                    <button class="wd-sprite" data-tap="boss"    style="top:0%;  left:36%; width:26%; height:28%;" aria-label="魔王塔"></button>
+                    <button class="wd-sprite" data-tap="english" style="top:0%;  left:62%; width:38%; height:25%;" aria-label="英文島"></button>
+                    <!-- 中段主陸 6 個建築 -->
+                    <button class="wd-sprite" data-tap="shop"    style="top:30%; left:2%;  width:28%; height:18%;" aria-label="商店"></button>
+                    <button class="wd-sprite" data-tap="exam"    style="top:26%; left:32%; width:34%; height:22%;" aria-label="考試中心"></button>
+                    <button class="wd-sprite" data-tap="museum"  style="top:30%; left:66%; width:30%; height:18%;" aria-label="偉人館"></button>
+                    <button class="wd-sprite" data-tap="pvp"     style="top:48%; left:2%;  width:24%; height:14%;" aria-label="PK 競技場"></button>
+                    <button class="wd-sprite" data-tap="farm"    style="top:48%; left:30%; width:32%; height:14%;" aria-label="農田"></button>
+                    <button class="wd-sprite" data-tap="quest"   style="top:48%; left:62%; width:30%; height:14%;" aria-label="任務告示板"></button>
+                    <!-- 下方 3 個漂浮島 -->
+                    <button class="wd-sprite" data-tap="math"    style="top:72%; left:0%;  width:28%; height:22%;" aria-label="數學島"></button>
+                    <button class="wd-sprite" data-tap="social"  style="top:72%; left:28%; width:38%; height:24%;" aria-label="社會島"></button>
+                    <button class="wd-sprite" data-tap="science" style="top:72%; left:66%; width:34%; height:22%;" aria-label="自然島"></button>
 
                     <!-- 任務指引箭頭：浮在任務告示板正上方 pulse -->
-                    <div class="quest-arrow" style="top:38%;left:75%;" aria-hidden="true"></div>
+                    <div class="quest-arrow" style="top:40%;left:73%;" aria-hidden="true"></div>
 
-                    <!-- ── 自由走動 NPC（10 隻集中在中央主陸 top:28~58% 範圍內走動） ── -->
-                    <div class="wd-freeroam fr-cow"     style="top:28%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-cow2"    style="top:38%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-chick"   style="top:32%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-chick2"  style="top:44%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-chick3"  style="top:55%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-shopper" style="top:35%;"><div class="wd-freeroam-inner"><img src="assets/images/world/shopper.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-shopper2" style="top:50%;"><div class="wd-freeroam-inner"><img src="assets/images/world/shopper.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-scholar" style="top:42%;"><div class="wd-freeroam-inner"><img src="assets/images/world/scholar.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-scholar2" style="top:58%;"><div class="wd-freeroam-inner"><img src="assets/images/world/scholar.png" alt=""></div></div>
-                    <div class="wd-freeroam fr-cow3"    style="top:48%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
+                    <!-- ── 自由走動 NPC（10 隻集中在主陸下方草地走廊 top:62~68%，避開建築） ── -->
+                    <div class="wd-freeroam fr-cow"     style="top:62%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-cow2"    style="top:65%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-chick"   style="top:63%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-chick2"  style="top:66%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-chick3"  style="top:68%;"><div class="wd-freeroam-inner"><img src="assets/images/world/chick.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-shopper" style="top:64%;"><div class="wd-freeroam-inner"><img src="assets/images/world/shopper.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-shopper2" style="top:67%;"><div class="wd-freeroam-inner"><img src="assets/images/world/shopper.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-scholar" style="top:62%;"><div class="wd-freeroam-inner"><img src="assets/images/world/scholar.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-scholar2" style="top:65%;"><div class="wd-freeroam-inner"><img src="assets/images/world/scholar.png" alt=""></div></div>
+                    <div class="wd-freeroam fr-cow3"    style="top:68%;"><div class="wd-freeroam-inner"><img src="assets/images/world/cow.png" alt=""></div></div>
 
                 </div>
                 <!-- 晝夜變化 overlay（60 秒一循環：晨→日→晚→夜） -->

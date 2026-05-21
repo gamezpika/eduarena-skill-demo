@@ -164,7 +164,7 @@
     position: relative;
     width: 100%;
     /* JS 設 width × MAP_RATIO（地圖 9:16 比例）+ background-size 100% 100% 不變形 */
-    background: url("../../assets/images/world_map_v2.png?v=1") center / 100% 100% no-repeat;
+    background: url("../../assets/images/world_map_v3.png?v=1") center / 100% 100% no-repeat;
     will-change: transform;
 }
 
@@ -616,13 +616,13 @@
 
 /* ── Free-roam NPC：自由走動於地圖上（純擺飾不可點） ─── */
 /* 外層：水平移動 + 中段瞬間翻面（用 left + scaleX）
-   left 15~78% 限制 NPC 走在中央主陸範圍內，不會走到漂浮島空隙 */
+   left 8~88% 沿主陸底邊草地走廊整條走，NPC top% 設在 60~68% 不會撞建築 */
 @keyframes wdRoamPath {
-    0%   { left: 15%; transform: scaleX(1); }
-    48%  { left: 78%; transform: scaleX(1); }
-    50%  { left: 78%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
-    98%  { left: 15%; transform: scaleX(-1); }
-    100% { left: 15%; transform: scaleX(1); }
+    0%   { left: 8%;  transform: scaleX(1); }
+    48%  { left: 88%; transform: scaleX(1); }
+    50%  { left: 88%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
+    98%  { left: 8%;  transform: scaleX(-1); }
+    100% { left: 8%;  transform: scaleX(1); }
 }
 /* 內層：真實走路步態（左右搖擺重心 + 微 Y 顛簸，不像青蛙跳） */
 @keyframes wdRoamHop {
