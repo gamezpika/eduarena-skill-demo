@@ -13,7 +13,7 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=13">
+    <link rel="stylesheet" href="static/css/world.css?v=14">
 </head>
 <body>
 
@@ -97,6 +97,67 @@
                         </span>
                         <span class="wd-label">農田</span>
                     </button>
+                    <!-- F1: PK 競技場 + 魔王塔（重用既有 village sprite） -->
+                    <button class="wd-sprite" data-tap="pvp" style="top:20%;left:30%;width:14%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/village/village_pvp.png" alt="PK 競技場">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">⚔️</span></span>
+                        <span class="wd-label">PK 競技場</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="boss" style="top:4%;left:82%;width:14%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/village/village_boss.png" alt="魔王塔">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">👹</span></span>
+                        <span class="wd-label">魔王塔</span>
+                    </button>
+
+                    <!-- F2+F3: 8 個 Codex 生新 sprite -->
+                    <button class="wd-sprite" data-tap="museum" style="top:22%;left:6%;width:14%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/museum.png" alt="偉人館">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">✨</span></span>
+                        <span class="wd-label">偉人館</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="ranking" style="top:32%;left:84%;width:12%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/ranking.png" alt="排行榜">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">🏆</span></span>
+                        <span class="wd-label">排行榜</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="quest" style="top:36%;left:30%;width:11%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/quest.png" alt="任務告示板">
+                        <span class="wd-label">任務</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="career" style="top:14%;left:46%;width:14%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/career.png" alt="職業學院">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">👔</span></span>
+                        <span class="wd-label">職業學院</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="whack" style="top:44%;left:64%;width:13%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/whack.png" alt="打地鼠">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">🔨</span></span>
+                        <span class="wd-label">打地鼠</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="spell" style="top:38%;left:48%;width:11%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/spell.png" alt="拼字塔">
+                        <span class="wd-label">拼字塔</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="treasure" style="top:46%;left:34%;width:9%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/treasure.png" alt="寶箱">
+                        <span class="wd-anim" aria-hidden="true"><span class="wd-sparkle sp1">✨</span></span>
+                        <span class="wd-label">每日寶箱</span>
+                    </button>
+                    <button class="wd-sprite" data-tap="bulletin" style="top:24%;left:78%;width:10%;">
+                        <span class="wd-shadow"></span>
+                        <img src="assets/images/world/bulletin.png" alt="公告板">
+                        <span class="wd-label">公告板</span>
+                    </button>
+
                     <button class="wd-sprite" data-tap="cottage" style="top:42%;left:12%;width:17%;">
                         <span class="wd-shadow"></span>
                         <img src="assets/images/world/cottage.png" alt="個人小屋">
