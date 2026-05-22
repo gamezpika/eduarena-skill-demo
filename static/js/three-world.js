@@ -298,54 +298,316 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         chinese: 14, english: 14, math: 12, science: 14, social: 14,
     };
 
+    // ─── Phase 4 試做: 5 科目島用 primitives 拼 3D（取代 sprite billboard）
+    const ISLAND_3D_KEYS = ['chinese', 'english', 'math', 'science', 'social'];
+    const islandAnimUpdaters = [];  // 每島自己的 animation update 函式
+
+    // 每島專屬字體（label 用）
+    const ISLAND_FONTS = {
+        chinese: { font: "bold 36px 'Ma Shan Zheng', 'DFKai-SB', 'STKaiti', cursive", color: "#ffd6d6", text: "國 語 島" },
+        english: { font: "bold 32px 'Playfair Display', 'Georgia', serif", color: "#cde7ff", text: "English Isle" },
+        math:    { font: "bold 36px 'Courier New', monospace", color: "#fff3c4", text: "1 2 3 數 學" },
+        science: { font: "italic 32px 'Comic Sans MS', cursive", color: "#c9f3d0", text: "✦ 自 然" },
+        social:  { font: "900 32px 'Arial Black', sans-serif", color: "#e1ccff", text: "🌏 SOCIAL 社會" },
+    };
+
     const buildingMeshes = [];
     const textureLoader = new THREE.TextureLoader();
     BUILDINGS.forEach(b => {
         const opts = POPUPS[b.key];
-        const url = SPRITE_MAP[b.key];
         const size = SPRITE_SIZE[b.key] || 8;
 
-        // chibi sprite billboard
-        const texture = textureLoader.load(url);
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        const spriteMat = new THREE.SpriteMaterial({
-            map: texture, transparent: true, depthWrite: false, sizeAttenuation: true
-        });
-        const sprite = new THREE.Sprite(spriteMat);
-        sprite.scale.set(size, size, 1);
-        sprite.position.set(b.x, size / 2, b.z);
-        scene.add(sprite);
+        if (ISLAND_3D_KEYS.includes(b.key)) {
+            // Phase 4: 3D primitives 拼
+            const island = make3DIsland(b.key);
+            island.group.position.set(b.x, 0, b.z);
+            scene.add(island.group);
+            if (island.update) islandAnimUpdaters.push(island.update);
 
-        // 透明 hitbox 給 raycaster（sprite 不能精準 ray intersect）
-        const hitbox = new THREE.Mesh(
-            new THREE.BoxGeometry(size * 0.7, size, size * 0.7),
-            new THREE.MeshBasicMaterial({ visible: false })
-        );
-        hitbox.position.set(b.x, size / 2, b.z);
-        hitbox.userData.key = b.key;
-        scene.add(hitbox);
-        buildingMeshes.push(hitbox);
+            // hitbox 給 raycaster
+            const hitbox = new THREE.Mesh(
+                new THREE.BoxGeometry(size, size, size),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitbox.position.set(b.x, size / 2, b.z);
+            hitbox.userData.key = b.key;
+            scene.add(hitbox);
+            buildingMeshes.push(hitbox);
 
-        // 上方浮 label
-        const labelCanvas = document.createElement("canvas");
-        labelCanvas.width = 256;
-        labelCanvas.height = 64;
-        const ctx = labelCanvas.getContext("2d");
-        ctx.fillStyle = "rgba(0,0,0,0.75)";
-        roundRect(ctx, 0, 0, 256, 64, 12);
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 32px sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(opts.icon + " " + opts.title, 128, 32);
-        const labelTexture = new THREE.CanvasTexture(labelCanvas);
-        const labelMat = new THREE.SpriteMaterial({ map: labelTexture, depthTest: false });
-        const label = new THREE.Sprite(labelMat);
-        label.position.set(b.x, size + 2, b.z);
-        label.scale.set(8, 2, 1);
-        scene.add(label);
+            // 特色字體 label
+            const fontSpec = ISLAND_FONTS[b.key];
+            const labelCanvas = document.createElement("canvas");
+            labelCanvas.width = 512; labelCanvas.height = 96;
+            const ctx = labelCanvas.getContext("2d");
+            ctx.fillStyle = "rgba(0,0,0,0.78)";
+            roundRect(ctx, 0, 0, 512, 96, 20);
+            ctx.fillStyle = fontSpec.color;
+            ctx.font = fontSpec.font;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(fontSpec.text, 256, 48);
+            const labelTexture = new THREE.CanvasTexture(labelCanvas);
+            const labelMat = new THREE.SpriteMaterial({ map: labelTexture, depthTest: false });
+            const label = new THREE.Sprite(labelMat);
+            label.position.set(b.x, size + 3, b.z);
+            label.scale.set(12, 2.25, 1);
+            scene.add(label);
+        } else {
+            // 其他 7 建築：保留 sprite billboard
+            const url = SPRITE_MAP[b.key];
+            const texture = textureLoader.load(url);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            const spriteMat = new THREE.SpriteMaterial({
+                map: texture, transparent: true, depthWrite: false, sizeAttenuation: true
+            });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(size, size, 1);
+            sprite.position.set(b.x, size / 2, b.z);
+            scene.add(sprite);
+
+            const hitbox = new THREE.Mesh(
+                new THREE.BoxGeometry(size * 0.7, size, size * 0.7),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitbox.position.set(b.x, size / 2, b.z);
+            hitbox.userData.key = b.key;
+            scene.add(hitbox);
+            buildingMeshes.push(hitbox);
+
+            // 一般 label
+            const labelCanvas = document.createElement("canvas");
+            labelCanvas.width = 256; labelCanvas.height = 64;
+            const ctx = labelCanvas.getContext("2d");
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            roundRect(ctx, 0, 0, 256, 64, 12);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 32px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(opts.icon + " " + opts.title, 128, 32);
+            const labelTexture = new THREE.CanvasTexture(labelCanvas);
+            const labelMat = new THREE.SpriteMaterial({ map: labelTexture, depthTest: false });
+            const label = new THREE.Sprite(labelMat);
+            label.position.set(b.x, size + 2, b.z);
+            label.scale.set(8, 2, 1);
+            scene.add(label);
+        }
     });
+
+    // ─── 5 個科目島工廠（return {group, update}）
+    function make3DIsland(key) {
+        switch (key) {
+            case "chinese":  return makeChineseIsland();
+            case "english":  return makeEnglishIsland();
+            case "math":     return makeMathIsland();
+            case "science":  return makeScienceIsland();
+            case "social":   return makeSocialIsland();
+        }
+    }
+
+    function makeChineseIsland() {
+        const g = new THREE.Group();
+        // 中式塔 3 層 (Cylinder + Cone 紅瓦頂交錯)
+        const colors = { wall: 0xc0392b, roof: 0x8b0000, base: 0x6d4c41 };
+        const wallMat = new THREE.MeshStandardMaterial({ color: colors.wall });
+        const roofMat = new THREE.MeshStandardMaterial({ color: colors.roof });
+        const baseMat = new THREE.MeshStandardMaterial({ color: colors.base });
+        const heights = [2, 1.8, 1.6];
+        const radii = [3.2, 2.6, 2.0];
+        let y = 0;
+        // 底座
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 4, 1, 16), baseMat);
+        base.position.y = 0.5; base.castShadow = true; g.add(base);
+        y = 1;
+        for (let i = 0; i < 3; i++) {
+            // 牆
+            const wall = new THREE.Mesh(new THREE.CylinderGeometry(radii[i], radii[i], heights[i], 8), wallMat);
+            wall.position.y = y + heights[i] / 2; wall.castShadow = true; g.add(wall);
+            y += heights[i];
+            // 屋頂
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(radii[i] + 0.6, 1, 8), roofMat);
+            roof.position.y = y + 0.5; roof.castShadow = true; g.add(roof);
+            y += 1;
+        }
+        // 塔頂風鈴
+        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), new THREE.MeshStandardMaterial({ color: 0xfdc500 }));
+        bell.position.y = y + 0.5; g.add(bell);
+        return {
+            group: g,
+            update: dt => {
+                bell.rotation.z = Math.sin(Date.now() * 0.003) * 0.4;
+            }
+        };
+    }
+
+    function makeEnglishIsland() {
+        const g = new THREE.Group();
+        // 西方城堡: 4 角塔 + 中央方塔
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x2980b9 });
+        // 中央主塔
+        const main = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 3), wallMat);
+        main.position.y = 2; main.castShadow = true; g.add(main);
+        const mainRoof = new THREE.Mesh(new THREE.ConeGeometry(2.3, 2, 4), roofMat);
+        mainRoof.position.y = 5; mainRoof.castShadow = true; g.add(mainRoof);
+        // 4 角小塔
+        const flags = [];
+        [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]].forEach(([x, z]) => {
+            const t = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4, 8), wallMat);
+            t.position.set(x, 2, z); t.castShadow = true; g.add(t);
+            const r = new THREE.Mesh(new THREE.ConeGeometry(1, 1.5, 8), roofMat);
+            r.position.set(x, 4.75, z); r.castShadow = true; g.add(r);
+            // 旗
+            const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.5), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+            flagPole.position.set(x, 6.2, z); g.add(flagPole);
+            const flagMat = new THREE.MeshStandardMaterial({ color: 0xc0392b, side: THREE.DoubleSide });
+            const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.4), flagMat);
+            flag.position.set(x + 0.3, 6.6, z); g.add(flag);
+            flags.push(flag);
+        });
+        return {
+            group: g,
+            update: dt => {
+                // 旗子飄動
+                flags.forEach((f, i) => {
+                    f.rotation.y = Math.sin(Date.now() * 0.004 + i) * 0.6;
+                });
+            }
+        };
+    }
+
+    function makeMathIsland() {
+        const g = new THREE.Group();
+        // 金字塔
+        const pyramid = new THREE.Mesh(
+            new THREE.ConeGeometry(3.5, 5, 4),
+            new THREE.MeshStandardMaterial({ color: 0xe67e22, flatShading: true })
+        );
+        pyramid.position.y = 2.5; pyramid.castShadow = true;
+        pyramid.rotation.y = Math.PI / 4; g.add(pyramid);
+        // 算盤架 (兩根 cylinder 平行)
+        const frame = new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+        const beadMat = new THREE.MeshStandardMaterial({ color: 0xfdc500 });
+        const beads = [];
+        [-1, 1].forEach(side => {
+            const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4, 8), frame);
+            bar.position.set(2.5, 2 + side * 0.6, 0); bar.rotation.z = Math.PI / 2;
+            g.add(bar);
+            // 5 顆珠在 bar 上
+            for (let i = -2; i <= 2; i++) {
+                const bead = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 8), beadMat);
+                bead.position.set(2.5 + i * 0.65, 2 + side * 0.6, 0);
+                bead.userData.basex = bead.position.x;
+                bead.userData.row = side;
+                g.add(bead);
+                beads.push(bead);
+            }
+        });
+        return {
+            group: g,
+            update: dt => {
+                // 算盤珠左右移
+                beads.forEach((b, i) => {
+                    b.position.x = b.userData.basex + Math.sin(Date.now() * 0.002 + i * 0.3) * 0.2;
+                });
+            }
+        };
+    }
+
+    function makeScienceIsland() {
+        const g = new THREE.Group();
+        // 山 (大 cone 灰)
+        const mountain = new THREE.Mesh(
+            new THREE.ConeGeometry(3, 4, 8),
+            new THREE.MeshStandardMaterial({ color: 0x7f8c8d, flatShading: true })
+        );
+        mountain.position.set(-1.5, 2, 0); mountain.castShadow = true; g.add(mountain);
+        // 山頂雪
+        const snowCap = new THREE.Mesh(
+            new THREE.ConeGeometry(1.2, 1.5, 8),
+            new THREE.MeshStandardMaterial({ color: 0xecf0f1, flatShading: true })
+        );
+        snowCap.position.set(-1.5, 4.5, 0); g.add(snowCap);
+        // 望遠鏡三腳架
+        const tripodMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+        [[-0.5, 0.5], [0.5, 0.5], [0.5, -0.5]].forEach(([x, z]) => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 6), tripodMat);
+            leg.position.set(2 + x * 0.3, 0.9, z * 0.3);
+            leg.rotation.x = z > 0 ? 0.2 : -0.2;
+            leg.rotation.z = x > 0 ? -0.2 : 0.2;
+            g.add(leg);
+        });
+        // 望遠鏡本體 (cylinder)
+        const tele = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 2.5, 12),
+            new THREE.MeshStandardMaterial({ color: 0xf39c12, metalness: 0.5, roughness: 0.3 })
+        );
+        tele.position.set(2, 2, 0);
+        tele.rotation.z = Math.PI / 3;
+        g.add(tele);
+        // 望遠鏡頭部 (球)
+        const teleHead = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12),
+            new THREE.MeshStandardMaterial({ color: 0xecf0f1 }));
+        teleHead.position.set(3, 3, 0); g.add(teleHead);
+        return {
+            group: g,
+            update: dt => {
+                // 望遠鏡左右掃描
+                const a = Math.sin(Date.now() * 0.001) * 0.5;
+                tele.rotation.y = a;
+                teleHead.position.x = 3 + Math.cos(a) * 0.3;
+                teleHead.position.z = Math.sin(a) * 0.3;
+            }
+        };
+    }
+
+    function makeSocialIsland() {
+        const g = new THREE.Group();
+        // 地球儀: Sphere 加 simple noise texture (canvas 畫陸地/海洋)
+        const globeCanvas = document.createElement("canvas");
+        globeCanvas.width = 256; globeCanvas.height = 128;
+        const gctx = globeCanvas.getContext("2d");
+        gctx.fillStyle = "#3498db";  // 海
+        gctx.fillRect(0, 0, 256, 128);
+        gctx.fillStyle = "#27ae60";  // 陸地
+        // 隨機 blob 陸地
+        [[40, 30, 40, 25], [120, 50, 50, 30], [200, 35, 35, 25], [80, 90, 30, 20], [180, 95, 45, 22]].forEach(([x, y, w, h]) => {
+            gctx.beginPath();
+            gctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+            gctx.fill();
+        });
+        const globeTex = new THREE.CanvasTexture(globeCanvas);
+        const globe = new THREE.Mesh(
+            new THREE.SphereGeometry(2.2, 32, 24),
+            new THREE.MeshStandardMaterial({ map: globeTex })
+        );
+        globe.position.y = 3; globe.castShadow = true; g.add(globe);
+        // 金色 torus 環 (赤道 + 子午線)
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0xf39c12, metalness: 0.6, roughness: 0.3 });
+        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.08, 8, 32), ringMat);
+        ring1.position.y = 3; g.add(ring1);
+        const ring2 = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.08, 8, 32), ringMat);
+        ring2.position.y = 3; ring2.rotation.x = Math.PI / 2; g.add(ring2);
+        // 底座
+        const base = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.6, 1, 0.8, 16),
+            new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+        );
+        base.position.y = 0.4; base.castShadow = true; g.add(base);
+        const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15, 0.15, 1, 8),
+            new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+        );
+        stem.position.y = 1.3; g.add(stem);
+        return {
+            group: g,
+            update: dt => {
+                // 地球儀旋轉
+                globe.rotation.y += 0.012;
+            }
+        };
+    }
 
     // ─── 建築模型工廠：每個建築用 primitives 組合出特色外觀
     function makeBuilding(key, h) {
@@ -982,6 +1244,8 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             b.mesh.rotation.y = -b.phase + Math.PI / 2;
             b.mixer.update(dt);
         });
+        // 5 個科目島自己的小動畫
+        islandAnimUpdaters.forEach(fn => fn(dt));
         // 寵物跟隨玩家 (lerp 在玩家後方右側 + 自身擺尾)
         const petTargetX = player.position.x + Math.sin(playerRot + Math.PI) * 2.5 + Math.cos(playerRot) * 1.5;
         const petTargetZ = player.position.z + Math.cos(playerRot + Math.PI) * 2.5 - Math.sin(playerRot) * 1.5;
