@@ -172,17 +172,18 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
     lensflare.addElement(new LensflareElement(flare3, 70, 1));
     sun.add(lensflare);
 
-    // ─── 草地 noise texture
+    // ─── 草地 noise texture（Phase 5b 改中世紀秋季泥土+乾草色）
     const grassCanvas = document.createElement("canvas");
     grassCanvas.width = 256; grassCanvas.height = 256;
     const grassCtx = grassCanvas.getContext("2d");
-    grassCtx.fillStyle = "#7cb342";
+    grassCtx.fillStyle = "#7e8a3a";  // 偏黃綠的乾草地基色
     grassCtx.fillRect(0, 0, 256, 256);
     for (let i = 0; i < 4000; i++) {
         const shade = Math.random();
-        if (shade < 0.5) grassCtx.fillStyle = "rgba(102, 153, 51, 0.5)";
-        else if (shade < 0.85) grassCtx.fillStyle = "rgba(140, 200, 80, 0.4)";
-        else grassCtx.fillStyle = "rgba(200, 230, 130, 0.6)";
+        if (shade < 0.45) grassCtx.fillStyle = "rgba(110, 95, 50, 0.45)";   // 泥土褐
+        else if (shade < 0.8)  grassCtx.fillStyle = "rgba(150, 160, 75, 0.42)";  // 乾草黃綠
+        else if (shade < 0.95) grassCtx.fillStyle = "rgba(80, 100, 40, 0.55)";   // 深苔綠
+        else grassCtx.fillStyle = "rgba(200, 180, 100, 0.55)";              // 秋金點綴
         grassCtx.fillRect(Math.random() * 256, Math.random() * 256, 2, 4);
     }
     const grassTex = new THREE.CanvasTexture(grassCanvas);
@@ -261,7 +262,13 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             let srcMesh = null;
             gltf.scene.traverse(c => { if (c.isMesh && !srcMesh) srcMesh = c; });
             if (!srcMesh) return;
-            const inst = new THREE.InstancedMesh(srcMesh.geometry, srcMesh.material, count);
+            // 中世紀色調 — clone material 套 tint
+            let mat = srcMesh.material;
+            if (options.tint) {
+                mat = srcMesh.material.clone();
+                mat.color = new THREE.Color(options.tint);
+            }
+            const inst = new THREE.InstancedMesh(srcMesh.geometry, mat, count);
             const dummy = new THREE.Object3D();
             let placed = 0;
             let attempts = 0;
@@ -289,21 +296,22 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
     }
 
     const KK_BASE = 'assets/3d/kaykit_forest/';
-    // 樹: 5 種 variation 混合 (Tree_1/2/3/4/Tree_Bare 各抓 1-2)
-    loadKayKitInstanced(KK_BASE + 'Tree_1_A_Color1.gltf', 50, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
-    loadKayKitInstanced(KK_BASE + 'Tree_2_A_Color1.gltf', 40, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
-    loadKayKitInstanced(KK_BASE + 'Tree_3_A_Color1.gltf', 35, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
-    loadKayKitInstanced(KK_BASE + 'Tree_Bare_1_A_Color1.gltf', 25, { minR: 32, scaleMin: 1.5, scaleMax: 2.8 });
-    // 灌木: 3 種
-    loadKayKitInstanced(KK_BASE + 'Bush_1_A_Color1.gltf', 60, { minR: 25, scaleMin: 1.0, scaleMax: 2.0 });
-    loadKayKitInstanced(KK_BASE + 'Bush_2_A_Color1.gltf', 40, { minR: 25, scaleMin: 1.0, scaleMax: 2.0 });
-    // 石頭: 3 種
-    loadKayKitInstanced(KK_BASE + 'Rock_1_A_Color1.gltf', 25, { minR: 22, scaleMin: 1.0, scaleMax: 2.5 });
-    loadKayKitInstanced(KK_BASE + 'Rock_2_A_Color1.gltf', 20, { minR: 22, scaleMin: 1.0, scaleMax: 2.2 });
-    loadKayKitInstanced(KK_BASE + 'Rock_3_A_Color1.gltf', 15, { minR: 22, scaleMin: 1.0, scaleMax: 2.0 });
-    // 草: 2 種
-    loadKayKitInstanced(KK_BASE + 'Grass_1_A_Color1.gltf', 150, { minR: 18, scaleMin: 1.0, scaleMax: 2.0, castShadow: false });
-    loadKayKitInstanced(KK_BASE + 'Grass_2_A_Color1.gltf', 100, { minR: 18, scaleMin: 1.0, scaleMax: 1.8, castShadow: false });
+    // Phase 5b: tint shift 把 KayKit chibi 風 → 中世紀秋色調
+    // 樹: 深綠/橄欖/秋紅褐/枯灰
+    loadKayKitInstanced(KK_BASE + 'Tree_1_A_Color1.gltf', 50, { minR: 32, scaleMin: 1.5, scaleMax: 3.0, tint: 0x3d5a2f });
+    loadKayKitInstanced(KK_BASE + 'Tree_2_A_Color1.gltf', 40, { minR: 32, scaleMin: 1.5, scaleMax: 3.0, tint: 0x556b2f });
+    loadKayKitInstanced(KK_BASE + 'Tree_3_A_Color1.gltf', 35, { minR: 32, scaleMin: 1.5, scaleMax: 3.0, tint: 0x8b6914 });
+    loadKayKitInstanced(KK_BASE + 'Tree_Bare_1_A_Color1.gltf', 25, { minR: 32, scaleMin: 1.5, scaleMax: 2.8, tint: 0x6b5a4a });
+    // 灌木
+    loadKayKitInstanced(KK_BASE + 'Bush_1_A_Color1.gltf', 60, { minR: 25, scaleMin: 1.0, scaleMax: 2.0, tint: 0x4a5d3a });
+    loadKayKitInstanced(KK_BASE + 'Bush_2_A_Color1.gltf', 40, { minR: 25, scaleMin: 1.0, scaleMax: 2.0, tint: 0x5a6b3a });
+    // 石頭：中世紀石材灰調帶土黃
+    loadKayKitInstanced(KK_BASE + 'Rock_1_A_Color1.gltf', 25, { minR: 22, scaleMin: 1.0, scaleMax: 2.5, tint: 0x8b8378 });
+    loadKayKitInstanced(KK_BASE + 'Rock_2_A_Color1.gltf', 20, { minR: 22, scaleMin: 1.0, scaleMax: 2.2, tint: 0x9c9285 });
+    loadKayKitInstanced(KK_BASE + 'Rock_3_A_Color1.gltf', 15, { minR: 22, scaleMin: 1.0, scaleMax: 2.0, tint: 0x7a7268 });
+    // 草地：乾草黃綠（秋季中世紀草地感）
+    loadKayKitInstanced(KK_BASE + 'Grass_1_A_Color1.gltf', 150, { minR: 18, scaleMin: 1.0, scaleMax: 2.0, castShadow: false, tint: 0x8a9a4a });
+    loadKayKitInstanced(KK_BASE + 'Grass_2_A_Color1.gltf', 100, { minR: 18, scaleMin: 1.0, scaleMax: 1.8, castShadow: false, tint: 0x9aa55a });
 
     // ─── Phase 3: 12 建築用 chibi sprite billboard（沿用 EDUDEMO 既有 sprite）
     const SPRITE_MAP = {
@@ -329,14 +337,24 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
     // 取代 RTS chibi GLTF，換成中世紀寫實磚瓦村莊
     const MEDIEVAL_KEYS = ['shop','exam','museum','pvp','farm','quest','boss'];
     // 每棟設計 spec — footprint 是「每邊 wall 模組數」（wall 寬 2m）
+    // 每棟 features：balcony (null|0..3 = 牆 idx)、balconyStyle('simple'/'cross')
+    // extStairs(0..3 = 牆 idx 或 null)、dormer(屋頂窗)、frontGable(屋頂三角山牆)、
+    // wallBase(底層用 base 牆)、extraChimney、supports(木支柱)
     const HOUSE_SPECS = {
-        shop:   { wallStyle: 'brick',   footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.55, chimney: true,  roofStyle: 'gable', scale: 1.0 },
-        exam:   { wallStyle: 'plaster', footprint: 4, floors: 2, doorWallIndex: 0, windowFreq: 0.55, chimney: false, roofStyle: 'gable', scale: 1.0 },
-        museum: { wallStyle: 'brick',   footprint: 3, floors: 3, doorWallIndex: 0, windowFreq: 0.5,  chimney: false, roofStyle: 'gable', scale: 1.0 },
-        pvp:    { wallStyle: 'brick',   footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.35, chimney: true,  roofStyle: 'gable', scale: 1.0 },
-        farm:   { wallStyle: 'plaster', footprint: 4, floors: 1, doorWallIndex: 0, windowFreq: 0.55, chimney: true,  roofStyle: 'gable', scale: 1.0 },
-        quest:  { wallStyle: 'plaster', footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.5,  chimney: true,  roofStyle: 'gable', scale: 1.0 },
-        boss:   { wallStyle: 'brick',   footprint: 2, floors: 4, doorWallIndex: 0, windowFreq: 0.5,  chimney: false, roofStyle: 'tower', scale: 1.2 },
+        shop:   { wallStyle: 'brick',   footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.55, chimney: true,  roofStyle: 'gable', scale: 1.0,
+                  balcony: 1, balconyStyle: 'cross', frontGable: true,  dormer: false, extStairs: null, supports: true,  extraChimney: false },
+        exam:   { wallStyle: 'plaster', footprint: 4, floors: 2, doorWallIndex: 0, windowFreq: 0.55, chimney: false, roofStyle: 'gable', scale: 1.0,
+                  balcony: null, frontGable: true,  dormer: true,  extStairs: null, supports: false, wallBase: true,  extraChimney: false },
+        museum: { wallStyle: 'brick',   footprint: 3, floors: 3, doorWallIndex: 0, windowFreq: 0.5,  chimney: false, roofStyle: 'gable', scale: 1.0,
+                  balcony: 2, balconyStyle: 'cross', frontGable: true,  dormer: false, extStairs: 1,    supports: true,  extraChimney: true },
+        pvp:    { wallStyle: 'brick',   footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.35, chimney: true,  roofStyle: 'gable', scale: 1.0,
+                  balcony: null, frontGable: true,  dormer: false, extStairs: null, supports: true,  extraChimney: false },
+        farm:   { wallStyle: 'plaster', footprint: 4, floors: 1, doorWallIndex: 0, windowFreq: 0.55, chimney: true,  roofStyle: 'gable', scale: 1.0,
+                  balcony: null, frontGable: true,  dormer: true,  extStairs: null, supports: false, wallBase: true,  extraChimney: true },
+        quest:  { wallStyle: 'plaster', footprint: 3, floors: 2, doorWallIndex: 0, windowFreq: 0.5,  chimney: true,  roofStyle: 'gable', scale: 1.0,
+                  balcony: 0, balconyStyle: 'simple', frontGable: true, dormer: false, extStairs: 2, supports: true,  wallBase: true,  extraChimney: false },
+        boss:   { wallStyle: 'brick',   footprint: 2, floors: 4, doorWallIndex: 0, windowFreq: 0.5,  chimney: false, roofStyle: 'tower', scale: 1.2,
+                  balcony: null, frontGable: false, dormer: false, extStairs: null, supports: false, extraChimney: false },
     };
     const megaLoader = new GLTFLoader();
 
@@ -469,18 +487,25 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
     const MK_PIECES = {};
 
     const MK_REQUIRED = [
-        // 牆 — 2 種風格 × 3 變體（straight / door / window）
+        // 牆 — 2 種風格 × 3 變體（straight / door / window）+ base 底牆
         'Wall_Plaster_Straight', 'Wall_Plaster_Door_Flat', 'Wall_Plaster_Window_Wide_Flat',
+        'Wall_Plaster_Straight_Base',
         'Wall_UnevenBrick_Straight', 'Wall_UnevenBrick_Door_Flat', 'Wall_UnevenBrick_Window_Wide_Flat',
         // 角
         'Corner_Exterior_Brick', 'Corner_Exterior_Wood',
-        // 屋頂
+        // 屋頂主件 + 三角山牆 + dormer
         'Roof_RoundTiles_4x4', 'Roof_RoundTile_2x1_Long', 'Roof_Tower_RoundTiles',
+        'Roof_Front_Brick4', 'Roof_Front_Brick6', 'Roof_Dormer_RoundTile',
+        // 陽臺 + 樓梯
+        'Balcony_Simple_Straight', 'Balcony_Cross_Straight',
+        'Stairs_Exterior_Platform',
+        // 木支柱 + 屋簷
+        'Prop_Support', 'Overhang_Roof_Plaster',
         // 門窗（裝飾）
         'Door_2_Flat', 'Window_Wide_Flat1',
         // Props
         'Prop_Wagon', 'Prop_Chimney', 'Prop_WoodenFence_Single', 'Prop_WoodenFence_Extension1',
-        'Prop_Crate', 'Prop_Brick1', 'Prop_Brick2', 'Prop_Vine1', 'Prop_Vine4',
+        'Prop_Crate', 'Prop_Brick1', 'Prop_Brick2', 'Prop_Vine1', 'Prop_Vine4', 'Prop_Vine5', 'Prop_Vine9',
     ];
 
     function loadMKPiece(name) {
@@ -518,10 +543,11 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         const half = size / 2;
 
         const isBrick = spec.wallStyle === 'brick';
-        const wallStraight = isBrick ? 'Wall_UnevenBrick_Straight' : 'Wall_Plaster_Straight';
-        const wallDoor     = isBrick ? 'Wall_UnevenBrick_Door_Flat' : 'Wall_Plaster_Door_Flat';
-        const wallWindow   = isBrick ? 'Wall_UnevenBrick_Window_Wide_Flat' : 'Wall_Plaster_Window_Wide_Flat';
-        const corner       = isBrick ? 'Corner_Exterior_Brick' : 'Corner_Exterior_Wood';
+        const wallStraight     = isBrick ? 'Wall_UnevenBrick_Straight'         : 'Wall_Plaster_Straight';
+        const wallStraightBase = isBrick ? 'Wall_UnevenBrick_Straight'         : 'Wall_Plaster_Straight_Base';
+        const wallDoor         = isBrick ? 'Wall_UnevenBrick_Door_Flat'        : 'Wall_Plaster_Door_Flat';
+        const wallWindow       = isBrick ? 'Wall_UnevenBrick_Window_Wide_Flat' : 'Wall_Plaster_Window_Wide_Flat';
+        const corner           = isBrick ? 'Corner_Exterior_Brick'             : 'Corner_Exterior_Wood';
 
         // 4 面牆：south(-z)/east(+x)/north(+z)/west(-x)
         // wall.gltf 預設面朝 -Z（厚度方向 z=-0.11），擺到 south 牆要 rotY=0、east rotY=-π/2 等
@@ -539,7 +565,11 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
                 for (let i = 0; i < n; i++) {
                     const isDoor = floor === 0 && s === spec.doorWallIndex && i === Math.floor(n/2);
                     const isWin  = !isDoor && Math.random() < (spec.windowFreq ?? 0.4);
-                    const pieceName = isDoor ? wallDoor : (isWin ? wallWindow : wallStraight);
+                    let pieceName;
+                    if (isDoor) pieceName = wallDoor;
+                    else if (isWin) pieceName = wallWindow;
+                    else if (floor === 0 && spec.wallBase && !isBrick) pieceName = wallStraightBase;
+                    else pieceName = wallStraight;
                     const piece = cloneMK(pieceName);
                     if (!piece) continue;
                     const t = (i - (n - 1) / 2) * MK_WALL_W;
@@ -549,6 +579,19 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
                     piece.position.set(px, yBase, pz);
                     piece.rotation.y = side.rotY;
                     g.add(piece);
+
+                    // 陽臺：在指定牆某層中央 wall 加一片 balcony（站到 wall 同位置同 rotY）
+                    if (spec.balcony !== null && spec.balcony !== undefined &&
+                        s === spec.balcony && floor === spec.floors - 1 && i === Math.floor(n/2) &&
+                        !isDoor) {
+                        const balcName = spec.balconyStyle === 'cross' ? 'Balcony_Cross_Straight' : 'Balcony_Simple_Straight';
+                        const bal = cloneMK(balcName);
+                        if (bal) {
+                            bal.position.set(px, yBase + 0.05, pz);
+                            bal.rotation.y = side.rotY;
+                            g.add(bal);
+                        }
+                    }
                 }
             }
             // 4 個角 corner（高 3.02m，跟 wall 3.12 接近）
@@ -588,12 +631,61 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             }
         }
 
+        // 屋頂三角山牆（gable）— 屋頂前後兩端貼三角磚牆
+        if (spec.frontGable && spec.roofStyle !== 'tower') {
+            const gableName = n >= 3 ? 'Roof_Front_Brick6' : 'Roof_Front_Brick4';
+            // 兩端：south(-half_z) + north(+half_z)
+            [-half, half].forEach((zPos, idx) => {
+                const gab = cloneMK(gableName);
+                if (!gab) return;
+                gab.position.set(0, totalH, zPos);
+                gab.rotation.y = idx === 0 ? 0 : Math.PI;
+                // 縮放比對 footprint 寬度（gable 6 mesh=6.69, gable 4 mesh=4.4）
+                const gw = n >= 3 ? 6.69 : 4.4;
+                const gs = size / gw;
+                gab.scale.set(gs, 1, 1);
+                g.add(gab);
+            });
+        }
+
+        // 屋頂窗 dormer（一個，放正面屋頂中段稍偏側）
+        if (spec.dormer && spec.roofStyle !== 'tower') {
+            const dor = cloneMK('Roof_Dormer_RoundTile');
+            if (dor) {
+                // dormer pivot 偏右（center.x=0.92），抵消讓 mesh 中心 = 0
+                dor.position.set(-0.92, totalH + 0.3, -half * 0.3);
+                g.add(dor);
+            }
+        }
+
         // 煙囪
         if (spec.chimney) {
             const ch = cloneMK('Prop_Chimney');
             if (ch) {
                 ch.position.set(half * 0.5, totalH + 0.3, -half * 0.5);
                 g.add(ch);
+            }
+        }
+        // 第二根煙囪（另一角）
+        if (spec.extraChimney) {
+            const ch2 = cloneMK('Prop_Chimney');
+            if (ch2) {
+                ch2.position.set(-half * 0.5, totalH + 0.3, half * 0.5);
+                g.add(ch2);
+            }
+        }
+
+        // 外部樓梯 — 在指定牆外緊貼牆面，通往 2 樓（boss 塔不適用）
+        if (spec.extStairs !== null && spec.extStairs !== undefined && spec.roofStyle !== 'tower') {
+            const side = sides[spec.extStairs];
+            const stair = cloneMK('Stairs_Exterior_Platform');
+            if (stair) {
+                let sx, sz;
+                if (side.axis === 'x') { sx = 0; sz = side.perp + (side.perp > 0 ? 1.5 : -1.5); }
+                else { sx = side.perp + (side.perp > 0 ? 1.5 : -1.5); sz = 0; }
+                stair.position.set(sx, 0, sz);
+                stair.rotation.y = side.rotY;
+                g.add(stair);
             }
         }
 
@@ -1068,28 +1160,35 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         ctx.fill();
     }
 
-    // ─── Phase 3h: Claude 寫 Three.js primitives 拼 chibi 學生（取代 RobotExpressive GLTF）
-    // 仿 Alphastack Claudina 風：Sphere 頭 + Box 身體 + Cylinder 手腳 + 走路擺動
+    // ─── Phase 5a: primitives 拼 chibi 中世紀冒險者（取代學生）
+    // Sphere 頭 + Box 身體 + Cylinder 手腳 + 披風 + 腰刀 + 皮甲色票
     const player = new THREE.Group();
     player.position.set(0, 2, 0);
     scene.add(player);
 
-    // 色票（chibi 國小學生）
+    // 色票（中世紀冒險者）
     const COLORS = {
-        skin:  0xfdd9b0,  // 膚色
-        hair:  0x2b1a0a,  // 深棕髮
-        shirt: 0x3498db,  // 藍 polo
-        pants: 0x34495e,  // 深藍褲
-        shoes: 0x2c3e50,  // 黑鞋
-        eye:   0x1a1a1a,
-        mouth: 0xc0392b,
-        cheek: 0xff7e90,  // 紅腮
+        skin:    0xfdd9b0,  // 膚色
+        hair:    0x6b3a1a,  // 紅棕髮
+        tunic:   0x6b4423,  // 深棕皮上衣
+        pants:   0x3a4a2a,  // 苔綠長褲
+        shoes:   0x2a1a0a,  // 深棕皮靴
+        belt:    0x1a0e08,  // 黑皮腰帶
+        beltGold:0xcdaa66,  // 銅皮帶扣
+        cape:    0x7d2932,  // 暗紅披風
+        capeBorder: 0x4a1820,
+        hood:    0x4a3326,  // 皮兜帽
+        scabbard:0x382216,  // 深棕劍鞘
+        sword:   0xcccccc,  // 銀劍柄
+        eye:     0x1a1a1a,
+        mouth:   0xa03020,
+        cheek:   0xff7e90,
     };
 
-    const chibi = makeChibiStudent();
+    const chibi = makeChibiAdventurer();
     player.add(chibi.group);
 
-    function makeChibiStudent() {
+    function makeChibiAdventurer() {
         const root = new THREE.Group();
 
         // 頭 (大頭 chibi 比例)
@@ -1106,38 +1205,23 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         hair.rotation.x = -0.12;
         root.add(hair);
 
-        // 學生帽 (棒球帽風: 半球 + 帽簷)
-        const hatTop = new THREE.Mesh(
-            new THREE.SphereGeometry(0.92, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.3),
-            new THREE.MeshStandardMaterial({ color: 0xc0392b })  // 紅
+        // 皮兜帽（圓罩，後方延伸到肩部）
+        const hoodMain = new THREE.Mesh(
+            new THREE.SphereGeometry(1.05, 18, 14, 0, Math.PI * 2, 0, Math.PI / 1.5),
+            new THREE.MeshStandardMaterial({ color: COLORS.hood, roughness: 0.85 })
         );
-        hatTop.position.y = 2.85;
-        hatTop.castShadow = true;
-        root.add(hatTop);
-        const hatBrim = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16, 1, false, -Math.PI / 2.5, Math.PI / 1.25),
-            new THREE.MeshStandardMaterial({ color: 0x8b0000 })  // 深紅帽簷
+        hoodMain.position.set(0, 2.65, -0.05);
+        hoodMain.castShadow = true;
+        root.add(hoodMain);
+        // 兜帽前緣（半圓 ring）
+        const hoodBrim = new THREE.Mesh(
+            new THREE.TorusGeometry(0.85, 0.12, 8, 16, Math.PI * 1.1),
+            new THREE.MeshStandardMaterial({ color: COLORS.hood, roughness: 0.9 })
         );
-        hatBrim.position.set(0, 2.75, 0.45);
-        hatBrim.castShadow = true;
-        root.add(hatBrim);
-
-        // 眼鏡 (兩個 torus 圓框 + 中間 box 鼻樑)
-        [-0.32, 0.32].forEach(x => {
-            const ring = new THREE.Mesh(
-                new THREE.TorusGeometry(0.22, 0.04, 8, 20),
-                new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5, roughness: 0.3 })
-            );
-            ring.position.set(x, 2.55, 0.92);
-            ring.rotation.x = 0;
-            root.add(ring);
-        });
-        const bridge = new THREE.Mesh(
-            new THREE.BoxGeometry(0.22, 0.04, 0.04),
-            new THREE.MeshStandardMaterial({ color: 0x2c3e50 })
-        );
-        bridge.position.set(0, 2.55, 0.92);
-        root.add(bridge);
+        hoodBrim.position.set(0, 2.65, 0.05);
+        hoodBrim.rotation.x = Math.PI / 2;
+        hoodBrim.rotation.z = Math.PI;
+        root.add(hoodBrim);
 
         // 眼睛 (兩顆大 chibi 黑點)
         [-0.32, 0.32].forEach(x => {
@@ -1175,14 +1259,71 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             root.add(cheek);
         });
 
-        // 身體 (box 上窄下寬模擬 polo)
+        // 身體 (深棕皮上衣)
         const body = new THREE.Mesh(
             new THREE.BoxGeometry(1.15, 1.3, 0.65),
-            new THREE.MeshStandardMaterial({ color: COLORS.shirt })
+            new THREE.MeshStandardMaterial({ color: COLORS.tunic, roughness: 0.7 })
         );
         body.position.y = 1.15;
         body.castShadow = true;
         root.add(body);
+
+        // 皮腰帶 + 銅釦
+        const belt = new THREE.Mesh(
+            new THREE.BoxGeometry(1.22, 0.18, 0.72),
+            new THREE.MeshStandardMaterial({ color: COLORS.belt, roughness: 0.6 })
+        );
+        belt.position.y = 0.62;
+        root.add(belt);
+        const beltBuckle = new THREE.Mesh(
+            new THREE.BoxGeometry(0.18, 0.18, 0.05),
+            new THREE.MeshStandardMaterial({ color: COLORS.beltGold, metalness: 0.7, roughness: 0.3 })
+        );
+        beltBuckle.position.set(0, 0.62, 0.35);
+        root.add(beltBuckle);
+
+        // 披風（背後一片梯形 Plane，向下飄）
+        const capeShape = new THREE.Shape();
+        capeShape.moveTo(-0.65, 0);
+        capeShape.lineTo(0.65, 0);
+        capeShape.lineTo(0.95, -2.0);
+        capeShape.lineTo(-0.95, -2.0);
+        capeShape.closePath();
+        const capeGeo = new THREE.ShapeGeometry(capeShape);
+        const cape = new THREE.Mesh(
+            capeGeo,
+            new THREE.MeshStandardMaterial({ color: COLORS.cape, side: THREE.DoubleSide, roughness: 0.8 })
+        );
+        cape.position.set(0, 1.85, -0.4);
+        cape.rotation.x = 0.1;
+        cape.castShadow = true;
+        root.add(cape);
+
+        // 劍鞘（左腰側懸掛）
+        const scabbard = new THREE.Mesh(
+            new THREE.BoxGeometry(0.14, 1.3, 0.08),
+            new THREE.MeshStandardMaterial({ color: COLORS.scabbard, roughness: 0.7 })
+        );
+        scabbard.position.set(-0.7, 0.4, 0.15);
+        scabbard.rotation.z = 0.15;
+        scabbard.castShadow = true;
+        root.add(scabbard);
+        // 劍柄（露出鞘口）
+        const swordHilt = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.08, 0.08, 0.32, 8),
+            new THREE.MeshStandardMaterial({ color: COLORS.beltGold, metalness: 0.6, roughness: 0.4 })
+        );
+        swordHilt.position.set(-0.7, 1.18, 0.15);
+        swordHilt.rotation.z = 0.15;
+        root.add(swordHilt);
+        // 劍格（橫的小 box）
+        const swordGuard = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.05, 0.05),
+            new THREE.MeshStandardMaterial({ color: COLORS.sword, metalness: 0.8, roughness: 0.2 })
+        );
+        swordGuard.position.set(-0.7, 1.02, 0.15);
+        swordGuard.rotation.z = 0.15;
+        root.add(swordGuard);
 
         // 左手 group (pivot 在肩膀，旋轉時手從肩擺)
         const leftArmGroup = new THREE.Group();
@@ -1230,22 +1371,24 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         rightLegGroup.add(leftLegMesh.clone());
         rightLegGroup.add(leftShoe.clone());
 
-        // 書包 (背後 box 偏圓)
-        const backpack = new THREE.Mesh(
-            new THREE.BoxGeometry(0.85, 1.0, 0.4),
-            new THREE.MeshStandardMaterial({ color: 0xf39c12 })  // 橘色
+        // 旅行木桶（背後綁一個小木桶 + 繩索捆）
+        const flask = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.22, 0.22, 0.55, 12),
+            new THREE.MeshStandardMaterial({ color: 0x5a3a1a, roughness: 0.8 })
         );
-        backpack.position.set(0, 1.25, -0.5);
-        backpack.castShadow = true;
-        root.add(backpack);
-        // 書包帶子 (兩條黑色)
-        [-0.25, 0.25].forEach(x => {
-            const strap = new THREE.Mesh(
-                new THREE.BoxGeometry(0.1, 1.2, 0.1),
-                new THREE.MeshStandardMaterial({ color: 0x2c3e50 })
+        flask.position.set(0.45, 0.8, -0.5);
+        flask.rotation.x = 0.3;
+        flask.castShadow = true;
+        root.add(flask);
+        // 木桶兩條金屬箍
+        [0.13, -0.13].forEach(dy => {
+            const hoop = new THREE.Mesh(
+                new THREE.TorusGeometry(0.23, 0.025, 6, 16),
+                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.6, roughness: 0.4 })
             );
-            strap.position.set(x, 1.3, -0.35);
-            root.add(strap);
+            hoop.position.set(0.45, 0.8 + dy, -0.5);
+            hoop.rotation.x = Math.PI / 2 + 0.3;
+            root.add(hoop);
         });
 
         // 整體下移 -2 (對齊 player group 內腳底)
