@@ -521,62 +521,153 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         ctx.fill();
     }
 
-    // ─── Phase 3e: GLTF 第三人稱角色 (Three.js 官方 Soldier model + walk/idle)
-    // 先放 placeholder capsule，GLTF 載入完替換
+    // ─── Phase 3h: Claude 寫 Three.js primitives 拼 chibi 學生（取代 RobotExpressive GLTF）
+    // 仿 Alphastack Claudina 風：Sphere 頭 + Box 身體 + Cylinder 手腳 + 走路擺動
     const player = new THREE.Group();
     player.position.set(0, 2, 0);
     scene.add(player);
 
-    const placeholderGeo = new THREE.CapsuleGeometry(1, 2, 4, 8);
-    const placeholderMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
-    const placeholder = new THREE.Mesh(placeholderGeo, placeholderMat);
-    placeholder.castShadow = true;
-    player.add(placeholder);
+    // 色票（chibi 國小學生）
+    const COLORS = {
+        skin:  0xfdd9b0,  // 膚色
+        hair:  0x2b1a0a,  // 深棕髮
+        shirt: 0x3498db,  // 藍 polo
+        pants: 0x34495e,  // 深藍褲
+        shoes: 0x2c3e50,  // 黑鞋
+        eye:   0x1a1a1a,
+        mouth: 0xc0392b,
+        cheek: 0xff7e90,  // 紅腮
+    };
 
-    let mixer = null;
-    let actions = { idle: null, walk: null, run: null };
-    let currentAction = null;
-    const gltfLoader = new GLTFLoader();
-    // RobotExpressive: CC0 卡通圓胖機器人 by Tomás Laulhé / 含 Idle / Walking / Running / Dance 等多種動畫
-    gltfLoader.load(
-        'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
-        gltf => {
-            const model = gltf.scene;
-            model.scale.set(0.9, 0.9, 0.9);
-            model.position.y = -2;  // 對齊原 capsule 腳底位置
-            model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-            player.remove(placeholder);
-            player.add(model);
+    const chibi = makeChibiStudent();
+    player.add(chibi.group);
 
-            mixer = new THREE.AnimationMixer(model);
-            const clips = gltf.animations;
-            const idle = clips.find(c => /idle/i.test(c.name));
-            const walk = clips.find(c => /walk/i.test(c.name));
-            const run  = clips.find(c => /run/i.test(c.name));
-            if (idle) actions.idle = mixer.clipAction(idle);
-            if (walk) actions.walk = mixer.clipAction(walk);
-            if (run)  actions.run  = mixer.clipAction(run);
-            if (actions.idle) { actions.idle.play(); currentAction = actions.idle; }
+    function makeChibiStudent() {
+        const root = new THREE.Group();
 
-            document.getElementById('loading-screen')?.classList.add('hide');
-        },
-        xhr => {
-            const pct = xhr.total > 0 ? (xhr.loaded / xhr.total) * 100 : 30;
-            const bar = document.getElementById('loading-bar-fill');
-            if (bar) bar.style.width = Math.min(100, pct) + '%';
-        },
-        err => {
-            console.error('GLTF load failed', err);
-            document.getElementById('loading-screen')?.classList.add('hide');
-        }
-    );
+        // 頭 (大頭 chibi 比例)
+        const headGeo = new THREE.SphereGeometry(0.95, 24, 18);
+        const head = new THREE.Mesh(headGeo, new THREE.MeshStandardMaterial({ color: COLORS.skin }));
+        head.position.y = 2.55;
+        head.castShadow = true;
+        root.add(head);
 
-    function switchAction(next, fade = 0.2) {
-        if (!next || next === currentAction) return;
-        if (currentAction) currentAction.fadeOut(fade);
-        next.reset().fadeIn(fade).play();
-        currentAction = next;
+        // 頭髮 (半球蓋上方 + 瀏海)
+        const hairGeo = new THREE.SphereGeometry(0.98, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.8);
+        const hair = new THREE.Mesh(hairGeo, new THREE.MeshStandardMaterial({ color: COLORS.hair }));
+        hair.position.y = 2.55;
+        hair.rotation.x = -0.12;  // 微前傾蓋瀏海
+        root.add(hair);
+
+        // 眼睛 (兩顆大 chibi 黑點)
+        [-0.32, 0.32].forEach(x => {
+            const eye = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 12, 10),
+                new THREE.MeshStandardMaterial({ color: COLORS.eye })
+            );
+            eye.position.set(x, 2.55, 0.83);
+            root.add(eye);
+            // 眼睛白色高光點
+            const shine = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 8, 6),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5 })
+            );
+            shine.position.set(x + 0.05, 2.62, 0.97);
+            root.add(shine);
+        });
+
+        // 嘴 (小笑容)
+        const mouth = new THREE.Mesh(
+            new THREE.BoxGeometry(0.22, 0.05, 0.04),
+            new THREE.MeshStandardMaterial({ color: COLORS.mouth })
+        );
+        mouth.position.set(0, 2.2, 0.92);
+        root.add(mouth);
+
+        // 紅腮
+        [-0.55, 0.55].forEach(x => {
+            const cheek = new THREE.Mesh(
+                new THREE.SphereGeometry(0.13, 10, 8),
+                new THREE.MeshStandardMaterial({ color: COLORS.cheek, transparent: true, opacity: 0.55 })
+            );
+            cheek.position.set(x, 2.32, 0.78);
+            cheek.scale.set(1, 0.6, 0.3);
+            root.add(cheek);
+        });
+
+        // 身體 (box 上窄下寬模擬 polo)
+        const body = new THREE.Mesh(
+            new THREE.BoxGeometry(1.15, 1.3, 0.65),
+            new THREE.MeshStandardMaterial({ color: COLORS.shirt })
+        );
+        body.position.y = 1.15;
+        body.castShadow = true;
+        root.add(body);
+
+        // 左手 group (pivot 在肩膀，旋轉時手從肩擺)
+        const leftArmGroup = new THREE.Group();
+        leftArmGroup.position.set(-0.7, 1.75, 0);
+        root.add(leftArmGroup);
+        const leftArmMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.18, 0.16, 1.3, 10),
+            new THREE.MeshStandardMaterial({ color: COLORS.skin })
+        );
+        leftArmMesh.position.y = -0.65;
+        leftArmMesh.castShadow = true;
+        leftArmGroup.add(leftArmMesh);
+
+        // 右手 group
+        const rightArmGroup = new THREE.Group();
+        rightArmGroup.position.set(0.7, 1.75, 0);
+        root.add(rightArmGroup);
+        const rightArmMesh = leftArmMesh.clone();
+        rightArmGroup.add(rightArmMesh);
+
+        // 左腿 group (pivot 在髖部)
+        const leftLegGroup = new THREE.Group();
+        leftLegGroup.position.set(-0.28, 0.5, 0);
+        root.add(leftLegGroup);
+        const leftLegMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.22, 0.2, 1.0, 10),
+            new THREE.MeshStandardMaterial({ color: COLORS.pants })
+        );
+        leftLegMesh.position.y = -0.5;
+        leftLegMesh.castShadow = true;
+        leftLegGroup.add(leftLegMesh);
+        // 左鞋 (附在腿底端)
+        const leftShoe = new THREE.Mesh(
+            new THREE.BoxGeometry(0.36, 0.2, 0.5),
+            new THREE.MeshStandardMaterial({ color: COLORS.shoes })
+        );
+        leftShoe.position.set(0, -1.0, 0.07);
+        leftShoe.castShadow = true;
+        leftLegGroup.add(leftShoe);
+
+        // 右腿 group
+        const rightLegGroup = new THREE.Group();
+        rightLegGroup.position.set(0.28, 0.5, 0);
+        root.add(rightLegGroup);
+        rightLegGroup.add(leftLegMesh.clone());
+        rightLegGroup.add(leftShoe.clone());
+
+        // 整體下移 -2 (對齊 player group 內腳底)
+        root.position.y = -2;
+
+        return {
+            group: root,
+            leftArm: leftArmGroup,
+            rightArm: rightArmGroup,
+            leftLeg: leftLegGroup,
+            rightLeg: rightLegGroup,
+            head: head,  // 給 idle 用，頭微擺
+        };
     }
+
+    // 動畫狀態（取代原 mixer/actions/switchAction）
+    let mixer = null;
+    let actions = {};
+    function switchAction() {}  // no-op (chibi 用 walkPhase 控制)
+    document.getElementById('loading-screen')?.classList.add('hide');
 
     // ─── 控制狀態（4 方向位移，相機不旋轉，世界不暈）
     const keys = { up: false, down: false, left: false, right: false };
@@ -703,14 +794,26 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             const BOUND = 55;
             if (nx > -BOUND && nx < BOUND) player.position.x = nx;
             if (nz > -BOUND && nz < BOUND) player.position.z = nz;
-            // 玩家朝移動方向轉
             playerRot = Math.atan2(stepX, stepZ);
             player.rotation.y = playerRot;
-            // 切換動畫: walking
-            switchAction(actions.walk || actions.idle);
+            // chibi 走路：手腳前後擺動 + 全身上下小跳
+            walkPhase += 0.28;
+            const armSwing = Math.sin(walkPhase) * 0.7;
+            const legSwing = Math.sin(walkPhase) * 0.55;
+            chibi.leftArm.rotation.x  = armSwing;
+            chibi.rightArm.rotation.x = -armSwing;
+            chibi.leftLeg.rotation.x  = -legSwing;
+            chibi.rightLeg.rotation.x = legSwing;
+            player.position.y = 2 + Math.abs(Math.sin(walkPhase)) * 0.15;
         } else {
-            // 靜止 → idle
-            switchAction(actions.idle);
+            // idle: 手腳回 0 + 頭微擺呼吸
+            chibi.leftArm.rotation.x  *= 0.85;
+            chibi.rightArm.rotation.x *= 0.85;
+            chibi.leftLeg.rotation.x  *= 0.85;
+            chibi.rightLeg.rotation.x *= 0.85;
+            player.position.y += (2 - player.position.y) * 0.2;
+            // 頭微擺
+            chibi.head.position.y = 2.55 + Math.sin(Date.now() * 0.003) * 0.04;
         }
     }
 
