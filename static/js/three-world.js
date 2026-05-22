@@ -556,8 +556,41 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         const hairGeo = new THREE.SphereGeometry(0.98, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.8);
         const hair = new THREE.Mesh(hairGeo, new THREE.MeshStandardMaterial({ color: COLORS.hair }));
         hair.position.y = 2.55;
-        hair.rotation.x = -0.12;  // 微前傾蓋瀏海
+        hair.rotation.x = -0.12;
         root.add(hair);
+
+        // 學生帽 (棒球帽風: 半球 + 帽簷)
+        const hatTop = new THREE.Mesh(
+            new THREE.SphereGeometry(0.92, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.3),
+            new THREE.MeshStandardMaterial({ color: 0xc0392b })  // 紅
+        );
+        hatTop.position.y = 2.85;
+        hatTop.castShadow = true;
+        root.add(hatTop);
+        const hatBrim = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16, 1, false, -Math.PI / 2.5, Math.PI / 1.25),
+            new THREE.MeshStandardMaterial({ color: 0x8b0000 })  // 深紅帽簷
+        );
+        hatBrim.position.set(0, 2.75, 0.45);
+        hatBrim.castShadow = true;
+        root.add(hatBrim);
+
+        // 眼鏡 (兩個 torus 圓框 + 中間 box 鼻樑)
+        [-0.32, 0.32].forEach(x => {
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(0.22, 0.04, 8, 20),
+                new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.5, roughness: 0.3 })
+            );
+            ring.position.set(x, 2.55, 0.92);
+            ring.rotation.x = 0;
+            root.add(ring);
+        });
+        const bridge = new THREE.Mesh(
+            new THREE.BoxGeometry(0.22, 0.04, 0.04),
+            new THREE.MeshStandardMaterial({ color: 0x2c3e50 })
+        );
+        bridge.position.set(0, 2.55, 0.92);
+        root.add(bridge);
 
         // 眼睛 (兩顆大 chibi 黑點)
         [-0.32, 0.32].forEach(x => {
@@ -650,6 +683,24 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         rightLegGroup.add(leftLegMesh.clone());
         rightLegGroup.add(leftShoe.clone());
 
+        // 書包 (背後 box 偏圓)
+        const backpack = new THREE.Mesh(
+            new THREE.BoxGeometry(0.85, 1.0, 0.4),
+            new THREE.MeshStandardMaterial({ color: 0xf39c12 })  // 橘色
+        );
+        backpack.position.set(0, 1.25, -0.5);
+        backpack.castShadow = true;
+        root.add(backpack);
+        // 書包帶子 (兩條黑色)
+        [-0.25, 0.25].forEach(x => {
+            const strap = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 1.2, 0.1),
+                new THREE.MeshStandardMaterial({ color: 0x2c3e50 })
+            );
+            strap.position.set(x, 1.3, -0.35);
+            root.add(strap);
+        });
+
         // 整體下移 -2 (對齊 player group 內腳底)
         root.position.y = -2;
 
@@ -661,6 +712,58 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             rightLeg: rightLegGroup,
             head: head,  // 給 idle 用，頭微擺
         };
+    }
+
+    // ─── Phase 3i: 寵物（小白球 chibi，跟著玩家走）
+    const pet = makeChibiPet();
+    scene.add(pet.group);
+
+    function makeChibiPet() {
+        const g = new THREE.Group();
+        // 身體 白球
+        const body = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 16, 12),
+            new THREE.MeshStandardMaterial({ color: 0xfafafa })
+        );
+        body.castShadow = true;
+        g.add(body);
+        // 耳朵 兩個小三角 (cone 倒)
+        [-0.25, 0.25].forEach(x => {
+            const ear = new THREE.Mesh(
+                new THREE.ConeGeometry(0.15, 0.3, 6),
+                new THREE.MeshStandardMaterial({ color: 0xfafafa })
+            );
+            ear.position.set(x, 0.45, 0);
+            ear.rotation.z = x > 0 ? -0.3 : 0.3;
+            ear.castShadow = true;
+            g.add(ear);
+        });
+        // 眼睛
+        [-0.15, 0.15].forEach(x => {
+            const eye = new THREE.Mesh(
+                new THREE.SphereGeometry(0.07, 8, 6),
+                new THREE.MeshStandardMaterial({ color: 0x000000 })
+            );
+            eye.position.set(x, 0.05, 0.45);
+            g.add(eye);
+        });
+        // 嘴 (粉鼻)
+        const nose = new THREE.Mesh(
+            new THREE.SphereGeometry(0.06, 8, 6),
+            new THREE.MeshStandardMaterial({ color: 0xff7e90 })
+        );
+        nose.position.set(0, -0.05, 0.5);
+        g.add(nose);
+        // 尾巴 (小球)
+        const tail = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 10, 8),
+            new THREE.MeshStandardMaterial({ color: 0xfafafa })
+        );
+        tail.position.set(0, 0.2, -0.55);
+        g.add(tail);
+
+        g.position.set(3, 0.5, 0);
+        return { group: g, tail };
     }
 
     // 動畫狀態（取代原 mixer/actions/switchAction）
@@ -875,10 +978,22 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             b.phase += 0.004 * b.speed;
             b.mesh.position.x = Math.cos(b.phase) * b.radius;
             b.mesh.position.z = Math.sin(b.phase) * b.radius;
-            b.mesh.position.y = b.height + Math.sin(b.phase * 2) * 2;  // 微上下波動
-            b.mesh.rotation.y = -b.phase + Math.PI / 2;  // 朝飛行方向
+            b.mesh.position.y = b.height + Math.sin(b.phase * 2) * 2;
+            b.mesh.rotation.y = -b.phase + Math.PI / 2;
             b.mixer.update(dt);
         });
+        // 寵物跟隨玩家 (lerp 在玩家後方右側 + 自身擺尾)
+        const petTargetX = player.position.x + Math.sin(playerRot + Math.PI) * 2.5 + Math.cos(playerRot) * 1.5;
+        const petTargetZ = player.position.z + Math.cos(playerRot + Math.PI) * 2.5 - Math.sin(playerRot) * 1.5;
+        pet.group.position.x += (petTargetX - pet.group.position.x) * 0.08;
+        pet.group.position.z += (petTargetZ - pet.group.position.z) * 0.08;
+        pet.group.position.y = 0.5 + Math.abs(Math.sin(Date.now() * 0.006)) * 0.1;  // 上下小跳
+        // 寵物面向玩家
+        const dxp = player.position.x - pet.group.position.x;
+        const dzp = player.position.z - pet.group.position.z;
+        pet.group.rotation.y = Math.atan2(dxp, dzp);
+        // 尾巴搖
+        pet.tail.rotation.z = Math.sin(Date.now() * 0.012) * 0.5;
         composer.render();
     }
     animate();

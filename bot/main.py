@@ -27,16 +27,17 @@ DEMO_BASE_URL = os.environ.get(
 
 WELCOME = f"""歡迎來看 EduArena 技術 demo 👋
 
-🎮 整套 demo 入口（4 種地圖）：
+🎮 整套 demo 入口（5 種地圖）：
 {DEMO_BASE_URL}/
 
 或直接看單一 demo：
 🌊 海洋地圖 → {DEMO_BASE_URL}/ocean.html
 🏝 村莊地圖 → {DEMO_BASE_URL}/village.html
 🏛 名人九宮格 → {DEMO_BASE_URL}/figures.html
-🗺 探索地圖 → {DEMO_BASE_URL}/world.html
+🗺 探索地圖（2D）→ {DEMO_BASE_URL}/world.html
+🌍 3D 探索地圖（NEW！）→ {DEMO_BASE_URL}/three-world.html
 
-💡 可以直接打字告訴我想看哪個（如「海洋」、「名人」、「探索」）"""
+💡 可以直接打字告訴我想看哪個（如「海洋」、「名人」、「3D」）"""
 
 # 關鍵字分流 → 對應單一 demo
 ROUTES = [
@@ -46,10 +47,12 @@ ROUTES = [
      "🏝 村莊地圖 — 手繪 2.5D 大場景，10 個建築 hotspot\n" + DEMO_BASE_URL + "/village.html"),
     (["偉人", "名人", "九宮格", "翻牌", "歷史", "figures", "李白", "孔子"],
      "🏛 名人九宮格 — 5 階段翻牌猜偉人遊戲\n" + DEMO_BASE_URL + "/figures.html"),
+    (["3D", "3d", "three", "立體", "新", "NEW", "chibi", "角色", "走路"],
+     "🌍 3D 探索地圖 — Three.js + chibi 學生 + 12 建築 + 飛鳥光暈\n" + DEMO_BASE_URL + "/three-world.html"),
     (["探索", "世界", "地圖", "拖曳", "world", "農田", "商店", "考試"],
-     "🗺 探索地圖 — 可上下左右拖曳大世界\n" + DEMO_BASE_URL + "/world.html"),
+     "🗺 探索地圖（2D）— 可上下左右拖曳大世界\n" + DEMO_BASE_URL + "/world.html"),
     (["全部", "整套", "menu", "hub", "首頁", "目錄", "看看"],
-     "🎮 整套 demo 入口（4 種地圖）：\n" + DEMO_BASE_URL + "/"),
+     "🎮 整套 demo 入口（5 種地圖）：\n" + DEMO_BASE_URL + "/"),
 ]
 
 def route_text(text: str) -> str:
