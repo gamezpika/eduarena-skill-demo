@@ -253,30 +253,57 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         return inst;
     }
 
-    // 樹冠（綠色 cone）
-    placeInstanced(
-        new THREE.ConeGeometry(1.2, 3, 6),
-        new THREE.MeshStandardMaterial({ color: 0x2d6a4f, flatShading: true }),
-        180, { minR: 32, yOffset: 2.5, scaleMin: 0.7, scaleMax: 1.4, tall: 1.2 }
-    );
-    // 樹幹（棕色 cylinder）
-    placeInstanced(
-        new THREE.CylinderGeometry(0.25, 0.35, 1.5, 6),
-        new THREE.MeshStandardMaterial({ color: 0x5d4037 }),
-        180, { minR: 32, yOffset: 0.75, scaleMin: 0.7, scaleMax: 1.4 }
-    );
-    // 草叢（小綠 cone 散布）
-    placeInstanced(
-        new THREE.ConeGeometry(0.3, 0.5, 4),
-        new THREE.MeshStandardMaterial({ color: 0x66bb6a, flatShading: true }),
-        400, { minR: 18, yOffset: 0.25, scaleMin: 0.5, scaleMax: 1.2, castShadow: false }
-    );
-    // 石頭（灰 box scatter）
-    placeInstanced(
-        new THREE.BoxGeometry(1, 0.6, 1),
-        new THREE.MeshStandardMaterial({ color: 0x9e9e9e, flatShading: true }),
-        50, { minR: 20, yOffset: 0.3, scaleMin: 0.6, scaleMax: 1.3 }
-    );
+    // Phase 4d: KayKit Forest Nature Pack (CC0) 載入 chibi 樹/草/石頭 GLTF
+    // 取代之前 primitives，視覺品質飛躍
+    const kkLoader = new GLTFLoader();
+    function loadKayKitInstanced(url, count, options) {
+        kkLoader.load(url, gltf => {
+            let srcMesh = null;
+            gltf.scene.traverse(c => { if (c.isMesh && !srcMesh) srcMesh = c; });
+            if (!srcMesh) return;
+            const inst = new THREE.InstancedMesh(srcMesh.geometry, srcMesh.material, count);
+            const dummy = new THREE.Object3D();
+            let placed = 0;
+            let attempts = 0;
+            while (placed < count && attempts < count * 5) {
+                attempts++;
+                const x = (Math.random() - 0.5) * 110;
+                const z = (Math.random() - 0.5) * 110;
+                const r = Math.hypot(x, z);
+                if (r < options.minR) continue;
+                if (r > 56) continue;
+                const y = terrainHeight(x, z) + (options.yOffset || 0);
+                dummy.position.set(x, y, z);
+                const s = options.scaleMin + Math.random() * (options.scaleMax - options.scaleMin);
+                dummy.scale.set(s, s, s);
+                dummy.rotation.y = Math.random() * Math.PI * 2;
+                dummy.updateMatrix();
+                inst.setMatrixAt(placed, dummy.matrix);
+                placed++;
+            }
+            inst.count = placed;
+            inst.castShadow = options.castShadow !== false;
+            inst.receiveShadow = true;
+            scene.add(inst);
+        }, undefined, err => console.warn('KayKit load failed', url, err));
+    }
+
+    const KK_BASE = 'assets/3d/kaykit_forest/';
+    // 樹: 5 種 variation 混合 (Tree_1/2/3/4/Tree_Bare 各抓 1-2)
+    loadKayKitInstanced(KK_BASE + 'Tree_1_A_Color1.gltf', 50, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
+    loadKayKitInstanced(KK_BASE + 'Tree_2_A_Color1.gltf', 40, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
+    loadKayKitInstanced(KK_BASE + 'Tree_3_A_Color1.gltf', 35, { minR: 32, scaleMin: 1.5, scaleMax: 3.0 });
+    loadKayKitInstanced(KK_BASE + 'Tree_Bare_1_A_Color1.gltf', 25, { minR: 32, scaleMin: 1.5, scaleMax: 2.8 });
+    // 灌木: 3 種
+    loadKayKitInstanced(KK_BASE + 'Bush_1_A_Color1.gltf', 60, { minR: 25, scaleMin: 1.0, scaleMax: 2.0 });
+    loadKayKitInstanced(KK_BASE + 'Bush_2_A_Color1.gltf', 40, { minR: 25, scaleMin: 1.0, scaleMax: 2.0 });
+    // 石頭: 3 種
+    loadKayKitInstanced(KK_BASE + 'Rock_1_A_Color1.gltf', 25, { minR: 22, scaleMin: 1.0, scaleMax: 2.5 });
+    loadKayKitInstanced(KK_BASE + 'Rock_2_A_Color1.gltf', 20, { minR: 22, scaleMin: 1.0, scaleMax: 2.2 });
+    loadKayKitInstanced(KK_BASE + 'Rock_3_A_Color1.gltf', 15, { minR: 22, scaleMin: 1.0, scaleMax: 2.0 });
+    // 草: 2 種
+    loadKayKitInstanced(KK_BASE + 'Grass_1_A_Color1.gltf', 150, { minR: 18, scaleMin: 1.0, scaleMax: 2.0, castShadow: false });
+    loadKayKitInstanced(KK_BASE + 'Grass_2_A_Color1.gltf', 100, { minR: 18, scaleMin: 1.0, scaleMax: 1.8, castShadow: false });
 
     // ─── Phase 3: 12 建築用 chibi sprite billboard（沿用 EDUDEMO 既有 sprite）
     const SPRITE_MAP = {
