@@ -82,27 +82,30 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ─── 12 建築 cube（不同顏色 + label）
+    // ─── Phase 2: 12 建築用 Three.js primitives 組合出各自獨特外觀
     const buildingMeshes = [];
     BUILDINGS.forEach(b => {
-        const opts = POPUPS[b.key];
-        const size = 6;
-        const geo = new THREE.BoxGeometry(size, b.h, size);
-        const mat = new THREE.MeshStandardMaterial({ color: opts.color });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(b.x, b.h / 2, b.z);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        mesh.userData.key = b.key;
-        scene.add(mesh);
-        buildingMeshes.push(mesh);
+        const group = makeBuilding(b.key, b.h);
+        group.position.set(b.x, 0, b.z);
+        group.userData.key = b.key;
+        scene.add(group);
+        // hitbox 用個透明 box 包整體（raycaster 用），實際視覺是 group 內 primitives
+        const hitbox = new THREE.Mesh(
+            new THREE.BoxGeometry(8, b.h + 2, 8),
+            new THREE.MeshBasicMaterial({ visible: false })
+        );
+        hitbox.position.set(b.x, (b.h + 2) / 2, b.z);
+        hitbox.userData.key = b.key;
+        scene.add(hitbox);
+        buildingMeshes.push(hitbox);
 
-        // 上方浮 label 用 Sprite (Canvas Texture)
+        // 上方浮 label sprite
+        const opts = POPUPS[b.key];
         const labelCanvas = document.createElement("canvas");
         labelCanvas.width = 256;
         labelCanvas.height = 64;
         const ctx = labelCanvas.getContext("2d");
-        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
         roundRect(ctx, 0, 0, 256, 64, 12);
         ctx.fillStyle = "#fff";
         ctx.font = "bold 32px sans-serif";
@@ -112,10 +115,173 @@
         const texture = new THREE.CanvasTexture(labelCanvas);
         const labelMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
         const label = new THREE.Sprite(labelMat);
-        label.position.set(b.x, b.h + 3, b.z);
+        label.position.set(b.x, b.h + 4, b.z);
         label.scale.set(8, 2, 1);
         scene.add(label);
     });
+
+    // ─── 建築模型工廠：每個建築用 primitives 組合出特色外觀
+    function makeBuilding(key, h) {
+        const g = new THREE.Group();
+        const baseColor = POPUPS[key].color;
+
+        switch (key) {
+            case "boss":  // 魔王塔：紫色高塔 + 紅色尖頂 + 發光水晶
+                addPart(g, new THREE.CylinderGeometry(2, 2.5, h, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x4a235a }), 0, h/2, 0);
+                addPart(g, new THREE.ConeGeometry(2, 2, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, h + 1, 0);
+                addPart(g, new THREE.OctahedronGeometry(0.7),
+                        new THREE.MeshStandardMaterial({ color: 0xe74c3c, emissive: 0xc0392b, emissiveIntensity: 0.5 }), 0, h + 2.5, 0);
+                break;
+            case "exam":  // 考試中心：希臘神殿 — 多根白柱 + 三角頂
+                addPart(g, new THREE.BoxGeometry(7, 0.5, 7),
+                        new THREE.MeshStandardMaterial({ color: 0xbdc3c7 }), 0, 0.25, 0);
+                [-2.5, 0, 2.5].forEach(x => [-2.5, 2.5].forEach(z => {
+                    addPart(g, new THREE.CylinderGeometry(0.4, 0.4, h - 1.5),
+                            new THREE.MeshStandardMaterial({ color: 0xecf0f1 }), x, (h-1.5)/2 + 0.5, z);
+                }));
+                addPart(g, new THREE.BoxGeometry(7, 0.6, 7),
+                        new THREE.MeshStandardMaterial({ color: 0xbdc3c7 }), 0, h - 0.5, 0);
+                addPart(g, makeRoofPrism(7, 1.5, 7),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, h + 0.5, 0);
+                break;
+            case "shop":  // 商店：紅白條紋篷頂 + 木屋
+                addPart(g, new THREE.BoxGeometry(5, h, 5),
+                        new THREE.MeshStandardMaterial({ color: 0x8b4513 }), 0, h/2, 0);
+                addPart(g, new THREE.BoxGeometry(6, 0.8, 6),
+                        new THREE.MeshStandardMaterial({ color: 0xe74c3c }), 0, h + 0.4, 0);
+                addPart(g, new THREE.BoxGeometry(1.5, 2.5, 0.2),
+                        new THREE.MeshStandardMaterial({ color: 0x4e342e }), 0, 1.25, 2.6);
+                break;
+            case "farm":  // 農田：圍欄 + 麥田（多 box）
+                addPart(g, new THREE.BoxGeometry(7, 0.3, 7),
+                        new THREE.MeshStandardMaterial({ color: 0x6d4c41 }), 0, 0.15, 0);
+                for (let i = -2.5; i <= 2.5; i += 1.5) {
+                    for (let j = -2.5; j <= 2.5; j += 1.5) {
+                        addPart(g, new THREE.BoxGeometry(0.6, h, 0.6),
+                                new THREE.MeshStandardMaterial({ color: 0xf1c40f }), i, h/2, j);
+                    }
+                }
+                // 四角圍欄柱
+                [-3.5, 3.5].forEach(x => [-3.5, 3.5].forEach(z => {
+                    addPart(g, new THREE.CylinderGeometry(0.2, 0.2, 2),
+                            new THREE.MeshStandardMaterial({ color: 0x4e342e }), x, 1, z);
+                }));
+                break;
+            case "pvp":  // PK 競技場：圓形 + 旗幟
+                addPart(g, new THREE.CylinderGeometry(3.5, 3.5, h, 16),
+                        new THREE.MeshStandardMaterial({ color: 0x95a5a6 }), 0, h/2, 0);
+                addPart(g, new THREE.CylinderGeometry(3.5, 3.5, 0.3, 16),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, h, 0);
+                // 中間插旗
+                addPart(g, new THREE.CylinderGeometry(0.1, 0.1, 4),
+                        new THREE.MeshStandardMaterial({ color: 0x4e342e }), 0, h + 2, 0);
+                addPart(g, new THREE.BoxGeometry(1.2, 0.8, 0.1),
+                        new THREE.MeshStandardMaterial({ color: 0xff5252 }), 0.6, h + 3.5, 0);
+                break;
+            case "museum":  // 偉人館：白色神殿 + 兩雕像
+                addPart(g, new THREE.BoxGeometry(5, h, 5),
+                        new THREE.MeshStandardMaterial({ color: 0xecf0f1 }), 0, h/2, 0);
+                addPart(g, makeRoofPrism(5.5, 1, 5.5),
+                        new THREE.MeshStandardMaterial({ color: 0xd5dbdb }), 0, h + 0.5, 0);
+                // 兩尊雕像
+                [-1.5, 1.5].forEach(x => {
+                    addPart(g, new THREE.CylinderGeometry(0.4, 0.4, 0.3),
+                            new THREE.MeshStandardMaterial({ color: 0xa1a1a1 }), x, 0.15, 2.8);
+                    addPart(g, new THREE.SphereGeometry(0.5),
+                            new THREE.MeshStandardMaterial({ color: 0xf5f5f5 }), x, 1.2, 2.8);
+                });
+                break;
+            case "quest":  // 任務告示板：木牌 + 旗
+                addPart(g, new THREE.BoxGeometry(0.3, h, 0.3),
+                        new THREE.MeshStandardMaterial({ color: 0x4e342e }), -1.5, h/2, 0);
+                addPart(g, new THREE.BoxGeometry(0.3, h, 0.3),
+                        new THREE.MeshStandardMaterial({ color: 0x4e342e }), 1.5, h/2, 0);
+                addPart(g, new THREE.BoxGeometry(4, 2.5, 0.3),
+                        new THREE.MeshStandardMaterial({ color: 0xa0522d }), 0, h - 1.5, 0);
+                addPart(g, new THREE.BoxGeometry(1.2, 0.8, 0.1),
+                        new THREE.MeshStandardMaterial({ color: 0xff5252 }), 0.6, h + 0.5, 0);
+                break;
+            case "chinese":  // 國語島：中式塔 多層斜頂
+                addPart(g, new THREE.CylinderGeometry(2.5, 3, 2, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, 1, 0);
+                addPart(g, new THREE.ConeGeometry(3.5, 1, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x8b0000 }), 0, 2.5, 0);
+                addPart(g, new THREE.CylinderGeometry(2, 2.5, 2, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, 4, 0);
+                addPart(g, new THREE.ConeGeometry(3, 1, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x8b0000 }), 0, 5.5, 0);
+                addPart(g, new THREE.CylinderGeometry(1.5, 2, h-6, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xc0392b }), 0, (h-6)/2 + 6, 0);
+                addPart(g, new THREE.ConeGeometry(2.5, 1.5, 8),
+                        new THREE.MeshStandardMaterial({ color: 0x8b0000 }), 0, h + 0.5, 0);
+                break;
+            case "english":  // 英文島：城堡 多塔尖頂
+                addPart(g, new THREE.BoxGeometry(6, h - 1, 6),
+                        new THREE.MeshStandardMaterial({ color: 0xbdc3c7 }), 0, (h-1)/2, 0);
+                [-2, 2].forEach(x => [-2, 2].forEach(z => {
+                    addPart(g, new THREE.CylinderGeometry(0.8, 0.8, h + 1, 8),
+                            new THREE.MeshStandardMaterial({ color: 0xbdc3c7 }), x, (h+1)/2, z);
+                    addPart(g, new THREE.ConeGeometry(1, 1.5, 8),
+                            new THREE.MeshStandardMaterial({ color: 0x2980b9 }), x, h + 1.75, z);
+                }));
+                break;
+            case "math":  // 數學島：金字塔 + 算盤塔
+                addPart(g, new THREE.ConeGeometry(4, h, 4),
+                        new THREE.MeshStandardMaterial({ color: 0xe67e22 }), 0, h/2, 0);
+                break;
+            case "social":  // 社會島：地球儀 + 拱形背景
+                addPart(g, new THREE.SphereGeometry(2.5, 24, 16),
+                        new THREE.MeshStandardMaterial({ color: 0x3498db }), 0, 3, 0);
+                addPart(g, new THREE.TorusGeometry(2.5, 0.15, 8, 32),
+                        new THREE.MeshStandardMaterial({ color: 0xf39c12 }), 0, 3, 0);
+                addPart(g, new THREE.CylinderGeometry(0.3, 0.3, 0.5),
+                        new THREE.MeshStandardMaterial({ color: 0xa0522d }), 0, 0.25, 0);
+                break;
+            case "science":  // 自然島：山 + 望遠鏡
+                addPart(g, new THREE.ConeGeometry(3, h, 6),
+                        new THREE.MeshStandardMaterial({ color: 0x6e6e6e }), 0, h/2, 0);
+                addPart(g, new THREE.CylinderGeometry(0.4, 0.4, 3),
+                        new THREE.MeshStandardMaterial({ color: 0xf39c12 }), 2.5, h + 1.5, 0);
+                addPart(g, new THREE.SphereGeometry(0.5, 16, 8),
+                        new THREE.MeshStandardMaterial({ color: 0xecf0f1 }), 2.5, h + 3, 0);
+                break;
+            default:
+                addPart(g, new THREE.BoxGeometry(5, h, 5),
+                        new THREE.MeshStandardMaterial({ color: baseColor }), 0, h/2, 0);
+        }
+        return g;
+    }
+    function addPart(group, geo, mat, x, y, z) {
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(x, y, z);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        group.add(m);
+    }
+    function makeRoofPrism(w, h, d) {
+        // 三角柱屋頂（用 BufferGeometry 手刻）
+        const verts = new Float32Array([
+            // 前三角
+            -w/2, 0, d/2,  w/2, 0, d/2,  0, h, d/2,
+            // 後三角
+            -w/2, 0, -d/2,  0, h, -d/2,  w/2, 0, -d/2,
+            // 左斜面
+            -w/2, 0, d/2,  0, h, d/2,  -w/2, 0, -d/2,
+            0, h, d/2,  0, h, -d/2,  -w/2, 0, -d/2,
+            // 右斜面
+            w/2, 0, d/2,  w/2, 0, -d/2,  0, h, d/2,
+            w/2, 0, -d/2,  0, h, -d/2,  0, h, d/2,
+            // 底
+            -w/2, 0, d/2,  -w/2, 0, -d/2,  w/2, 0, d/2,
+            -w/2, 0, -d/2,  w/2, 0, -d/2,  w/2, 0, d/2,
+        ]);
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+        geo.computeVertexNormals();
+        return geo;
+    }
 
     function roundRect(ctx, x, y, w, h, r) {
         ctx.beginPath();
@@ -240,6 +406,7 @@
     });
 
     // ─── 玩家移動（4 方向位移，玩家轉向只看 model rotation 不影響相機）
+    let walkPhase = 0;
     function updatePlayer() {
         let dx = 0, dz = 0;
         if (keys.up)    dz -= 1;  // 北
@@ -252,7 +419,8 @@
             dz += joystick.dy;
         }
 
-        if (dx !== 0 || dz !== 0) {
+        const moving = dx !== 0 || dz !== 0;
+        if (moving) {
             const len = Math.hypot(dx, dz);
             const stepX = dx / len * PLAYER_SPEED;
             const stepZ = dz / len * PLAYER_SPEED;
@@ -264,6 +432,12 @@
             // 玩家朝移動方向轉（只 model 視覺，相機不轉）
             playerRot = Math.atan2(stepX, stepZ);
             player.rotation.y = playerRot;
+            // walk bobbing 上下小跳
+            walkPhase += 0.35;
+            player.position.y = 2 + Math.abs(Math.sin(walkPhase)) * 0.35;
+        } else {
+            // 靜止時 y 回 2 平滑
+            player.position.y += (2 - player.position.y) * 0.2;
         }
     }
 
