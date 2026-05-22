@@ -54,8 +54,57 @@
     renderer.shadowMap.enabled = true;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb);  // 天藍色背景
-    scene.fog = new THREE.Fog(0x87ceeb, 60, 200);
+    scene.fog = new THREE.Fog(0xb0d8e8, 80, 250);
+
+    // ─── 天空盒 gradient sphere（內側）
+    const skyCanvas = document.createElement("canvas");
+    skyCanvas.width = 64; skyCanvas.height = 256;
+    const skyCtx = skyCanvas.getContext("2d");
+    const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 256);
+    skyGrad.addColorStop(0,    "#4a90e2");  // 頂部深藍
+    skyGrad.addColorStop(0.5,  "#87ceeb");  // 中段天藍
+    skyGrad.addColorStop(0.85, "#ffd9a8");  // 地平線暖橘
+    skyGrad.addColorStop(1,    "#ffb380");  // 底部暖橘
+    skyCtx.fillStyle = skyGrad;
+    skyCtx.fillRect(0, 0, 64, 256);
+    const skyTexture = new THREE.CanvasTexture(skyCanvas);
+    const sky = new THREE.Mesh(
+        new THREE.SphereGeometry(220, 32, 16),
+        new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide, fog: false })
+    );
+    scene.add(sky);
+
+    // ─── 飄雲 sprite billboard（8 朵隨機飄）
+    const cloudCanvas = document.createElement("canvas");
+    cloudCanvas.width = 256; cloudCanvas.height = 128;
+    const cloudCtx = cloudCanvas.getContext("2d");
+    cloudCtx.fillStyle = "rgba(255,255,255,0)";
+    cloudCtx.fillRect(0, 0, 256, 128);
+    // 多個重疊圓畫蓬鬆雲
+    cloudCtx.fillStyle = "rgba(255,255,255,0.92)";
+    [
+        [80, 70, 45], [130, 55, 55], [180, 70, 40],
+        [60, 85, 30], [150, 90, 35], [200, 85, 28]
+    ].forEach(([x, y, r]) => {
+        cloudCtx.beginPath();
+        cloudCtx.arc(x, y, r, 0, Math.PI * 2);
+        cloudCtx.fill();
+    });
+    const cloudTex = new THREE.CanvasTexture(cloudCanvas);
+    const clouds = [];
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    for (let i = 0; i < 10; i++) {
+        const mat = new THREE.SpriteMaterial({
+            map: cloudTex, transparent: true, opacity: rand(0.55, 0.85),
+            depthWrite: false, fog: false
+        });
+        const c = new THREE.Sprite(mat);
+        const w = rand(20, 36);
+        c.scale.set(w, w * 0.5, 1);
+        c.position.set(rand(-100, 100), rand(30, 50), rand(-100, 100));
+        scene.add(c);
+        clouds.push({ mesh: c, speed: rand(0.015, 0.045) });
+    }
 
     const camera = new THREE.PerspectiveCamera(
         50, window.innerWidth / window.innerHeight, 0.1, 500
@@ -74,9 +123,26 @@
     sun.shadow.camera.bottom = -60;
     scene.add(sun);
 
-    // ─── 地形 plane（草地）
-    const groundGeo = new THREE.PlaneGeometry(120, 120);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x7cb342 });
+    // ─── 地形 plane（草地 noise texture）
+    const grassCanvas = document.createElement("canvas");
+    grassCanvas.width = 256; grassCanvas.height = 256;
+    const grassCtx = grassCanvas.getContext("2d");
+    // 草綠基底
+    grassCtx.fillStyle = "#7cb342";
+    grassCtx.fillRect(0, 0, 256, 256);
+    // 隨機草點 (noise)
+    for (let i = 0; i < 4000; i++) {
+        const shade = Math.random();
+        if (shade < 0.5) grassCtx.fillStyle = "rgba(102, 153, 51, 0.5)";
+        else if (shade < 0.85) grassCtx.fillStyle = "rgba(140, 200, 80, 0.4)";
+        else grassCtx.fillStyle = "rgba(200, 230, 130, 0.6)";
+        grassCtx.fillRect(Math.random() * 256, Math.random() * 256, 2, 4);
+    }
+    const grassTex = new THREE.CanvasTexture(grassCanvas);
+    grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+    grassTex.repeat.set(15, 15);
+    const groundGeo = new THREE.PlaneGeometry(120, 120, 1, 1);
+    const groundMat = new THREE.MeshStandardMaterial({ map: grassTex });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
@@ -491,6 +557,11 @@
         requestAnimationFrame(animate);
         updatePlayer();
         updateCamera();
+        // 雲飄
+        clouds.forEach(c => {
+            c.mesh.position.x += c.speed;
+            if (c.mesh.position.x > 110) c.mesh.position.x = -110;
+        });
         renderer.render(scene, camera);
     }
     animate();
