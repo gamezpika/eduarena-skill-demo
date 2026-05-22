@@ -38,15 +38,13 @@ import * as THREE from 'three';
 
     const scene = new THREE.Scene();
 
-    // OrthographicCamera 斜俯瞰 — 從 SCENE 右下方往左上看 60°
-    // 視野固定框住整個場景
+    // OrthographicCamera 斜俯瞰 60°（讓 chibi 看得到全身，不是只看頭頂紅帽）
     const camera = new THREE.OrthographicCamera(
         -SCENE_W / 2, SCENE_W / 2,
         SCENE_H / 2, -SCENE_H / 2,
-        -200, 500
+        -500, 500
     );
-    // 純俯瞰（top-down 90°）— 跟地圖 2D 視角一致最不違和
-    camera.position.set(0, 100, 0.01);
+    camera.position.set(0, 80, 60);   // 斜上方，看下來 ~55°
     camera.lookAt(0, 0, 0);
 
     // 燈光（基本三點打光，讓 primitives 有陰影層次）
@@ -79,7 +77,7 @@ import * as THREE from 'three';
     };
 
     const player = new THREE.Group();
-    player.scale.set(2.2, 2.2, 2.2);  // 放大適合 100×200 場景
+    player.scale.set(4.0, 4.0, 4.0);  // 放大讓地圖上明顯
     scene.add(player);
 
     function makeChibiStudent() {
