@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#a8d57c">
+    <title>Walk Demo — 走在地圖上</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; user-select: none; }
+        html, body {
+            width: 100%; height: 100vh; height: 100dvh;
+            background: #2d3a1f; overflow: hidden;
+            font-family: -apple-system, "PingFang TC", sans-serif;
+        }
+        .stage {
+            position: fixed; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .map {
+            position: relative;
+            width: min(100vmin, 1024px);
+            height: min(100vmin, 1024px);
+            background-image: url(assets/images/sprites/town_map.png?v=1);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .player {
+            position: absolute;
+            width: 128px; height: 128px;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            will-change: transform;
+        }
+        /* sprite sheet 512×512, 4 col × 4 row, each cell 128×128
+           row 0 south / 1 north / 2 east / 3 west */
+        .sprite-frame {
+            width: 128px; height: 128px;
+            background-image: url(assets/images/sprites/student_walk_sheet_white4.png?v=4);
+            background-size: 512px 512px;
+            background-repeat: no-repeat;
+        }
+        .sprite-frame[data-dir="south"] { background-position-y:    0px; }
+        .sprite-frame[data-dir="north"] { background-position-y: -128px; }
+        .sprite-frame[data-dir="east"]  { background-position-y: -256px; }
+        .sprite-frame[data-dir="west"]  { background-position-y: -384px; }
+        @keyframes walk4 {
+            0%   { background-position-x:    0px; }
+            25%  { background-position-x: -128px; }
+            50%  { background-position-x: -256px; }
+            75%  { background-position-x: -384px; }
+            100% { background-position-x:    0px; }
+        }
+        .sprite-frame.walking { animation: walk4 0.55s steps(4) infinite; }
+        /* 玩家底下橢圓陰影 */
+        .shadow {
+            position: absolute;
+            bottom: 6px;
+            left: 50%; transform: translateX(-50%);
+            width: 56px; height: 14px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.35), rgba(0,0,0,0) 70%);
+            pointer-events: none; z-index: -1;
+        }
+
+        /* HUD */
+        .banner {
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.65); color: #fff;
+            padding: 6px 14px; border-radius: 999px;
+            font-size: 12px; font-weight: 700; z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .hint {
+            position: fixed; top: 44px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.5); color: #fff;
+            padding: 5px 12px; border-radius: 8px;
+            font-size: 11px; z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: hintFade 6s ease-out forwards;
+        }
+        @keyframes hintFade {
+            0%, 70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        .back-link {
+            position: fixed; top: 12px; left: 12px;
+            background: rgba(0,0,0,0.55); color: #fff;
+            padding: 6px 12px; border-radius: 999px;
+            font-size: 12px; text-decoration: none;
+            z-index: 100;
+        }
+
+        /* 觸控搖桿（手機用） */
+        .joystick {
+            position: fixed; bottom: 24px; left: 24px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.18);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%; z-index: 50;
+        }
+        .joystick-knob {
+            position: absolute; top: 50%; left: 50%;
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: background 0.1s;
+        }
+        .joystick.active .joystick-knob { background: rgba(255,200,100,1); }
+    </style>
+</head>
+<body>
+
+<a class="back-link" href="/">← 回首頁</a>
+<div class="banner">🗺 Walk Demo · Codex 地圖 + 16 幀 sprite</div>
+<div class="hint">⌨ 方向鍵 / WASD 走動 · 手機拖搖桿</div>
+
+<div class="stage">
+    <div class="map" id="map">
+        <div class="player" id="player">
+            <div class="shadow"></div>
+            <div class="sprite-frame walking" id="sprite" data-dir="south"></div>
+        </div>
+    </div>
+</div>
+
+<div class="joystick" id="joystick">
+    <div class="joystick-knob" id="joystickKnob"></div>
+</div>
+
+<script>
+const map     = document.getElementById('map');
+const player  = document.getElementById('player');
+const sprite  = document.getElementById('sprite');
+
+// 玩家初始位置（map 中央，px）
+const PLAYER_SIZE = 128;
+let px = 0, py = 0;  // 相對 map 中心的偏移
+let dir = 'south';
+let walking = false;
+
+// 玩家邊界（map 寬高 - 半 sprite，假設 map 1024×1024 但 css 是 vmin scaled）
+// 用 map 實際渲染尺寸算邊界
+function getBounds() {
+    const rect = map.getBoundingClientRect();
+    const half = PLAYER_SIZE * 0.5;  // 假定 sprite 視覺中心
+    return {
+        minX: -rect.width / 2 + half,
+        maxX:  rect.width / 2 - half,
+        // 上下保留多一點（sprite 腳底 y）
+        minY: -rect.height / 2 + half,
+        maxY:  rect.height / 2 - half,
+    };
+}
+
+function applyPos() {
+    player.style.transform = `translate(calc(-50% + ${px}px), calc(-50% + ${py}px))`;
+}
+
+// 鍵盤狀態
+const keys = {};
+window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// 搖桿
+const joystick     = document.getElementById('joystick');
+const joystickKnob = document.getElementById('joystickKnob');
+let stickVec = { x: 0, y: 0 };  // 標準化 [-1, 1]
+let stickActive = false;
+let stickTouchId = null;
+
+function setKnob(dx, dy) {
+    const max = 35;
+    const len = Math.hypot(dx, dy);
+    if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+    joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    stickVec.x = dx / max;
+    stickVec.y = dy / max;
+}
+
+joystick.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    stickTouchId = t.identifier;
+    stickActive = true;
+    joystick.classList.add('active');
+    const rect = joystick.getBoundingClientRect();
+    setKnob(t.clientX - rect.left - rect.width/2, t.clientY - rect.top - rect.height/2);
+}, { passive: false });
+
+joystick.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+        if (t.identifier !== stickTouchId) continue;
+        const rect = joystick.getBoundingClientRect();
+        setKnob(t.clientX - rect.left - rect.width/2, t.clientY - rect.top - rect.height/2);
+    }
+}, { passive: false });
+
+joystick.addEventListener('touchend', e => {
+    for (const t of e.changedTouches) {
+        if (t.identifier !== stickTouchId) continue;
+        stickActive = false;
+        stickTouchId = null;
+        joystick.classList.remove('active');
+        setKnob(0, 0);
+        stickVec.x = stickVec.y = 0;
+    }
+});
+
+// game loop
+const SPEED = 2.4;  // px per frame ~ 144 px/s @60fps
+function loop() {
+    requestAnimationFrame(loop);
+    let dx = 0, dy = 0;
+
+    // 鍵盤
+    if (keys['arrowup']   || keys['w']) dy -= 1;
+    if (keys['arrowdown'] || keys['s']) dy += 1;
+    if (keys['arrowleft'] || keys['a']) dx -= 1;
+    if (keys['arrowright']|| keys['d']) dx += 1;
+
+    // 搖桿覆蓋鍵盤
+    if (stickActive) {
+        dx = stickVec.x;
+        dy = stickVec.y;
+    }
+
+    const len = Math.hypot(dx, dy);
+    if (len > 0.01) {
+        // normalize
+        dx /= Math.max(len, 1);
+        dy /= Math.max(len, 1);
+        px += dx * SPEED;
+        py += dy * SPEED;
+
+        // 邊界 clamp
+        const b = getBounds();
+        if (px < b.minX) px = b.minX;
+        if (px > b.maxX) px = b.maxX;
+        if (py < b.minY) py = b.minY;
+        if (py > b.maxY) py = b.maxY;
+
+        // 切方向 (取主軸)
+        if (Math.abs(dy) > Math.abs(dx)) {
+            dir = dy < 0 ? 'north' : 'south';
+        } else {
+            dir = dx < 0 ? 'west' : 'east';
+        }
+
+        if (!walking) {
+            walking = true;
+            sprite.classList.add('walking');
+        }
+        sprite.dataset.dir = dir;
+        applyPos();
+    } else if (walking) {
+        walking = false;
+        sprite.classList.remove('walking');
+        // 停在 stand 那一幀
+        sprite.style.backgroundPositionX = '0px';
+    }
+}
+applyPos();
+loop();
+</script>
+
+</body>
+</html>
