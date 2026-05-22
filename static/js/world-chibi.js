@@ -255,14 +255,41 @@ import * as THREE from 'three';
     const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
     let maskData = null;
     const maskImg = new Image();
-    maskImg.crossOrigin = 'anonymous';
+    // 不設 crossOrigin — 同源 (Railway demo 站) 不需要，設了反而可能觸發 CORS 失敗
     maskImg.onload = () => {
-        maskCtx.drawImage(maskImg, 0, 0, MASK_W, MASK_H);
-        maskData = maskCtx.getImageData(0, 0, MASK_W, MASK_H);
-        console.log('[chibi] walkable mask loaded',
-                    `(walkable pixels: ${countWalkable()}/${MASK_W*MASK_H})`);
+        try {
+            maskCtx.drawImage(maskImg, 0, 0, MASK_W, MASK_H);
+            maskData = maskCtx.getImageData(0, 0, MASK_W, MASK_H);
+            const wc = countWalkable();
+            console.log(`[chibi] mask loaded, walkable: ${wc}/${MASK_W * MASK_H} (${(wc / (MASK_W * MASK_H) * 100).toFixed(1)}%)`);
+
+            // 若初始位置在擋區 → 螺旋外搜尋最近 walkable
+            if (!isWalkable(px, py)) {
+                console.warn(`[chibi] initial (${px},${py}) blocked, searching nearest walkable…`);
+                let found = false;
+                for (let r = 1; r < 60 && !found; r += 1) {
+                    for (let a = 0; a < 24 && !found; a++) {
+                        const ang = (a / 24) * Math.PI * 2;
+                        const tx = px + Math.cos(ang) * r;
+                        const ty = py + Math.sin(ang) * r;
+                        if (isWalkable(tx, ty)) {
+                            px = tx; py = ty;
+                            player.position.set(px, 0, py);
+                            console.log(`[chibi] relocated to (${tx.toFixed(1)},${ty.toFixed(1)})`);
+                            found = true;
+                        }
+                    }
+                }
+                if (!found) console.error('[chibi] no walkable found within radius 60');
+            } else {
+                console.log(`[chibi] initial (${px},${py}) is walkable ✓`);
+            }
+        } catch (e) {
+            console.warn('[chibi] getImageData failed (CORS?):', e);
+            maskData = null;  // fallback：mask 不可用 → 不擋
+        }
     };
-    maskImg.onerror = (e) => console.warn('[chibi] mask load failed', e);
+    maskImg.onerror = (e) => console.warn('[chibi] mask image load failed', e);
     maskImg.src = 'assets/images/world_map_walkable.png?v=1';
 
     function countWalkable() {
@@ -440,6 +467,13 @@ import * as THREE from 'three';
     loop();
 
     // 暴露給 debug
-    window.eduChibi = { player, chibi, scene, camera };
+    window.eduChibi = {
+        player, chibi, scene, camera,
+        get pos() { return { x: px, y: py }; },
+        get maskLoaded() { return !!maskData; },
+        check(x, y) { return isWalkable(x ?? px, y ?? py); },
+        unblock() { maskData = null; console.log('[chibi] mask disabled, free walk'); },
+    };
+    console.log('[chibi] init done. debug: eduChibi.pos / eduChibi.maskLoaded / eduChibi.check() / eduChibi.unblock()');
 })();
 
