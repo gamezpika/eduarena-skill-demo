@@ -151,25 +151,26 @@
     dirIndicator.position.set(0, 2, 1.5);
     player.add(dirIndicator);
 
-    // ─── 控制狀態
-    const keys = { w: false, a: false, s: false, d: false };
+    // ─── 控制狀態（4 方向位移，相機不旋轉，世界不暈）
+    const keys = { up: false, down: false, left: false, right: false };
     const joystick = { active: false, dx: 0, dy: 0 };
-    let playerRot = 0;  // 玩家面對方向 (Y 軸旋轉)
+    let playerRot = 0;  // 玩家面對方向（依移動方向算）
     const PLAYER_SPEED = 0.35;
-    const TURN_SPEED = 0.04;
 
-    // 鍵盤
-    window.addEventListener("keydown", e => {
-        if (e.key === "w" || e.key === "W" || e.key === "ArrowUp")    keys.w = true;
-        if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft")  keys.a = true;
-        if (e.key === "s" || e.key === "S" || e.key === "ArrowDown")  keys.s = true;
-        if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") keys.d = true;
+    // 鍵盤（方向鍵 + WASD 都通，document 確保焦點）
+    document.addEventListener("keydown", e => {
+        const k = e.key;
+        if (k === "ArrowUp"    || k === "w" || k === "W") { keys.up = true; e.preventDefault(); }
+        if (k === "ArrowDown"  || k === "s" || k === "S") { keys.down = true; e.preventDefault(); }
+        if (k === "ArrowLeft"  || k === "a" || k === "A") { keys.left = true; e.preventDefault(); }
+        if (k === "ArrowRight" || k === "d" || k === "D") { keys.right = true; e.preventDefault(); }
     });
-    window.addEventListener("keyup", e => {
-        if (e.key === "w" || e.key === "W" || e.key === "ArrowUp")    keys.w = false;
-        if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft")  keys.a = false;
-        if (e.key === "s" || e.key === "S" || e.key === "ArrowDown")  keys.s = false;
-        if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") keys.d = false;
+    document.addEventListener("keyup", e => {
+        const k = e.key;
+        if (k === "ArrowUp"    || k === "w" || k === "W") keys.up = false;
+        if (k === "ArrowDown"  || k === "s" || k === "S") keys.down = false;
+        if (k === "ArrowLeft"  || k === "a" || k === "A") keys.left = false;
+        if (k === "ArrowRight" || k === "d" || k === "D") keys.right = false;
     });
 
     // 手機虛擬搖桿
@@ -238,43 +239,45 @@
         if (e.target.id === "demo-modal") e.target.classList.remove("show");
     });
 
-    // ─── 玩家移動 + 相機跟拍
+    // ─── 玩家移動（4 方向位移，玩家轉向只看 model rotation 不影響相機）
     function updatePlayer() {
-        let forward = 0, turn = 0;
-        if (keys.w) forward += 1;
-        if (keys.s) forward -= 1;
-        if (keys.a) turn += 1;
-        if (keys.d) turn -= 1;
+        let dx = 0, dz = 0;
+        if (keys.up)    dz -= 1;  // 北
+        if (keys.down)  dz += 1;  // 南
+        if (keys.left)  dx -= 1;  // 西
+        if (keys.right) dx += 1;  // 東
 
         if (joystick.active) {
-            forward += -joystick.dy;
-            turn += -joystick.dx;
+            dx += joystick.dx;
+            dz += joystick.dy;
         }
 
-        playerRot += turn * TURN_SPEED;
-        player.rotation.y = playerRot;
-
-        if (forward !== 0) {
-            const dx = Math.sin(playerRot) * forward * PLAYER_SPEED;
-            const dz = Math.cos(playerRot) * forward * PLAYER_SPEED;
-            const nx = player.position.x + dx;
-            const nz = player.position.z + dz;
-            // 邊界限制
+        if (dx !== 0 || dz !== 0) {
+            const len = Math.hypot(dx, dz);
+            const stepX = dx / len * PLAYER_SPEED;
+            const stepZ = dz / len * PLAYER_SPEED;
+            const nx = player.position.x + stepX;
+            const nz = player.position.z + stepZ;
             const BOUND = 55;
             if (nx > -BOUND && nx < BOUND) player.position.x = nx;
             if (nz > -BOUND && nz < BOUND) player.position.z = nz;
+            // 玩家朝移動方向轉（只 model 視覺，相機不轉）
+            playerRot = Math.atan2(stepX, stepZ);
+            player.rotation.y = playerRot;
         }
     }
 
     function updateCamera() {
-        // 第三人稱：相機在玩家後方上空
-        const camDist = 14;
-        const camHeight = 8;
-        const camX = player.position.x - Math.sin(playerRot) * camDist;
-        const camZ = player.position.z - Math.cos(playerRot) * camDist;
-        const targetCamPos = new THREE.Vector3(camX, camHeight, camZ);
-        // 平滑跟隨
-        camera.position.lerp(targetCamPos, 0.1);
+        // 固定相機俯角，只 follow 玩家 position（不跟玩家旋轉 = 世界不轉 = 不暈）
+        const CAM_OFFSET_X = 0;
+        const CAM_OFFSET_Y = 22;
+        const CAM_OFFSET_Z = 22;
+        const targetCamPos = new THREE.Vector3(
+            player.position.x + CAM_OFFSET_X,
+            CAM_OFFSET_Y,
+            player.position.z + CAM_OFFSET_Z
+        );
+        camera.position.lerp(targetCamPos, 0.12);
         camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
     }
 
