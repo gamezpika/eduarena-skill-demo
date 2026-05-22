@@ -82,25 +82,56 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ─── Phase 2: 12 建築用 Three.js primitives 組合出各自獨特外觀
+    // ─── Phase 3: 12 建築用 chibi sprite billboard（沿用 EDUDEMO 既有 sprite）
+    const SPRITE_MAP = {
+        boss:    "assets/images/village/village_boss.png",
+        shop:    "assets/images/village/village_shop.png",
+        exam:    "assets/images/world/academy.png",
+        museum:  "assets/images/world/museum.png",
+        pvp:     "assets/images/village/village_pvp.png",
+        farm:    "assets/images/village/village_farm.png",
+        quest:   "assets/images/world/quest.png",
+        chinese: "assets/images/island_chinese.png",
+        english: "assets/images/island_english.png",
+        math:    "assets/images/island_math.png",
+        science: "assets/images/island_science.png",
+        social:  "assets/images/island_social.png",
+    };
+    const SPRITE_SIZE = {  // 每建築 sprite 尺寸（不同建築可差別大）
+        boss: 12, shop: 10, exam: 12, museum: 10, pvp: 9, farm: 9, quest: 7,
+        chinese: 14, english: 14, math: 12, science: 14, social: 14,
+    };
+
     const buildingMeshes = [];
+    const textureLoader = new THREE.TextureLoader();
     BUILDINGS.forEach(b => {
-        const group = makeBuilding(b.key, b.h);
-        group.position.set(b.x, 0, b.z);
-        group.userData.key = b.key;
-        scene.add(group);
-        // hitbox 用個透明 box 包整體（raycaster 用），實際視覺是 group 內 primitives
+        const opts = POPUPS[b.key];
+        const url = SPRITE_MAP[b.key];
+        const size = SPRITE_SIZE[b.key] || 8;
+
+        // chibi sprite billboard
+        const texture = textureLoader.load(url);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        const spriteMat = new THREE.SpriteMaterial({
+            map: texture, transparent: true, depthWrite: false, sizeAttenuation: true
+        });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.scale.set(size, size, 1);
+        sprite.position.set(b.x, size / 2, b.z);
+        scene.add(sprite);
+
+        // 透明 hitbox 給 raycaster（sprite 不能精準 ray intersect）
         const hitbox = new THREE.Mesh(
-            new THREE.BoxGeometry(8, b.h + 2, 8),
+            new THREE.BoxGeometry(size * 0.7, size, size * 0.7),
             new THREE.MeshBasicMaterial({ visible: false })
         );
-        hitbox.position.set(b.x, (b.h + 2) / 2, b.z);
+        hitbox.position.set(b.x, size / 2, b.z);
         hitbox.userData.key = b.key;
         scene.add(hitbox);
         buildingMeshes.push(hitbox);
 
-        // 上方浮 label sprite
-        const opts = POPUPS[b.key];
+        // 上方浮 label
         const labelCanvas = document.createElement("canvas");
         labelCanvas.width = 256;
         labelCanvas.height = 64;
@@ -112,10 +143,10 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(opts.icon + " " + opts.title, 128, 32);
-        const texture = new THREE.CanvasTexture(labelCanvas);
-        const labelMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+        const labelTexture = new THREE.CanvasTexture(labelCanvas);
+        const labelMat = new THREE.SpriteMaterial({ map: labelTexture, depthTest: false });
         const label = new THREE.Sprite(labelMat);
-        label.position.set(b.x, b.h + 4, b.z);
+        label.position.set(b.x, size + 2, b.z);
         label.scale.set(8, 2, 1);
         scene.add(label);
     });
