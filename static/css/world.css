@@ -614,15 +614,60 @@
 }
 .wd-ripple.r2 { animation-delay: -1.5s; }
 
-/* ── Free-roam NPC：自由走動於地圖上（純擺飾不可點） ─── */
-/* 外層：水平移動 + 中段瞬間翻面（用 left + scaleX）
-   left 8~88% 沿主陸底邊草地走廊整條走，NPC top% 設在 60~68% 不會撞建築 */
-@keyframes wdRoamPath {
-    0%   { left: 8%;  transform: scaleX(1); }
-    48%  { left: 88%; transform: scaleX(1); }
-    50%  { left: 88%; transform: scaleX(-1); }   /* 走到右邊瞬間翻面 */
-    98%  { left: 8%;  transform: scaleX(-1); }
-    100% { left: 8%;  transform: scaleX(1); }
+/* ── Free-roam NPC：依地圖路徑走（不再單一橫向走廊） ─── */
+/* 5 條路徑，emoji 分組沿不同路徑走，依地圖背景畫的綠草小徑 */
+
+/* Path 1: 主陸環狀順時針（圍繞 6 個建築外圈走一圈） */
+@keyframes wdPath1 {
+    0%   { top: 33%; left: 18%; transform: scaleX(1); }
+    23%  { top: 33%; left: 78%; transform: scaleX(1); }
+    25%  { top: 33%; left: 78%; transform: scaleX(1); }
+    48%  { top: 60%; left: 78%; transform: scaleX(1); }
+    50%  { top: 60%; left: 78%; transform: scaleX(-1); }
+    73%  { top: 60%; left: 18%; transform: scaleX(-1); }
+    75%  { top: 60%; left: 18%; transform: scaleX(-1); }
+    98%  { top: 33%; left: 18%; transform: scaleX(-1); }
+    100% { top: 33%; left: 18%; transform: scaleX(1); }
+}
+
+/* Path 2: 主陸環狀逆時針 */
+@keyframes wdPath2 {
+    0%   { top: 60%; left: 78%; transform: scaleX(-1); }
+    23%  { top: 60%; left: 18%; transform: scaleX(-1); }
+    25%  { top: 60%; left: 18%; transform: scaleX(1); }
+    48%  { top: 33%; left: 18%; transform: scaleX(1); }
+    50%  { top: 33%; left: 18%; transform: scaleX(1); }
+    73%  { top: 33%; left: 78%; transform: scaleX(1); }
+    75%  { top: 33%; left: 78%; transform: scaleX(-1); }
+    98%  { top: 60%; left: 78%; transform: scaleX(-1); }
+    100% { top: 60%; left: 78%; transform: scaleX(-1); }
+}
+
+/* Path 3: 主陸中央橫線（考試中心前廣場） */
+@keyframes wdPath3 {
+    0%   { top: 47%; left: 15%; transform: scaleX(1); }
+    48%  { top: 47%; left: 85%; transform: scaleX(1); }
+    50%  { top: 47%; left: 85%; transform: scaleX(-1); }
+    98%  { top: 47%; left: 15%; transform: scaleX(-1); }
+    100% { top: 47%; left: 15%; transform: scaleX(1); }
+}
+
+/* Path 4: 農田前小徑（中央偏下） */
+@keyframes wdPath4 {
+    0%   { top: 58%; left: 30%; transform: scaleX(1); }
+    48%  { top: 58%; left: 65%; transform: scaleX(1); }
+    50%  { top: 58%; left: 65%; transform: scaleX(-1); }
+    98%  { top: 58%; left: 30%; transform: scaleX(-1); }
+    100% { top: 58%; left: 30%; transform: scaleX(1); }
+}
+
+/* Path 5: 從魔王塔下來到考試中心（垂直階梯） */
+@keyframes wdPath5 {
+    0%   { top: 22%; left: 48%; transform: scaleY(1); }
+    48%  { top: 38%; left: 48%; transform: scaleY(1); }
+    50%  { top: 38%; left: 48%; transform: scaleY(1); }
+    98%  { top: 22%; left: 48%; transform: scaleY(1); }
+    100% { top: 22%; left: 48%; transform: scaleY(1); }
 }
 /* 內層：真實走路步態（左右搖擺重心 + 微 Y 顛簸，不像青蛙跳） */
 @keyframes wdRoamHop {
@@ -638,8 +683,7 @@
     height: auto;
     pointer-events: none;
     z-index: 15;
-    /* path 動畫 */
-    animation: wdRoamPath 40s linear infinite;
+    /* path 動畫由每 fr-* class 指定（wdPath1~5） */
 }
 .wd-freeroam-inner {
     transform-origin: center bottom;
@@ -661,17 +705,23 @@
     pointer-events: none;
     user-select: none;
 }
-/* 各 NPC 速度錯時 + 寬度個性化 */
-.fr-cow      { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
-.fr-cow2     { animation-duration: 55s; animation-delay: -18s; width: 8%; }
-.fr-cow3     { animation-duration: 40s; animation-delay: -28s; width: 7%; }
-.fr-chick    { animation-duration: 22s; animation-delay: -7s;  width: 5%; }
-.fr-chick2   { animation-duration: 28s; animation-delay: -14s; width: 5%; }
-.fr-chick3   { animation-duration: 18s; animation-delay: -3s;  width: 4%; }
-.fr-shopper  { animation-duration: 38s; animation-delay: -12s; width: 7%; }
-.fr-shopper2 { animation-duration: 46s; animation-delay: -30s; width: 7%; }
-.fr-scholar  { animation-duration: 50s; animation-delay: -22s; width: 8%; }
-.fr-scholar2 { animation-duration: 42s; animation-delay: -8s;  width: 7%; }
+/* 每 NPC 各自指派 path + 速度錯時 + 寬度個性化 */
+/* Path 1 主陸環順時針 */
+.fr-cow      { animation: wdPath1 60s linear infinite;        animation-delay: 0s;   width: 8%; }
+.fr-shopper  { animation: wdPath1 70s linear infinite;        animation-delay: -25s; width: 7%; }
+/* Path 2 主陸環逆時針 */
+.fr-cow2     { animation: wdPath2 65s linear infinite;        animation-delay: -18s; width: 8%; }
+.fr-scholar  { animation: wdPath2 55s linear infinite;        animation-delay: -10s; width: 8%; }
+/* Path 3 中央橫線（考試中心前廣場） */
+.fr-chick    { animation: wdPath3 22s linear infinite;        animation-delay: -7s;  width: 5%; }
+.fr-chick2   { animation: wdPath3 28s linear infinite;        animation-delay: -14s; width: 5%; }
+/* Path 4 農田前小徑 */
+.fr-chick3   { animation: wdPath4 18s linear infinite;        animation-delay: -3s;  width: 5%; }
+.fr-cow3     { animation: wdPath4 24s linear infinite;        animation-delay: -12s; width: 7%; }
+/* Path 5 魔王塔下來 (垂直) — 巫師走 */
+.fr-scholar2 { animation: wdPath5 30s linear infinite;        animation-delay: 0s;   width: 7%; }
+/* shopper2 (🛒) 改走中央廣場 path 3 錯時 */
+.fr-shopper2 { animation: wdPath3 36s linear infinite;        animation-delay: -20s; width: 6%; }
 
 /* 不同 NPC 走路節奏錯（內層 hop animation-duration） */
 .fr-cow .wd-freeroam-inner,
