@@ -1,16 +1,16 @@
 /**
- * 3D 探索地圖 — Three.js Phase 1 POC
- *
- * 內容：
- * - 1 個 plane 草地（綠色）
- * - 12 個 cube 建築（不同顏色 + label）
- * - 1 個 capsule 玩家（藍色）
- * - 第三人稱相機跟拍
- * - WASD 鍵盤 / 手機左下虛擬搖桿走動
- * - Raycaster 點 cube → 開 modal
- *
- * Phase 2 會把 cube 換成 chibi 建築 GLTF model，capsule 換成 chibi 角色含 walk animation。
+ * 3D 探索地圖 — Three.js Phase 3 完整版
+ * Phase 1: cube + capsule | 2: primitives | 3a: chibi sprite | 3b: 天空+雲+草地
+ * 3c: Perlin 地形 + Instanced 樹草石 (學 Bruno Simon)
+ * 3d: ES module + UnrealBloom + ACES tone mapping
+ * 3e: GLTF 第三人稱角色 (Soldier) + AnimationMixer walk/idle 切換
  */
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
 (function () {
     "use strict";
 
@@ -52,6 +52,10 @@
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
+    // Phase 3d: ACES filmic tone mapping + sRGB（電影感）
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0xb0d8e8, 80, 250);
@@ -472,28 +476,61 @@
         ctx.fill();
     }
 
-    // ─── 玩家 capsule（藍色，站在地圖中央）
-    const playerGeo = new THREE.CapsuleGeometry(1, 2, 4, 8);
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
-    const player = new THREE.Mesh(playerGeo, playerMat);
+    // ─── Phase 3e: GLTF 第三人稱角色 (Three.js 官方 Soldier model + walk/idle)
+    // 先放 placeholder capsule，GLTF 載入完替換
+    const player = new THREE.Group();
     player.position.set(0, 2, 0);
-    player.castShadow = true;
     scene.add(player);
 
-    // 玩家頭部（黃色球，表示朝向）
-    const headGeo = new THREE.SphereGeometry(0.8, 16, 16);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xfdc500 });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.set(0, 2.5, 0);
-    head.castShadow = true;
-    player.add(head);
+    const placeholderGeo = new THREE.CapsuleGeometry(1, 2, 4, 8);
+    const placeholderMat = new THREE.MeshStandardMaterial({ color: 0x3498db });
+    const placeholder = new THREE.Mesh(placeholderGeo, placeholderMat);
+    placeholder.castShadow = true;
+    player.add(placeholder);
 
-    // 朝向指示器（前方紅色小方塊）
-    const dirGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const dirMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-    const dirIndicator = new THREE.Mesh(dirGeo, dirMat);
-    dirIndicator.position.set(0, 2, 1.5);
-    player.add(dirIndicator);
+    let mixer = null;
+    let actions = { idle: null, walk: null, run: null };
+    let currentAction = null;
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+        'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Soldier.glb',
+        gltf => {
+            const model = gltf.scene;
+            model.scale.set(2, 2, 2);
+            model.position.y = -2;  // GLTF model 中心是腳底，移到 player group 內 -2 對齊原 capsule
+            model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+            player.remove(placeholder);
+            player.add(model);
+
+            mixer = new THREE.AnimationMixer(model);
+            const clips = gltf.animations;
+            const idle = clips.find(c => /idle/i.test(c.name));
+            const walk = clips.find(c => /walk/i.test(c.name));
+            const run  = clips.find(c => /run/i.test(c.name));
+            if (idle) actions.idle = mixer.clipAction(idle);
+            if (walk) actions.walk = mixer.clipAction(walk);
+            if (run)  actions.run  = mixer.clipAction(run);
+            if (actions.idle) { actions.idle.play(); currentAction = actions.idle; }
+
+            document.getElementById('loading-screen')?.classList.add('hide');
+        },
+        xhr => {
+            const pct = xhr.total > 0 ? (xhr.loaded / xhr.total) * 100 : 30;
+            const bar = document.getElementById('loading-bar-fill');
+            if (bar) bar.style.width = Math.min(100, pct) + '%';
+        },
+        err => {
+            console.error('GLTF load failed', err);
+            document.getElementById('loading-screen')?.classList.add('hide');
+        }
+    );
+
+    function switchAction(next, fade = 0.2) {
+        if (!next || next === currentAction) return;
+        if (currentAction) currentAction.fadeOut(fade);
+        next.reset().fadeIn(fade).play();
+        currentAction = next;
+    }
 
     // ─── 控制狀態（4 方向位移，相機不旋轉，世界不暈）
     const keys = { up: false, down: false, left: false, right: false };
@@ -607,15 +644,14 @@
             const BOUND = 55;
             if (nx > -BOUND && nx < BOUND) player.position.x = nx;
             if (nz > -BOUND && nz < BOUND) player.position.z = nz;
-            // 玩家朝移動方向轉（只 model 視覺，相機不轉）
+            // 玩家朝移動方向轉
             playerRot = Math.atan2(stepX, stepZ);
             player.rotation.y = playerRot;
-            // walk bobbing 上下小跳
-            walkPhase += 0.35;
-            player.position.y = 2 + Math.abs(Math.sin(walkPhase)) * 0.35;
+            // 切換動畫: walking
+            switchAction(actions.walk || actions.idle);
         } else {
-            // 靜止時 y 回 2 平滑
-            player.position.y += (2 - player.position.y) * 0.2;
+            // 靜止 → idle
+            switchAction(actions.idle);
         }
     }
 
@@ -633,9 +669,23 @@
         camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
     }
 
+    // ─── Phase 3d: EffectComposer + UnrealBloomPass (光暈/電影感)
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.55,  // strength
+        0.45,  // radius
+        0.82   // threshold
+    );
+    composer.addPass(bloomPass);
+
     // ─── 渲染循環
+    const clock = new THREE.Clock();
     function animate() {
         requestAnimationFrame(animate);
+        const dt = clock.getDelta();
+        if (mixer) mixer.update(dt);
         updatePlayer();
         updateCamera();
         // 雲飄
@@ -643,13 +693,14 @@
             c.mesh.position.x += c.speed;
             if (c.mesh.position.x > 110) c.mesh.position.x = -110;
         });
-        renderer.render(scene, camera);
+        composer.render();
     }
     animate();
 
     // ─── 視窗 resize
     window.addEventListener("resize", () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
     });
