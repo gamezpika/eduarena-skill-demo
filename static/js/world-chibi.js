@@ -247,10 +247,46 @@ import * as THREE from 'three';
     shadow.scale.set(1.2, 0.55, 1);
     player.add(shadow);
 
+    // ─── Walkable mask（派派 PS 畫的黑線，dilate 後當路徑）
+    const MASK_W = 1024, MASK_H = 1820;
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = MASK_W;
+    maskCanvas.height = MASK_H;
+    const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+    let maskData = null;
+    const maskImg = new Image();
+    maskImg.crossOrigin = 'anonymous';
+    maskImg.onload = () => {
+        maskCtx.drawImage(maskImg, 0, 0, MASK_W, MASK_H);
+        maskData = maskCtx.getImageData(0, 0, MASK_W, MASK_H);
+        console.log('[chibi] walkable mask loaded',
+                    `(walkable pixels: ${countWalkable()}/${MASK_W*MASK_H})`);
+    };
+    maskImg.onerror = (e) => console.warn('[chibi] mask load failed', e);
+    maskImg.src = 'assets/images/world_map_walkable.png?v=1';
+
+    function countWalkable() {
+        let n = 0;
+        for (let i = 0; i < maskData.data.length; i += 4) {
+            if (maskData.data[i] > 128) n++;
+        }
+        return n;
+    }
+
+    // scene (sceneX, sceneZ) → mask (mx, my) → R 通道 > 128 = 白色 = walkable
+    function isWalkable(sceneX, sceneZ) {
+        if (!maskData) return true;  // 載入前不擋（避免初始 freeze）
+        const mx = Math.floor((sceneX + SCENE_W / 2) / SCENE_W * MASK_W);
+        const my = Math.floor((sceneZ + SCENE_H / 2) / SCENE_H * MASK_H);
+        if (mx < 0 || mx >= MASK_W || my < 0 || my >= MASK_H) return false;
+        const idx = (my * MASK_W + mx) * 4;
+        return maskData.data[idx] > 128;
+    }
+
     // ─── 玩家位置（場景座標 SCENE_W × SCENE_H 內）
-    // 初始位置：中央偏下（草地走廊）
+    // 初始位置：中央主陸（派派塗黑大片區域）
     let px = 0;
-    let py = SCENE_H * 0.18;  // 場景下半部
+    let py = 0;  // 中央
     player.position.set(px, 0, py);
 
     // ─── Resize 處理（讓 canvas 解析度跟著 .wd-world 大小變）
@@ -353,10 +389,22 @@ import * as THREE from 'three';
             const norm = Math.max(moveLen, 1);
             dx /= norm;
             dy /= norm;
-            px += dx * SPEED;
-            py += dy * SPEED;
+            const stepX = dx * SPEED;
+            const stepY = dy * SPEED;
 
-            // 邊界 clamp
+            // 嘗試移動：先試完整方向，不行試只走 X 或只走 Y（沿牆滑）
+            const tryX = px + stepX;
+            const tryY = py + stepY;
+            if (isWalkable(tryX, tryY)) {
+                px = tryX; py = tryY;
+            } else if (isWalkable(tryX, py)) {
+                px = tryX;  // X 軸可走 → 沿水平牆面滑
+            } else if (isWalkable(px, tryY)) {
+                py = tryY;  // Y 軸可走 → 沿垂直牆面滑
+            }
+            // else 兩軸都擋 → 完全停住
+
+            // 邊界 clamp（保底）
             px = Math.max(-HALF_W + 3, Math.min(HALF_W - 3, px));
             py = Math.max(-HALF_H + 5, Math.min(HALF_H - 5, py));
 
@@ -394,3 +442,4 @@ import * as THREE from 'three';
     // 暴露給 debug
     window.eduChibi = { player, chibi, scene, camera };
 })();
+
