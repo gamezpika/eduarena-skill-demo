@@ -41,7 +41,7 @@
         }
         .sprite {
             width: 256px; height: 256px;  /* 2× scale 128 → 256 */
-            background-image: url(assets/images/sprites/student_walk_sheet.png?v=1);
+            background-image: url(assets/images/sprites/student_walk_sheet_q.png?v=2);
             background-size: 1024px 1024px;  /* 整 sheet 4× scale = 512×4 = 2048? */
             background-repeat: no-repeat;
             image-rendering: pixelated;  /* 保留 sprite 清晰邊緣 */
@@ -50,7 +50,7 @@
         /* 改用 sprite sheet 原 512×512，css scale 2× → display 256×256 per cell */
         .sprite-real {
             width: 128px; height: 128px;
-            background-image: url(assets/images/sprites/student_walk_sheet.png?v=1);
+            background-image: url(assets/images/sprites/student_walk_sheet_q.png?v=2);
             background-size: 512px 512px;
             background-repeat: no-repeat;
             image-rendering: -webkit-optimize-contrast;
@@ -126,8 +126,8 @@
 <div class="wrap">
     <h1>🎨 Codex i2i sprite 動畫驗證</h1>
     <div class="subtitle">
-        Gemini 2.5-flash-image 餵 EduArena student_v2.png 鎖畫風<br>
-        生 4 方向 × 4 幀 = 16 幀 sprite sheet
+        Gemini 2.5-flash-image i2i + PIL palette quantize<br>
+        4 方向 × 4 幀 = 16 幀，base 色票強制統一
     </div>
 
     <div class="stage">
