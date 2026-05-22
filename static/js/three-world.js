@@ -9,7 +9,10 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 
 (function () {
     "use strict";
@@ -110,6 +113,36 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         clouds.push({ mesh: c, speed: rand(0.015, 0.045) });
     }
 
+    // ─── Phase 3g: 飛鳥 (Flamingo / Parrot / Stork) 各自圓形軌道飛
+    const birds = [];
+    const birdLoader = new GLTFLoader();
+    [
+        { name: "Flamingo", scale: 0.06, radius: 38, speed: 0.6, height: 28 },
+        { name: "Parrot",   scale: 0.06, radius: 52, speed: 1.0, height: 35 },
+        { name: "Stork",    scale: 0.06, radius: 45, speed: 0.45, height: 42 },
+    ].forEach((spec, idx) => {
+        birdLoader.load(
+            `https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/${spec.name}.glb`,
+            gltf => {
+                const bird = gltf.scene;
+                bird.scale.setScalar(spec.scale);
+                bird.traverse(c => { if (c.isMesh) c.castShadow = false; });
+                scene.add(bird);
+                const bMixer = new THREE.AnimationMixer(bird);
+                if (gltf.animations.length > 0) {
+                    bMixer.clipAction(gltf.animations[0]).play();
+                }
+                birds.push({
+                    mesh: bird, mixer: bMixer,
+                    radius: spec.radius, speed: spec.speed,
+                    phase: idx * 2.1, height: spec.height,
+                });
+            },
+            null,
+            err => console.warn(`Bird ${spec.name} load failed`, err)
+        );
+    });
+
     const camera = new THREE.PerspectiveCamera(
         50, window.innerWidth / window.innerHeight, 0.1, 500
     );
@@ -117,7 +150,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     // ─── 光源
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambient);
-    const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+    const sun = new THREE.DirectionalLight(0xfff2cc, 1.1);
     sun.position.set(50, 100, 30);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -126,6 +159,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     sun.shadow.camera.top = 60;
     sun.shadow.camera.bottom = -60;
     scene.add(sun);
+
+    // ─── Phase 3g: 太陽 LensFlare 光暈
+    const flareTexLoader = new THREE.TextureLoader();
+    const flare0 = flareTexLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/lensflare/lensflare0.png');
+    const flare3 = flareTexLoader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/lensflare/lensflare3.png');
+    const lensflare = new Lensflare();
+    lensflare.addElement(new LensflareElement(flare0, 320, 0, sun.color));
+    lensflare.addElement(new LensflareElement(flare3, 50, 0.6));
+    lensflare.addElement(new LensflareElement(flare3, 70, 0.7));
+    lensflare.addElement(new LensflareElement(flare3, 120, 0.9));
+    lensflare.addElement(new LensflareElement(flare3, 70, 1));
+    sun.add(lensflare);
 
     // ─── 草地 noise texture
     const grassCanvas = document.createElement("canvas");
@@ -587,23 +632,31 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     joyEl.addEventListener("pointerup", endJoystick);
     joyEl.addEventListener("pointercancel", endJoystick);
 
-    // ─── Raycaster 點建築
+    // ─── Raycaster 點建築 + hover outline
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    canvas.addEventListener("pointerdown", e => {
-        // 排除搖桿區域
+    function pickBuilding(clientX, clientY) {
         const joyRect = joyEl.getBoundingClientRect();
-        if (e.clientX >= joyRect.left && e.clientX <= joyRect.right &&
-            e.clientY >= joyRect.top && e.clientY <= joyRect.bottom) return;
-
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        if (clientX >= joyRect.left && clientX <= joyRect.right &&
+            clientY >= joyRect.top && clientY <= joyRect.bottom) return null;
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(buildingMeshes);
-        if (intersects.length > 0) {
-            const key = intersects[0].object.userData.key;
-            openModal(key);
+        return intersects.length > 0 ? intersects[0].object : null;
+    }
+    canvas.addEventListener("pointerdown", e => {
+        const hit = pickBuilding(e.clientX, e.clientY);
+        if (hit) {
+            outlinePass.selectedObjects = [hit];
+            setTimeout(() => openModal(hit.userData.key), 350); // 先 outline 0.35s 再開 modal
         }
+    });
+    // hover (僅 desktop, 加 outline 預覽)
+    canvas.addEventListener("pointermove", e => {
+        if (e.pointerType === 'touch') return;
+        const hit = pickBuilding(e.clientX, e.clientY);
+        outlinePass.selectedObjects = hit ? [hit] : [];
     });
 
     function openModal(key) {
@@ -614,11 +667,16 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         document.getElementById("demo-modal-body").innerHTML = opts.body;
         document.getElementById("demo-modal").classList.add("show");
     }
+    function clearOutline() { outlinePass.selectedObjects = []; }
     document.getElementById("demo-modal-close").addEventListener("click", () => {
         document.getElementById("demo-modal").classList.remove("show");
+        clearOutline();
     });
     document.getElementById("demo-modal").addEventListener("click", e => {
-        if (e.target.id === "demo-modal") e.target.classList.remove("show");
+        if (e.target.id === "demo-modal") {
+            e.target.classList.remove("show");
+            clearOutline();
+        }
     });
 
     // ─── 玩家移動（4 方向位移，玩家轉向只看 model rotation 不影響相機）
@@ -673,6 +731,20 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     // ─── Phase 3d: EffectComposer + UnrealBloomPass (光暈/電影感)
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
+
+    // Phase 3g: Outline pass (點建築亮邊框)
+    const outlinePass = new OutlinePass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        scene, camera
+    );
+    outlinePass.edgeStrength = 4.0;
+    outlinePass.edgeGlow = 1.2;
+    outlinePass.edgeThickness = 2.5;
+    outlinePass.pulsePeriod = 1.8;
+    outlinePass.visibleEdgeColor.set('#ffeb3b');  // 黃色
+    outlinePass.hiddenEdgeColor.set('#ff6f00');   // 橘色（被遮擋部分）
+    composer.addPass(outlinePass);
+
     const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
         0.55,  // strength
@@ -680,6 +752,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         0.82   // threshold
     );
     composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
 
     // ─── 渲染循環
     const clock = new THREE.Clock();
@@ -693,6 +766,15 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         clouds.forEach(c => {
             c.mesh.position.x += c.speed;
             if (c.mesh.position.x > 110) c.mesh.position.x = -110;
+        });
+        // 飛鳥圓形軌道
+        birds.forEach(b => {
+            b.phase += 0.004 * b.speed;
+            b.mesh.position.x = Math.cos(b.phase) * b.radius;
+            b.mesh.position.z = Math.sin(b.phase) * b.radius;
+            b.mesh.position.y = b.height + Math.sin(b.phase * 2) * 2;  // 微上下波動
+            b.mesh.rotation.y = -b.phase + Math.PI / 2;  // 朝飛行方向
+            b.mixer.update(dt);
         });
         composer.render();
     }
