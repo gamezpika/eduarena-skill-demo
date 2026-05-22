@@ -651,6 +651,16 @@
     width: 100%;
     height: auto;
 }
+/* emoji NPC：純文字 emoji 顯示在 inner 內，可調整大小 */
+.wd-emoji {
+    display: block;
+    font-size: clamp(22px, 4vw, 36px);
+    line-height: 1;
+    text-align: center;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+    user-select: none;
+}
 /* 各 NPC 速度錯時 + 寬度個性化 */
 .fr-cow      { animation-duration: 45s; animation-delay: 0s;   width: 8%; }
 .fr-cow2     { animation-duration: 55s; animation-delay: -18s; width: 8%; }
