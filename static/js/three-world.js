@@ -492,12 +492,13 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     let actions = { idle: null, walk: null, run: null };
     let currentAction = null;
     const gltfLoader = new GLTFLoader();
+    // RobotExpressive: CC0 卡通圓胖機器人 by Tomás Laulhé / 含 Idle / Walking / Running / Dance 等多種動畫
     gltfLoader.load(
-        'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Soldier.glb',
+        'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
         gltf => {
             const model = gltf.scene;
-            model.scale.set(2, 2, 2);
-            model.position.y = -2;  // GLTF model 中心是腳底，移到 player group 內 -2 對齊原 capsule
+            model.scale.set(0.9, 0.9, 0.9);
+            model.position.y = -2;  // 對齊原 capsule 腳底位置
             model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
             player.remove(placeholder);
             player.add(model);
