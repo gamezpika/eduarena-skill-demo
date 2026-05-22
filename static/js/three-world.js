@@ -325,6 +325,22 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
         chinese: 14, english: 14, math: 12, science: 14, social: 14,
     };
 
+    // ─── Phase 4e: 7 中央建築用 Quaternius Ultimate Fantasy RTS chibi GLTF
+    const QUATERNIUS_BASE = 'assets/3d/glTF/';
+    const QUATERNIUS_MAP = {
+        shop:    'Market_SecondAge_Level3.gltf',
+        exam:    'Temple_SecondAge_Level3.gltf',
+        museum:  'Wonder_SecondAge_Level3.gltf',
+        pvp:     'Barracks_SecondAge_Level3.gltf',
+        farm:    'Farm_SecondAge_Level3_Wheat.gltf',
+        quest:   'TownCenter_SecondAge_Level3.gltf',
+        boss:    'WatchTower_SecondAge_Level3.gltf',
+    };
+    const QUATERNIUS_SCALE = {
+        shop: 4, exam: 4, museum: 4, pvp: 4, farm: 5, quest: 4, boss: 4.5
+    };
+    const quatLoader = new GLTFLoader();
+
     // ─── Phase 4 試做: 5 科目島用 primitives 拼 3D（取代 sprite billboard）
     const ISLAND_3D_KEYS = ['chinese', 'english', 'math', 'science', 'social'];
     const islandAnimUpdaters = [];  // 每島自己的 animation update 函式
@@ -379,8 +395,49 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             label.position.set(b.x, size + 3, b.z);
             label.scale.set(12, 2.25, 1);
             scene.add(label);
+        } else if (QUATERNIUS_MAP[b.key]) {
+            // Phase 4e: 7 中央建築用 Quaternius GLTF (async load, hitbox 先建)
+            const hitbox = new THREE.Mesh(
+                new THREE.BoxGeometry(size * 0.7, size, size * 0.7),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitbox.position.set(b.x, size / 2, b.z);
+            hitbox.userData.key = b.key;
+            scene.add(hitbox);
+            buildingMeshes.push(hitbox);
+
+            // 標準 label (同 sprite billboard 那段)
+            const labelCanvas = document.createElement("canvas");
+            labelCanvas.width = 256; labelCanvas.height = 64;
+            const ctx = labelCanvas.getContext("2d");
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            roundRect(ctx, 0, 0, 256, 64, 12);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 32px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(opts.icon + " " + opts.title, 128, 32);
+            const labelTexture = new THREE.CanvasTexture(labelCanvas);
+            const labelMat = new THREE.SpriteMaterial({ map: labelTexture, depthTest: false });
+            const label = new THREE.Sprite(labelMat);
+            label.position.set(b.x, size + 2, b.z);
+            label.scale.set(8, 2, 1);
+            scene.add(label);
+
+            // 載入 Quaternius GLTF
+            const url = QUATERNIUS_BASE + QUATERNIUS_MAP[b.key];
+            const scale = QUATERNIUS_SCALE[b.key] || 4;
+            quatLoader.load(url, gltf => {
+                const model = gltf.scene;
+                model.scale.set(scale, scale, scale);
+                model.position.set(b.x, 0, b.z);
+                model.traverse(c => {
+                    if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+                });
+                scene.add(model);
+            }, undefined, err => console.warn('Quaternius load failed', b.key, err));
         } else {
-            // 其他 7 建築：保留 sprite billboard
+            // fallback：sprite billboard (理論上不會觸發，因為 12 keys 都 mapped)
             const url = SPRITE_MAP[b.key];
             const texture = textureLoader.load(url);
             texture.minFilter = THREE.LinearFilter;
@@ -402,7 +459,6 @@ import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
             scene.add(hitbox);
             buildingMeshes.push(hitbox);
 
-            // 一般 label
             const labelCanvas = document.createElement("canvas");
             labelCanvas.width = 256; labelCanvas.height = 64;
             const ctx = labelCanvas.getContext("2d");
