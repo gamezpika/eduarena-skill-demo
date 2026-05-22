@@ -123,14 +123,12 @@
     sun.shadow.camera.bottom = -60;
     scene.add(sun);
 
-    // ─── 地形 plane（草地 noise texture）
+    // ─── 草地 noise texture
     const grassCanvas = document.createElement("canvas");
     grassCanvas.width = 256; grassCanvas.height = 256;
     const grassCtx = grassCanvas.getContext("2d");
-    // 草綠基底
     grassCtx.fillStyle = "#7cb342";
     grassCtx.fillRect(0, 0, 256, 256);
-    // 隨機草點 (noise)
     for (let i = 0; i < 4000; i++) {
         const shade = Math.random();
         if (shade < 0.5) grassCtx.fillStyle = "rgba(102, 153, 51, 0.5)";
@@ -141,12 +139,95 @@
     const grassTex = new THREE.CanvasTexture(grassCanvas);
     grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
     grassTex.repeat.set(15, 15);
-    const groundGeo = new THREE.PlaneGeometry(120, 120, 1, 1);
+
+    // ─── Phase 3c: Perlin-like noise 地形起伏（中央區 flatten 給建築站平地）
+    // 學自 brunosimon/infinite-world: 細分 plane + vertex displacement
+    function terrainHeight(x, z) {
+        // 距中心 r：r < 28 完全平，r > 50 完整起伏，r=28~50 漸進
+        const r = Math.hypot(x, z);
+        const flatRadius = 28;
+        const fullHeightRadius = 50;
+        let factor = (r - flatRadius) / (fullHeightRadius - flatRadius);
+        factor = Math.max(0, Math.min(1, factor));
+        // 多 octave noise（用 sin/cos 模擬 Perlin，UMD 不依賴 SimplexNoise）
+        const h =
+            Math.sin(x * 0.08) * Math.cos(z * 0.08) * 3 +
+            Math.sin(x * 0.2 + z * 0.15) * 1.2 +
+            Math.cos(z * 0.32 - x * 0.1) * 0.6;
+        return h * factor;
+    }
+
+    const groundGeo = new THREE.PlaneGeometry(120, 120, 80, 80);
+    const positions = groundGeo.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+        const x = positions.getX(i);
+        const z = positions.getY(i);
+        positions.setZ(i, terrainHeight(x, z));
+    }
+    positions.needsUpdate = true;
+    groundGeo.computeVertexNormals();
+
     const groundMat = new THREE.MeshStandardMaterial({ map: grassTex });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
+
+    // ─── Phase 3c: Instanced trees + grass tufts (大量裝飾不卡)
+    // 學自 brunosimon/folio: InstancedMesh 一次 draw 上千個 instance
+    function placeInstanced(geo, mat, count, options) {
+        const inst = new THREE.InstancedMesh(geo, mat, count);
+        const dummy = new THREE.Object3D();
+        let placed = 0;
+        let attempts = 0;
+        while (placed < count && attempts < count * 5) {
+            attempts++;
+            const x = (Math.random() - 0.5) * 110;
+            const z = (Math.random() - 0.5) * 110;
+            const r = Math.hypot(x, z);
+            // 避開中央建築區
+            if (r < options.minR) continue;
+            if (r > 56) continue;  // 別到地圖邊外
+            const y = terrainHeight(x, z) + (options.yOffset || 0);
+            dummy.position.set(x, y, z);
+            const s = options.scaleMin + Math.random() * (options.scaleMax - options.scaleMin);
+            dummy.scale.set(s, s * (options.tall || 1), s);
+            dummy.rotation.y = Math.random() * Math.PI * 2;
+            dummy.updateMatrix();
+            inst.setMatrixAt(placed, dummy.matrix);
+            placed++;
+        }
+        inst.count = placed;
+        inst.castShadow = options.castShadow !== false;
+        inst.receiveShadow = true;
+        scene.add(inst);
+        return inst;
+    }
+
+    // 樹冠（綠色 cone）
+    placeInstanced(
+        new THREE.ConeGeometry(1.2, 3, 6),
+        new THREE.MeshStandardMaterial({ color: 0x2d6a4f, flatShading: true }),
+        180, { minR: 32, yOffset: 2.5, scaleMin: 0.7, scaleMax: 1.4, tall: 1.2 }
+    );
+    // 樹幹（棕色 cylinder）
+    placeInstanced(
+        new THREE.CylinderGeometry(0.25, 0.35, 1.5, 6),
+        new THREE.MeshStandardMaterial({ color: 0x5d4037 }),
+        180, { minR: 32, yOffset: 0.75, scaleMin: 0.7, scaleMax: 1.4 }
+    );
+    // 草叢（小綠 cone 散布）
+    placeInstanced(
+        new THREE.ConeGeometry(0.3, 0.5, 4),
+        new THREE.MeshStandardMaterial({ color: 0x66bb6a, flatShading: true }),
+        400, { minR: 18, yOffset: 0.25, scaleMin: 0.5, scaleMax: 1.2, castShadow: false }
+    );
+    // 石頭（灰 box scatter）
+    placeInstanced(
+        new THREE.BoxGeometry(1, 0.6, 1),
+        new THREE.MeshStandardMaterial({ color: 0x9e9e9e, flatShading: true }),
+        50, { minR: 20, yOffset: 0.3, scaleMin: 0.6, scaleMax: 1.3 }
+    );
 
     // ─── Phase 3: 12 建築用 chibi sprite billboard（沿用 EDUDEMO 既有 sprite）
     const SPRITE_MAP = {
