@@ -266,11 +266,6 @@
 .fighter-boss.defeated {
     animation: bossDefeated 1.8s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
 }
-.fighter-boss.enraged { animation: bossEnraged 0.6s ease-in-out infinite alternate; }
-@keyframes bossEnraged {
-    0%   { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)) hue-rotate(0) brightness(1); }
-    100% { filter: drop-shadow(0 0 16px #ff3030) hue-rotate(-25deg) brightness(1.25); }
-}
 @keyframes bossIdle {
     0%, 100% { transform: translateX(-50%) translateY(0) scale(1, 1); }
     50%      { transform: translateX(-50%) translateY(-5px) scale(1.02, 0.98); }
@@ -365,27 +360,6 @@
     pointer-events: none;
     z-index: 50;
 }
-/* 勝利光柱（從魔王位置打下來 + 擴散） */
-.victory-pillar {
-    position: absolute;
-    left: 78%;
-    top: 0;
-    bottom: 0;
-    width: 200px;
-    transform: translateX(-50%);
-    background:
-        linear-gradient(180deg, rgba(255, 230, 130, 0) 0%, rgba(255, 230, 130, 0.8) 30%, rgba(255, 180, 60, 0.6) 70%, rgba(255, 130, 30, 0) 100%);
-    mix-blend-mode: screen;
-    opacity: 0;
-    animation: pillarBurst 1.8s ease-out forwards;
-    animation-delay: 0.4s;
-}
-@keyframes pillarBurst {
-    0%   { opacity: 0; transform: translateX(-50%) scaleY(0.4); }
-    30%  { opacity: 1; transform: translateX(-50%) scaleY(1.2); }
-    100% { opacity: 0; transform: translateX(-50%) scaleY(1); }
-}
-
 /* 失敗紅色 vignette + fade */
 .lose-vignette {
     position: absolute;

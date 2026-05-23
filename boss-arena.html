@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=7">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=8">
 </head>
 <body>
 
@@ -126,7 +126,6 @@ const state = {
     qIdx: 0,
     busy: false,
     finished: false,
-    enraged: false,        // 魔王怒氣模式 (HP<50%)
 };
 
 const $ = (id) => document.getElementById(id);
@@ -312,28 +311,13 @@ async function attackBoss() {
     setTimeout(() => stage.classList.remove("impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
     updateBars();
-    checkEnrage();
 
     await sleep(400);
     boss.classList.remove("hit");
 }
 
-// E. 魔王怒氣模式（HP<50%）
-function checkEnrage() {
-    if (!state.enraged && state.bossHP > 0 && state.bossHP / state.bossMaxHP < 0.5) {
-        state.enraged = true;
-        boss.classList.add("enraged");
-        const pop = document.createElement("div");
-        pop.className = "combo-pop tier-3";
-        pop.textContent = "魔王怒氣！";
-        stage.appendChild(pop);
-        setTimeout(() => pop.remove(), 1200);
-    }
-}
-
 async function getHitByBoss() {
-    const enrageBonus = state.enraged ? 1.4 : 1.0;  // E. 怒氣模式傷害 +40%
-    const dmg = Math.floor((18 + Math.floor(Math.random() * 12)) * enrageBonus);
+    const dmg = 18 + Math.floor(Math.random() * 12);  // 18-29
     state.heroHP = Math.max(0, state.heroHP - dmg);
     hero.classList.add("hit");
     stage.classList.add("shake", "player-hit");
@@ -361,19 +345,15 @@ function endGame(outcome) {
     let overlayDelay = 600;
 
     if (outcome === "win") {
-        // H. 勝利 cinematic
+        // H. 勝利 cinematic（拿掉光柱、拿掉 combo 顯示）
         boss.classList.add("defeated");
         stage.classList.add("slow-mo");
-        // 光柱從魔王位置打下來
-        const pillar = document.createElement("div");
-        pillar.className = "victory-pillar";
-        stage.appendChild(pillar);
         // 主角擺勝利姿勢
         hero.classList.remove("attacking");
         hero.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
-        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題 · 最高 Combo ×${state.combo}`;
-        overlayDelay = 2200;  // 等 cinematic 跑完
+        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
+        overlayDelay = 2200;
     } else if (outcome === "retreat") {
         // H. 失敗 cinematic
         const vig = document.createElement("div");
