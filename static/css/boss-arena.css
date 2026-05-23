@@ -180,15 +180,6 @@
     z-index: 2;
     overflow: visible;
 }
-/* DEBUG: 暫時的座標標籤（派派標完後移除） */
-.grid-label {
-    font: bold 2.2px sans-serif;
-    fill: rgba(255, 255, 255, 0.95);
-    paint-order: stroke;
-    stroke: rgba(0, 0, 0, 0.85);
-    stroke-width: 0.5px;
-    pointer-events: none;
-}
 .grid-tile {
     fill: transparent;
     stroke: rgba(120, 200, 255, 0.85);
@@ -372,8 +363,8 @@
 /* 魔王站位 — 真等距菱形 (4,4) center = stage (74%, 50%) 最右中央 */
 .fighter-boss {
     position: absolute;
-    left: 83.6%;
-    bottom: 50%;
+    left: 66.8%;
+    bottom: 57%;
     width: 100px;
     height: auto;
     transform: translateX(-50%);
