@@ -297,6 +297,47 @@ function blankConfig(w, h) {
     };
 }
 
+// 預設 12 棟 EduArena 菱形 grid（3 列 × 4 行）— 對應 isometric 學園村標準佈局
+function defaultEduArenaConfig(w, h) {
+    const COL_X = [0.18, 0.50, 0.82];
+    const ROW_Y = [0.11, 0.32, 0.55, 0.78];
+    const HW = 0.13, HH = 0.09;
+    const SPECS = [
+        {row:0,col:0,id:'chinese_island', name:'國語島',     category:'education_chinese', color:'#FF3B30', type:'navigation'},
+        {row:0,col:1,id:'boss_tower',     name:'魔王塔',     category:'combat_pve',        color:'#6F2DA8', type:'trigger_event'},
+        {row:0,col:2,id:'english_castle', name:'英文島',     category:'education_english', color:'#0A84FF', type:'navigation'},
+        {row:1,col:0,id:'shop',           name:'商店',       category:'commerce',          color:'#FF9500', type:'open_modal'},
+        {row:1,col:1,id:'exam_center',    name:'考試中心',   category:'examination',       color:'#E5E5EA', type:'navigation'},
+        {row:1,col:2,id:'museum',         name:'偉人館',     category:'culture',           color:'#5AC8FA', type:'open_modal'},
+        {row:2,col:0,id:'pvp_arena',      name:'PK 競技場',  category:'combat_pvp',        color:'#BF5AF2', type:'trigger_event'},
+        {row:2,col:1,id:'farm',           name:'農田',       category:'agriculture',       color:'#FFCC00', type:'navigation'},
+        {row:2,col:2,id:'quest_board',    name:'任務告示板', category:'quest_board',       color:'#8B5A2B', type:'open_modal'},
+        {row:3,col:0,id:'math_island',    name:'數學島',     category:'education_math',    color:'#FFD60A', type:'navigation'},
+        {row:3,col:1,id:'social_island',  name:'社會島',     category:'education_social',  color:'#30D158', type:'navigation'},
+        {row:3,col:2,id:'science_island', name:'自然島',     category:'education_science', color:'#34C759', type:'navigation'},
+    ];
+    const buildings = SPECS.map(s => {
+        const cx = COL_X[s.col], cy = ROW_Y[s.row];
+        const poly = [
+            {x: cx,      y: cy - HH},
+            {x: cx + HW, y: cy},
+            {x: cx,      y: cy + HH},
+            {x: cx - HW, y: cy},
+        ];
+        return {
+            id: s.id, name: s.name, category: s.category,
+            center: {x: cx, y: cy},
+            bounding_box: {x_min: cx-HW, y_min: cy-HH, x_max: cx+HW, y_max: cy+HH},
+            mask_color: s.color,
+            render_order: (s.row + 1) * 100 + s.col,
+            interaction_type: s.type,
+            polygon: poly,
+            path: [],
+        };
+    });
+    return { dimensions: {width: w, height: h}, buildings, connections: [] };
+}
+
 // 載入 config
 fetch('assets/world_map_config.json?v=' + Date.now())
     .then(r => r.json())
@@ -759,27 +800,32 @@ document.getElementById('btnLoadUrl').addEventListener('click', () => {
 });
 
 function loadNewImage(src, displayName) {
-    const reset = confirm(
+    const choice = prompt(
         `要切到新圖：${displayName}\n\n` +
-        '按「確定」= 重置 config（building 清空、從頭加）\n' +
-        '按「取消」= 保留現有 building（座標相對位置不變，請確認新圖比例對齊）'
+        '輸入數字選擇 building 處理：\n' +
+        '  1 = 預設 12 棟 EduArena 菱形 grid (3×4，新地圖最常用)\n' +
+        '  2 = 清空 building（從零開始加）\n' +
+        '  3 = 保留現有 building（座標相對位置不變）\n\n' +
+        '預設選 1：',
+        '1'
     );
+    if (choice === null) return;  // 使用者按取消
     mapImg.src = src;
     document.getElementById('mapSrc').textContent = displayName + ' × world_map_config.json';
-    if (reset) {
-        mapImg.onload = () => {
-            mapConfig = blankConfig(mapImg.naturalWidth, mapImg.naturalHeight);
+    mapImg.onload = () => {
+        const w = mapImg.naturalWidth, h = mapImg.naturalHeight;
+        if (choice === '2') {
+            mapConfig = blankConfig(w, h);
             selectedBuildingId = null;
-            renderAll();
-        };
-    } else {
-        mapImg.onload = () => {
-            if (mapConfig) mapConfig.dimensions = {
-                width: mapImg.naturalWidth, height: mapImg.naturalHeight,
-            };
-            renderAll();
-        };
-    }
+        } else if (choice === '3') {
+            if (mapConfig) mapConfig.dimensions = { width: w, height: h };
+        } else {
+            // 預設或 '1'：預設 12 棟 EduArena 菱形 grid
+            mapConfig = defaultEduArenaConfig(w, h);
+            selectedBuildingId = null;
+        }
+        renderAll();
+    };
 }
 
 // ─── 新增 building
