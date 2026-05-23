@@ -660,24 +660,49 @@ function spawnWeaponTrail() {
     setTimeout(() => trail.remove(), 700);
 }
 
+// 從 attack sprite 路徑推 charge/release 同 tier 路徑
+function deriveBossFramePath(attackSprite, phase) {
+    if (!attackSprite) return null;
+    // e.g. "boss/v2/math/t1/attack.png" → "boss/v2/math/t1/charge.png"
+    return attackSprite.replace(/\/attack\.png$/, `/${phase}.png`);
+}
+
+// 嘗試切換 boss sprite；圖不存在會在 img.onerror 回退
+function swapBossSprite(spritePath, fallback) {
+    if (!spritePath) return;
+    boss.src = `assets/images/${spritePath}?v=1`;
+    boss.onerror = () => {
+        boss.onerror = null;
+        if (fallback) boss.src = `assets/images/${fallback}?v=1`;
+    };
+}
+
 async function getHitByBoss() {
     // tier 等級 (t1/t2/t3 → 1/2/3)
     const tierLevel = parseInt((playerSetup.tier || "t1").replace("t", ""), 10) || 1;
 
-    // B2 蓄力前搖 0.4s（魔王發光、scale 變大）
+    const attackSp = state.bossData && state.bossData.attack_sprite;
+    const chargeSp = deriveBossFramePath(attackSp, "charge");
+    const releaseSp = deriveBossFramePath(attackSp, "release");
+
+    // B2 蓄力前搖 0.4s（魔王發光、scale 變大 + 切 charge.png）
     boss.classList.add("charging");
+    swapBossSprite(chargeSp, attackSp);  // charge 圖；不存在 fallback attack
     await sleep(400);
     boss.classList.remove("charging");
 
-    // B1 切到 attack sprite
-    if (state.bossData && state.bossData.attack_sprite) {
-        boss.src = `assets/images/${state.bossData.attack_sprite}?v=1`;
+    // B1 切到 attack sprite (peak attack pose)
+    if (attackSp) {
+        boss.src = `assets/images/${attackSp}?v=1`;
     }
 
     await sleep(120);
 
     // B3 投射物：boss → hero，tier 越高越多
     spawnBossProjectile(tierLevel);
+
+    // 出招中段切到 release（follow-through 跟進姿勢）
+    setTimeout(() => swapBossSprite(releaseSp, attackSp), 180);
 
     // 飛行時間 0.5s
     await sleep(500);
