@@ -1323,6 +1323,34 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 }
 .job-preview .job-name { color: #ffd54d; font-weight: 700; font-size: 13px; }
 
+/* 棋盤主題切換 picker */
+.theme-picker {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+.theme-btn {
+    padding: 10px 4px;
+    background: rgba(30, 20, 8, 0.85);
+    color: rgba(255, 230, 180, 0.9);
+    border: 2px solid rgba(120, 90, 50, 0.6);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.theme-btn:hover { border-color: rgba(255, 215, 90, 0.7); background: rgba(60, 40, 16, 0.9); }
+.theme-btn.active {
+    background: linear-gradient(180deg, #ffd54d 0%, #c7902a 100%);
+    color: #2d1500;
+    border-color: #ffd54d;
+    box-shadow: 0 0 12px rgba(255, 215, 90, 0.7);
+    text-shadow: 1px 1px 1px rgba(255, 240, 200, 0.5);
+}
+
 .setup-start {
     margin-top: 10px;
     padding: 14px;

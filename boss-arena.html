@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=36">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=37">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -55,6 +55,17 @@
                     <!-- 24 職業 JS render -->
                 </div>
                 <div class="job-preview" id="job-preview">點選職業看詳細</div>
+            </div>
+
+            <div class="setup-section">
+                <h3>🧱 戰場棋盤主題</h3>
+                <div class="theme-picker" id="setup-theme">
+                    <button class="theme-btn" data-theme="sandstone">🏜 砂岩</button>
+                    <button class="theme-btn" data-theme="rocky">🪨 圓石</button>
+                    <button class="theme-btn" data-theme="marble">⬜ 白雲石</button>
+                    <button class="theme-btn" data-theme="volcanic">🌋 火山</button>
+                    <button class="theme-btn" data-theme="ice">❄ 冰原</button>
+                </div>
             </div>
 
             <button class="setup-start" id="setup-start">開始挑戰魔王 →</button>
@@ -1107,10 +1118,19 @@ function restoreSetup() {
     } catch (e) { /* ignore */ }
 }
 
-(async function init() {
-    // 棋盤主題 (URL ?theme=sandstone|rocky|marble|volcanic|ice)
-    const theme = new URLSearchParams(location.search).get("theme") || "sandstone";
+// 棋盤主題：URL > localStorage > default
+function applyTheme(theme) {
     document.body.dataset.theme = theme;
+    document.querySelectorAll("#setup-theme .theme-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.theme === theme);
+    });
+    try { localStorage.setItem("eduarena_demo_theme", theme); } catch (e) {}
+}
+
+(async function init() {
+    const urlTheme = new URLSearchParams(location.search).get("theme");
+    const savedTheme = (() => { try { return localStorage.getItem("eduarena_demo_theme"); } catch (e) { return null; } })();
+    applyTheme(urlTheme || savedTheme || "sandstone");
 
     await loadData();
     restoreSetup();
@@ -1121,6 +1141,10 @@ function restoreSetup() {
     const savedJob = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
     selectJob(savedJob);
     document.getElementById("setup-start").onclick = startArena;
+    // 主題按鈕綁定
+    document.querySelectorAll("#setup-theme .theme-btn").forEach(b => {
+        b.onclick = () => applyTheme(b.dataset.theme);
+    });
 })();
 </script>
 
