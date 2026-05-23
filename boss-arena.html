@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=41">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=42">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -936,9 +936,9 @@ function pStampFromSky(pos, subj, tier, shape = "shape-disc") {
     setTimeout(() => stamp.remove(), 750);
 }
 
-// ----- 楓之谷風 VFX primitive：直接顯示 vfx.png 並套用 motion class -----
+// ----- 楓之谷風 VFX primitive：直接顯示 vfx.webp 並套用 motion class -----
 function pMapleVfx(pos, subj, tier, motion, opts = {}) {
-    const url = `assets/images/boss/v2/${subj}/t${tier}/vfx.png?v=2`;
+    const url = `assets/images/boss/v2/${subj}/t${tier}/vfx.webp?v=3`;
     const count = opts.count || 1;
     const stagger = opts.stagger || 0;
     console.log(`[boss-vfx] ${subj}-t${tier} motion=${motion} count=${count} url=${url}`);
@@ -1182,7 +1182,32 @@ function applyJobBuff() {
     state.heroMaxMP = 50 + bonus[1];  state.heroMP  = state.heroMaxMP;
 }
 
-function startArena() {
+// 圖片預載 helper（404 也 resolve 不卡 Promise.all）
+function preloadImage(url) {
+    return new Promise((resolve) => {
+        const im = new Image();
+        im.onload = () => resolve(true);
+        im.onerror = () => resolve(false);
+        im.src = url;
+    });
+}
+function showSetupSpinner() {
+    let sp = document.getElementById("setup-spinner");
+    if (!sp) {
+        sp = document.createElement("div");
+        sp.id = "setup-spinner";
+        sp.className = "setup-spinner";
+        sp.innerHTML = '<div class="setup-spinner-ring"></div><div class="setup-spinner-text">⚔ 準備戰場中...</div>';
+        document.body.appendChild(sp);
+    }
+    sp.style.display = "flex";
+}
+function hideSetupSpinner() {
+    const sp = document.getElementById("setup-spinner");
+    if (sp) sp.style.display = "none";
+}
+
+async function startArena() {
     playerSetup.name = document.getElementById("setup-name").value.trim() || "派派";
 
     // 套用題庫
@@ -1201,18 +1226,22 @@ function startArena() {
     boss.src = `assets/images/${tierData.sprite}?v=1`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
 
-    // 預載連續動作幀 + 楓之谷 VFX 圖（避免戰鬥中切圖載入延遲）
+    // 預載連續動作幀 + 楓之谷 VFX 圖 — await 等載入完成（派派 5/24：戰鬥內絕對流暢）
     const tierKey = playerSetup.tier;  // "t1"/"t2"/"t3"
     const framesToPreload = [
-        tierData.sprite,
-        tierData.hit_sprite,
-        tierData.attack_sprite,
-        tierData.defeat_sprite,
-        deriveBossFramePath(tierData.attack_sprite, "charge"),
-        deriveBossFramePath(tierData.attack_sprite, "release"),
-        `boss/v2/${playerSetup.subject}/${tierKey}/vfx.png`,
+        `${tierData.sprite}?v=1`,
+        `${tierData.hit_sprite}?v=1`,
+        `${tierData.attack_sprite}?v=1`,
+        `${tierData.defeat_sprite}?v=1`,
+        `${deriveBossFramePath(tierData.attack_sprite, "charge")}?v=1`,
+        `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=1`,
+        `boss/v2/${playerSetup.subject}/${tierKey}/vfx.webp?v=3`,
     ].filter(Boolean);
-    framesToPreload.forEach(p => { const im = new Image(); im.src = `assets/images/${p}?v=1`; });
+
+    // setup 畫面顯示「準備戰場中…」spinner，等所有圖載完才切戰場
+    showSetupSpinner();
+    await Promise.all(framesToPreload.map(p => preloadImage(`assets/images/${p}`)));
+    hideSetupSpinner();
 
     // 戰場用 tier 的 bg（15 張 boss 各自背景），5×5 棋盤是 CSS overlay 疊在上面
     stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;

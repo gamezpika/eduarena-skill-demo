@@ -970,6 +970,39 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     box-shadow: 0 0 18px rgba(255, 180, 40, 0.95), 0 0 32px rgba(230, 140, 30, 0.55);
 }
 
+/* ===== 戰場準備中 spinner（preload 圖檔時顯示）===== */
+.setup-spinner {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(8, 4, 0, 0.78);
+    backdrop-filter: blur(4px);
+    color: #ffd54d;
+    font-family: inherit;
+}
+.setup-spinner-ring {
+    width: 56px;
+    height: 56px;
+    border: 5px solid rgba(255, 215, 90, 0.25);
+    border-top-color: #ffd54d;
+    border-radius: 50%;
+    animation: spinnerSpin 0.85s linear infinite;
+}
+.setup-spinner-text {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255, 200, 60, 0.7);
+}
+@keyframes spinnerSpin {
+    to { transform: rotate(360deg); }
+}
+
 /* ===== 楓之谷風 VFX：6 motion + 全螢幕彩色閃 + fallback aura ===== */
 .boss-vfx {
     position: absolute;
