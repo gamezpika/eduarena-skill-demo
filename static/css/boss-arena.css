@@ -1,0 +1,443 @@
+/* boss-arena.css — 瑪莉的鍊金工房風等距戰場 demo
+   配合 boss-arena.html，疊在 demo.css 之上。 */
+
+#screen-arena {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background:
+        radial-gradient(ellipse 80% 50% at 50% 30%, rgba(80, 40, 20, 0.25) 0%, transparent 70%),
+        linear-gradient(180deg, #1a0f08 0%, #0d0a08 100%);
+    color: #f0e6d2;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ===== 上方 HUD：木框角色卡 ===== */
+.arena-hud {
+    flex-shrink: 0;
+    padding: 12px 14px 8px;
+    z-index: 2;
+}
+.hero-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 8px 8px;
+    background:
+        linear-gradient(135deg, #c79a5a 0%, #a37840 30%, #8a6332 60%, #6b4a22 100%);
+    border: 2px solid #3d2810;
+    border-radius: 14px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 220, 160, 0.4),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+        0 4px 10px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+.hero-card::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(255, 230, 180, 0.25);
+    border-radius: 11px;
+    pointer-events: none;
+}
+.hero-portrait {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid #5a3a1a;
+    background: #2a1a0c;
+    box-shadow: inset 0 0 0 2px rgba(255, 220, 160, 0.3);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+.hero-portrait img {
+    width: 130%;
+    height: auto;
+    margin-bottom: -6px;
+    image-rendering: -webkit-optimize-contrast;
+}
+.hero-info {
+    flex: 1;
+    min-width: 0;
+}
+.hero-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+.hero-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+}
+.bar-label {
+    width: 22px;
+    font-weight: 700;
+    color: #ffe6a8;
+    flex-shrink: 0;
+}
+.bar-value {
+    width: 56px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+.bar-track {
+    flex: 1;
+    height: 8px;
+    background: #2a1a0c;
+    border-radius: 4px;
+    border: 1px solid #1a0e04;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.bar-fill {
+    height: 100%;
+    transition: width 0.5s ease-out;
+    border-radius: 3px;
+}
+.bar-fill.hp {
+    background: linear-gradient(180deg, #ff8a4c 0%, #d63b1a 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 220, 180, 0.5);
+}
+.bar-fill.mp {
+    background: linear-gradient(180deg, #6aa8ff 0%, #1a4ad6 100%);
+    box-shadow: inset 0 1px 0 rgba(180, 220, 255, 0.5);
+}
+
+/* ===== 戰場區 ===== */
+.arena-stage {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    background-image: url("../../assets/images/arena/dungeon_bg.png?v=1");
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    transition: transform 0.06s;
+}
+.arena-stage.shake { animation: arenaShake 0.4s; }
+@keyframes arenaShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-6px, 3px); }
+    40% { transform: translate(7px, -2px); }
+    60% { transform: translate(-5px, 4px); }
+    80% { transform: translate(4px, -3px); }
+}
+
+/* 紅色受擊閃光（玩家） */
+.arena-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(255, 30, 30, 0.45) 0%, rgba(180, 0, 0, 0.15) 60%, transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+.arena-stage.player-hit::after { opacity: 1; animation: vignetteFade 0.45s; }
+@keyframes vignetteFade {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* 主角站位（等距畫面左下） */
+.fighter-hero {
+    position: absolute;
+    left: 22%;
+    bottom: 18%;
+    width: 90px;
+    height: auto;
+    transform-origin: 50% 100%;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
+    animation: heroIdle 2.4s ease-in-out infinite;
+    z-index: 3;
+}
+.fighter-hero.hit { animation: heroHit 0.5s; }
+@keyframes heroIdle {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    50% { transform: translateY(-3px) scale(0.99, 1.01); }
+}
+@keyframes heroHit {
+    0% { transform: translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
+    15% { transform: translateX(-8px) rotate(-3deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
+    30% { transform: translateX(8px) rotate(2deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
+    50% { transform: translateX(-5px); filter: brightness(1.3); }
+    100% { transform: translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
+}
+
+/* 魔王站位（等距畫面右上） */
+.fighter-boss {
+    position: absolute;
+    right: 14%;
+    top: 22%;
+    width: 130px;
+    height: auto;
+    transform-origin: 50% 100%;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
+    animation: bossIdle 3s ease-in-out infinite;
+    z-index: 3;
+}
+.fighter-boss.hit { animation: bossHit 0.5s; }
+.fighter-boss.defeated {
+    animation: bossDefeated 1.2s forwards;
+}
+@keyframes bossIdle {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    50% { transform: translateY(-5px) scale(1.02, 0.98); }
+}
+@keyframes bossHit {
+    0%   { transform: translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
+    20%  { transform: translateX(10px) scale(0.96, 1.04); filter: brightness(3.2) saturate(0.2); }
+    45%  { transform: translateX(-8px) scale(1.04, 0.96); filter: brightness(3.2) saturate(0.2); }
+    65%  { transform: translateX(5px); filter: brightness(1.5); }
+    100% { transform: translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
+}
+@keyframes bossDefeated {
+    0%   { transform: translateY(0) rotate(0); opacity: 1; }
+    30%  { transform: translateY(-10px) rotate(-5deg); opacity: 1; }
+    60%  { transform: translateY(20px) rotate(15deg); opacity: 0.7; }
+    100% { transform: translateY(40px) rotate(25deg); opacity: 0; }
+}
+
+/* 魔王 HP 條（戰場內懸浮） */
+.boss-hud {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    max-width: 280px;
+    z-index: 4;
+}
+.boss-hud .boss-name {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ff8a4c;
+    text-shadow: 0 0 8px rgba(255, 100, 0, 0.7), 1px 1px 2px #000;
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+}
+.boss-hp-track {
+    height: 12px;
+    background: #2a0a0a;
+    border: 2px solid #4a1a08;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.7),
+        0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.boss-hp-fill {
+    height: 100%;
+    background: linear-gradient(180deg, #ff5050 0%, #a00010 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 200, 200, 0.6);
+    transition: width 0.5s ease-out;
+}
+
+/* 飄字傷害數字 */
+.dmg-pop {
+    position: absolute;
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffe34d;
+    text-shadow:
+        2px 2px 0 #000,
+        -2px 2px 0 #000,
+        2px -2px 0 #000,
+        -2px -2px 0 #000,
+        0 0 12px rgba(255, 200, 60, 0.7);
+    pointer-events: none;
+    animation: dmgPop 1.0s forwards;
+    z-index: 10;
+    font-family: "Arial Black", sans-serif;
+    letter-spacing: -1px;
+}
+.dmg-pop.miss { color: #ff5a5a; text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000, 0 0 12px rgba(255, 60, 60, 0.7); }
+@keyframes dmgPop {
+    0%   { transform: translate(-50%, 0) scale(0.4); opacity: 0; }
+    20%  { transform: translate(-50%, -10px) scale(1.4); opacity: 1; }
+    50%  { transform: translate(-50%, -30px) scale(1.0); opacity: 1; }
+    100% { transform: translate(-50%, -60px) scale(0.8); opacity: 0; }
+}
+
+/* 火把光暈閃爍（疊在背景上） */
+.torch-glow {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255, 180, 60, 0.45) 0%, rgba(255, 120, 30, 0.2) 40%, transparent 70%);
+    mix-blend-mode: screen;
+    animation: torchFlicker 1.4s ease-in-out infinite;
+    z-index: 2;
+}
+.torch-glow.left  { top: 18%; left: 8%; }
+.torch-glow.right { top: 18%; right: 8%; animation-delay: 0.7s; }
+@keyframes torchFlicker {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    30%      { opacity: 1.0;  transform: scale(1.1); }
+    60%      { opacity: 0.7;  transform: scale(0.95); }
+}
+
+/* ===== 題目區 ===== */
+.arena-question {
+    flex-shrink: 0;
+    margin: 8px 14px 0;
+    padding: 12px 14px;
+    background:
+        linear-gradient(135deg, rgba(255, 250, 230, 0.95) 0%, rgba(245, 230, 200, 0.92) 100%);
+    border: 2px solid #6b4a22;
+    border-radius: 12px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 4px 10px rgba(0, 0, 0, 0.5);
+    color: #3d2810;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.arena-options {
+    flex-shrink: 0;
+    padding: 10px 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    z-index: 2;
+}
+.opt-btn {
+    padding: 12px 6px;
+    background:
+        linear-gradient(180deg, #c79a5a 0%, #a37840 50%, #8a6332 100%);
+    border: 2px solid #3d2810;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 220, 160, 0.5),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.08s, filter 0.08s;
+    font-family: inherit;
+}
+.opt-btn:active { transform: scale(0.96); filter: brightness(1.1); }
+.opt-btn:disabled { cursor: default; opacity: 0.7; }
+.opt-btn.correct {
+    animation: optCorrect 0.6s;
+    background: linear-gradient(180deg, #6fcf3f 0%, #3a8a20 100%);
+    border-color: #1a4a08;
+}
+.opt-btn.wrong {
+    animation: optWrong 0.6s;
+    background: linear-gradient(180deg, #d64040 0%, #8a1010 100%);
+    border-color: #4a0808;
+}
+@keyframes optCorrect {
+    0%, 100% { transform: scale(1); }
+    30%      { transform: scale(1.12); }
+}
+@keyframes optWrong {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    50%      { transform: translateX(6px); }
+    75%      { transform: translateX(-3px); }
+}
+
+/* ===== 結局畫面 ===== */
+.arena-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: overlayIn 0.4s;
+}
+@keyframes overlayIn {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to   { opacity: 1; backdrop-filter: blur(4px); }
+}
+.overlay-emoji { font-size: 80px; margin-bottom: 12px; animation: bigBounce 0.8s; }
+@keyframes bigBounce {
+    0%   { transform: scale(0); opacity: 0; }
+    50%  { transform: scale(1.3); opacity: 1; }
+    70%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+.overlay-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffe34d;
+    text-shadow: 2px 2px 0 #000, 0 0 16px rgba(255, 200, 60, 0.6);
+    margin-bottom: 8px;
+}
+.overlay-title.lose { color: #ff5a5a; text-shadow: 2px 2px 0 #000, 0 0 16px rgba(255, 60, 60, 0.6); }
+.overlay-sub {
+    font-size: 14px;
+    color: #f0e6d2;
+    margin-bottom: 24px;
+}
+.overlay-btn {
+    padding: 14px 32px;
+    background: linear-gradient(180deg, #c79a5a 0%, #8a6332 100%);
+    border: 2px solid #3d2810;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.5), 0 4px 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+.overlay-btn:active { transform: scale(0.96); }
+
+/* 返回首頁鈕（左上） */
+.arena-back {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 50;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 220, 160, 0.4);
+    color: #ffe6a8;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.arena-back:active { transform: scale(0.95); }

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a0f08">
+    <meta name="description" content="EduArena 技術 Demo — 瑪莉的鍊金工房風等距 2.5D 魔王戰場（答對攻擊、答錯扣血）">
+
+    <meta property="og:title" content="EduArena 等距魔王戰 Demo">
+    <meta property="og:description" content="瑪莉的鍊金工房風 — 答對攻擊魔王，答錯主角扣血">
+    <meta property="og:type" content="website">
+
+    <title>魔王戰 · EduArena Demo</title>
+    <link rel="stylesheet" href="static/css/demo.css?v=3">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=1">
+</head>
+<body>
+
+<div class="demo-banner">技術 DEMO</div>
+
+<div class="iphone-frame">
+    <div class="iphone-island" aria-hidden="true"></div>
+    <div class="iphone-home" aria-hidden="true"></div>
+
+    <div class="iphone-screen">
+
+        <div id="screen-arena">
+
+            <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
+
+            <!-- 上方主角 HUD（木框） -->
+            <div class="arena-hud">
+                <div class="hero-card">
+                    <div class="hero-portrait">
+                        <img src="assets/images/arena/hero.png" alt="hero">
+                    </div>
+                    <div class="hero-info">
+                        <div class="hero-name">小派派</div>
+                        <div class="hero-bars">
+                            <div class="bar-row">
+                                <span class="bar-label">HP</span>
+                                <span class="bar-value" id="hero-hp-num">100 / 100</span>
+                                <div class="bar-track"><div class="bar-fill hp" id="hero-hp-fill" style="width: 100%"></div></div>
+                            </div>
+                            <div class="bar-row">
+                                <span class="bar-label">MP</span>
+                                <span class="bar-value" id="hero-mp-num">50 / 50</span>
+                                <div class="bar-track"><div class="bar-fill mp" id="hero-mp-fill" style="width: 100%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 戰場 -->
+            <div class="arena-stage" id="arena-stage">
+                <div class="torch-glow left"></div>
+                <div class="torch-glow right"></div>
+
+                <div class="boss-hud">
+                    <div class="boss-name">★ 數學魔王 ★</div>
+                    <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
+                </div>
+
+                <img src="assets/images/arena/hero.png" class="fighter-hero" id="fighter-hero" alt="hero">
+                <img src="assets/images/arena/boss_idle.png" class="fighter-boss" id="fighter-boss" alt="boss">
+            </div>
+
+            <!-- 題目卡 -->
+            <div class="arena-question" id="arena-question">準備迎戰...</div>
+
+            <!-- 4 選項 -->
+            <div class="arena-options" id="arena-options">
+                <button class="opt-btn" data-i="0">--</button>
+                <button class="opt-btn" data-i="1">--</button>
+                <button class="opt-btn" data-i="2">--</button>
+                <button class="opt-btn" data-i="3">--</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+// 假題庫（demo 用，數學 5 題）
+const QUESTIONS = [
+    { q: "12 × 8 = ?",   options: ["88", "96", "86", "100"], ans: 1 },
+    { q: "25 + 37 = ?",  options: ["52", "72", "62", "68"],  ans: 2 },
+    { q: "81 ÷ 9 = ?",   options: ["7",  "8",  "9",  "11"],  ans: 2 },
+    { q: "100 - 47 = ?", options: ["53", "63", "43", "57"],  ans: 0 },
+    { q: "7 × 9 = ?",    options: ["56", "72", "63", "65"],  ans: 2 },
+];
+
+const state = {
+    heroHP: 100, heroMaxHP: 100,
+    heroMP: 50,  heroMaxMP: 50,
+    bossHP: 250, bossMaxHP: 250,
+    qIdx: 0,
+    busy: false,
+    finished: false,
+};
+
+const $ = (id) => document.getElementById(id);
+const stage = $("arena-stage");
+const hero  = $("fighter-hero");
+const boss  = $("fighter-boss");
+
+function updateBars() {
+    $("hero-hp-num").textContent = `${state.heroHP} / ${state.heroMaxHP}`;
+    $("hero-hp-fill").style.width = (state.heroHP / state.heroMaxHP * 100) + "%";
+    $("hero-mp-num").textContent = `${state.heroMP} / ${state.heroMaxMP}`;
+    $("hero-mp-fill").style.width = (state.heroMP / state.heroMaxMP * 100) + "%";
+    $("boss-hp-fill").style.width = (state.bossHP / state.bossMaxHP * 100) + "%";
+}
+
+function loadQuestion() {
+    const q = QUESTIONS[state.qIdx % QUESTIONS.length];
+    $("arena-question").textContent = q.q;
+    const btns = document.querySelectorAll(".opt-btn");
+    btns.forEach((btn, i) => {
+        btn.textContent = "ABCD"[i] + ". " + q.options[i];
+        btn.className = "opt-btn";
+        btn.disabled = false;
+        btn.onclick = () => handleAnswer(i, btn);
+    });
+}
+
+function popDamage(targetEl, text, miss) {
+    const rect = targetEl.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const pop = document.createElement("div");
+    pop.className = "dmg-pop" + (miss ? " miss" : "");
+    pop.textContent = text;
+    pop.style.left = (rect.left - stageRect.left + rect.width / 2) + "px";
+    pop.style.top  = (rect.top  - stageRect.top  + 10) + "px";
+    stage.appendChild(pop);
+    setTimeout(() => pop.remove(), 1000);
+}
+
+async function handleAnswer(idx, btn) {
+    if (state.busy || state.finished) return;
+    state.busy = true;
+    const q = QUESTIONS[state.qIdx % QUESTIONS.length];
+    document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
+
+    if (idx === q.ans) {
+        btn.classList.add("correct");
+        await attackBoss();
+    } else {
+        btn.classList.add("wrong");
+        // 顯示正解
+        document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
+        await getHitByBoss();
+    }
+
+    if (state.bossHP <= 0)      return endGame(true);
+    if (state.heroHP <= 0)      return endGame(false);
+
+    await sleep(700);
+    state.qIdx++;
+    state.busy = false;
+    loadQuestion();
+}
+
+async function attackBoss() {
+    const dmg = 40 + Math.floor(Math.random() * 30);  // 40-69
+    state.bossHP = Math.max(0, state.bossHP - dmg);
+    boss.src = "assets/images/arena/boss_hurt.png";
+    boss.classList.add("hit");
+    popDamage(boss, "-" + dmg, false);
+    updateBars();
+    await sleep(500);
+    boss.classList.remove("hit");
+    if (state.bossHP > 0) boss.src = "assets/images/arena/boss_idle.png";
+}
+
+async function getHitByBoss() {
+    const dmg = 18 + Math.floor(Math.random() * 12);  // 18-29
+    state.heroHP = Math.max(0, state.heroHP - dmg);
+    hero.classList.add("hit");
+    stage.classList.add("shake", "player-hit");
+    popDamage(hero, "-" + dmg, true);
+    if (navigator.vibrate) navigator.vibrate(30);
+    updateBars();
+    await sleep(500);
+    hero.classList.remove("hit");
+    stage.classList.remove("shake", "player-hit");
+}
+
+function endGame(win) {
+    state.finished = true;
+    if (win) {
+        boss.classList.add("defeated");
+        boss.src = "assets/images/arena/boss_defeated.png";
+    }
+    setTimeout(() => {
+        const overlay = document.createElement("div");
+        overlay.className = "arena-overlay";
+        overlay.innerHTML = win
+            ? `<div class="overlay-emoji">🎉</div>
+               <div class="overlay-title">勝利！</div>
+               <div class="overlay-sub">剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題</div>
+               <button class="overlay-btn" onclick="location.reload()">再戰一次</button>`
+            : `<div class="overlay-emoji">💀</div>
+               <div class="overlay-title lose">失敗...</div>
+               <div class="overlay-sub">魔王還剩 HP ${state.bossHP}</div>
+               <button class="overlay-btn" onclick="location.reload()">再來一次</button>`;
+        stage.appendChild(overlay);
+    }, win ? 1300 : 600);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// 開場
+updateBars();
+loadQuestion();
+</script>
+
+</body>
+</html>
