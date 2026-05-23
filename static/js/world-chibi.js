@@ -257,13 +257,18 @@ import * as THREE from 'three';
         return true;
     }
 
-    // ─── 點建築 → chibi 自動走過去（直線 lerp + 撞牆繞）
-    let autoTarget = null;  // { building, scenePos: {x, z} }
+    // ─── 點建築 → chibi 自動走過去（依 path waypoints 走，沒 path 就直線到 center）
+    let autoTarget = null;  // { building, waypoints: [{x,z},...], idx }
     function startAutoMove(building) {
-        // 目標：building.center 朝玩家方向 offset 一點（不要走到 center 進 bbox 內）
-        const { x, z } = normToScene(building.center.x, building.center.y);
-        autoTarget = { building, scenePos: { x, z } };
-        console.log(`[chibi] auto-move → ${building.name} (${building.center.x.toFixed(2)}, ${building.center.y.toFixed(2)})`);
+        let waypoints;
+        if (building.path && building.path.length > 0) {
+            waypoints = building.path.map(p => normToScene(p.x, p.y));
+            console.log(`[chibi] auto-move → ${building.name} via ${waypoints.length} waypoints`);
+        } else {
+            waypoints = [normToScene(building.center.x, building.center.y)];
+            console.log(`[chibi] auto-move → ${building.name} (direct center)`);
+        }
+        autoTarget = { building, waypoints, idx: 0 };
     }
 
     // ─── 到達 building 後依 interaction_type 開 demo modal
@@ -373,16 +378,21 @@ import * as THREE from 'three';
         const manualInput = Math.hypot(dx, dy) > 0.05;
         if (manualInput) autoTarget = null;  // 手動輸入取消 auto-move
 
-        // 2. Auto-move 朝 target lerp
+        // 2. Auto-move 朝目前 waypoint lerp，到達一個 waypoint 自動切下一個
         if (!manualInput && autoTarget) {
-            const ddx = autoTarget.scenePos.x - px;
-            const ddy = autoTarget.scenePos.z - py;
+            const wp = autoTarget.waypoints[autoTarget.idx];
+            const ddx = wp.x - px;
+            const ddy = wp.z - py;
             const dist = Math.hypot(ddx, ddy);
             if (dist < ARRIVE_DIST) {
-                // 到達！
-                const arrived = autoTarget.building;
-                autoTarget = null;
-                onArrive(arrived);
+                autoTarget.idx++;
+                if (autoTarget.idx >= autoTarget.waypoints.length) {
+                    // 全部 waypoints 走完
+                    const arrived = autoTarget.building;
+                    autoTarget = null;
+                    onArrive(arrived);
+                }
+                // 還有下一個 waypoint → 下一 frame 繼續朝它走
             } else {
                 dx = ddx / dist;
                 dy = ddy / dist;
@@ -404,10 +414,13 @@ import * as THREE from 'three';
             } else if (isWalkable(px, tryY)) {
                 py = tryY;
             } else if (autoTarget) {
-                // auto-move 撞牆停 → 視為到達
-                const arrived = autoTarget.building;
-                autoTarget = null;
-                onArrive(arrived);
+                // auto-move 撞牆停 → 跳下一個 waypoint（避免卡死）
+                autoTarget.idx++;
+                if (autoTarget.idx >= autoTarget.waypoints.length) {
+                    const arrived = autoTarget.building;
+                    autoTarget = null;
+                    onArrive(arrived);
+                }
             }
             px = Math.max(-HALF_W + 3, Math.min(HALF_W - 3, px));
             py = Math.max(-HALF_H + 5, Math.min(HALF_H - 5, py));
