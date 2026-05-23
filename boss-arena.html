@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=15">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=16">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -541,7 +541,7 @@ function setHeroSpriteFromJob(job) {
     // 預設沒選職業 → 用 hero_iso_sword 當基底
     let src = "assets/images/arena/hero_iso_sword.png?v=1";
     if (job && job.key) {
-        const jobSpritePath = `assets/images/arena/hero_job_${job.key}.png?v=1`;
+        const jobSpritePath = `assets/images/arena/hero_job_${job.key}.png?v=2`;
         src = jobSpritePath;
     }
     hero.src = src;
