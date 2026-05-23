@@ -168,88 +168,64 @@
     100% { opacity: 0; }
 }
 
-/* ===== 5×5 等距棋盤獨立網格層（CSS overlay，疊在 tier bg 上）=====
-   派派 5/23：保留 tier bg，棋盤是 CSS 動態高亮層
-   每格 transform 菱形（rotate 45° + scaleY 0.5），平時隱形
-   只有 .hero-pos / .move-range / .attack-range / .boss-pos 才顯示 */
-.grid-cell {
+/* ===== 5×5 等距棋盤 SVG 網格層 =====
+   派派 5/23 修正：SVG inline 25 個 polygon 對齊既有座標系
+   平時淡藍輪廓，狀態改變時 fill 高亮 */
+.grid-svg {
     position: absolute;
-    width: 72px;
-    height: 72px;
-    transform: translate(-50%, -50%) rotate(45deg) scaleY(0.5);
-    transform-origin: 50% 50%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 2;
-    border: 1px solid rgba(255, 240, 200, 0);   /* default 隱形 */
-    background: transparent;
-    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    overflow: visible;
 }
-
+.grid-tile {
+    fill: transparent;
+    stroke: rgba(120, 200, 255, 0.32);
+    stroke-width: 0.18;
+    vector-effect: non-scaling-stroke;
+    transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s;
+}
 /* 主角當前格：金色 */
-.grid-cell.hero-pos {
-    border: 2px solid rgba(255, 230, 100, 0.95);
-    background: radial-gradient(ellipse at center, rgba(255, 220, 100, 0.30) 0%, rgba(220, 150, 50, 0.18) 100%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 200, 0.5), 0 0 14px rgba(255, 220, 100, 0.6);
+.grid-tile.hero-pos {
+    fill: rgba(255, 220, 100, 0.32);
+    stroke: rgba(255, 230, 100, 1);
+    stroke-width: 0.32;
 }
-
-/* 移動範圍：淺藍 */
-.grid-cell.move-range {
-    border: 1px solid rgba(100, 180, 255, 0.7);
-    background: rgba(100, 180, 255, 0.10);
-    box-shadow: inset 0 0 0 1px rgba(180, 220, 255, 0.3);
+/* 移動範圍：淺藍 fill */
+.grid-tile.move-range {
+    fill: rgba(100, 180, 255, 0.22);
+    stroke: rgba(140, 200, 255, 0.65);
+    stroke-width: 0.22;
 }
-
 /* 攻擊範圍：紅色 */
-.grid-cell.attack-range {
-    border: 1px solid rgba(255, 80, 80, 0.85);
-    background: rgba(255, 50, 50, 0.16);
-    box-shadow: inset 0 0 0 1px rgba(255, 150, 150, 0.4), 0 0 10px rgba(255, 60, 60, 0.4);
+.grid-tile.attack-range {
+    fill: rgba(255, 80, 80, 0.25);
+    stroke: rgba(255, 100, 100, 0.85);
+    stroke-width: 0.24;
 }
-
-/* attack-range + hero-pos = 主角站攻擊範圍 → 橘紅脈動 */
-.grid-cell.attack-range.hero-pos {
-    border: 2px solid rgba(255, 150, 60, 1);
-    background: radial-gradient(ellipse at center, rgba(255, 180, 60, 0.4) 0%, rgba(200, 60, 30, 0.3) 100%);
-    box-shadow: inset 0 0 0 2px rgba(255, 220, 130, 0.6), 0 0 18px rgba(255, 120, 60, 0.8);
-    animation: cellAttackPulse 1.4s ease-in-out infinite;
+/* 主角站攻擊範圍 = 橘紅脈動（用 CSS animation on opacity 模擬） */
+.grid-tile.attack-range.hero-pos {
+    fill: rgba(255, 170, 60, 0.42);
+    stroke: rgba(255, 150, 60, 1);
+    stroke-width: 0.36;
+    animation: tilePulse 1.4s ease-in-out infinite;
 }
-@keyframes cellAttackPulse {
-    0%, 100% { box-shadow: inset 0 0 0 2px rgba(255, 220, 130, 0.6), 0 0 18px rgba(255, 120, 60, 0.8); }
-    50%      { box-shadow: inset 0 0 0 2px rgba(255, 230, 150, 0.9), 0 0 28px rgba(255, 140, 70, 1.0); }
+@keyframes tilePulse {
+    0%, 100% { fill-opacity: 0.6; }
+    50%      { fill-opacity: 1.0; }
 }
-
 /* 魔王格：紫色 */
-.grid-cell.boss-pos {
-    border: 1px solid rgba(180, 80, 220, 0.7);
-    background: rgba(150, 60, 180, 0.12);
+.grid-tile.boss-pos {
+    fill: rgba(150, 60, 180, 0.2);
+    stroke: rgba(180, 80, 220, 0.8);
+    stroke-width: 0.22;
 }
 
-/* 25 格 5×5 位置（對齊 arena_5x5.png 等距 lerp） */
-.grid-cell[data-x="0"][data-y="0"] { left: 22%; bottom: 62%; }
-.grid-cell[data-x="1"][data-y="0"] { left: 30%; bottom: 59%; }
-.grid-cell[data-x="2"][data-y="0"] { left: 38%; bottom: 56%; }
-.grid-cell[data-x="3"][data-y="0"] { left: 46%; bottom: 53%; }
-.grid-cell[data-x="4"][data-y="0"] { left: 54%; bottom: 50%; }
-.grid-cell[data-x="0"][data-y="1"] { left: 27%; bottom: 55%; }
-.grid-cell[data-x="1"][data-y="1"] { left: 35%; bottom: 52%; }
-.grid-cell[data-x="2"][data-y="1"] { left: 43%; bottom: 49%; }
-.grid-cell[data-x="3"][data-y="1"] { left: 51%; bottom: 46%; }
-.grid-cell[data-x="4"][data-y="1"] { left: 59%; bottom: 43%; }
-.grid-cell[data-x="0"][data-y="2"] { left: 32%; bottom: 48%; }
-.grid-cell[data-x="1"][data-y="2"] { left: 40%; bottom: 45%; }
-.grid-cell[data-x="2"][data-y="2"] { left: 48%; bottom: 42%; }
-.grid-cell[data-x="3"][data-y="2"] { left: 56%; bottom: 39%; }
-.grid-cell[data-x="4"][data-y="2"] { left: 64%; bottom: 36%; }
-.grid-cell[data-x="0"][data-y="3"] { left: 37%; bottom: 41%; }
-.grid-cell[data-x="1"][data-y="3"] { left: 45%; bottom: 38%; }
-.grid-cell[data-x="2"][data-y="3"] { left: 53%; bottom: 35%; }
-.grid-cell[data-x="3"][data-y="3"] { left: 61%; bottom: 32%; }
-.grid-cell[data-x="4"][data-y="3"] { left: 69%; bottom: 29%; }
-.grid-cell[data-x="0"][data-y="4"] { left: 42%; bottom: 34%; }
-.grid-cell[data-x="1"][data-y="4"] { left: 50%; bottom: 31%; }
-.grid-cell[data-x="2"][data-y="4"] { left: 58%; bottom: 28%; }
-.grid-cell[data-x="3"][data-y="4"] { left: 66%; bottom: 25%; }
-.grid-cell[data-x="4"][data-y="4"] { left: 74%; bottom: 22%; }
+/* grid-cell DIV 已改用 SVG，這 25 條規則保留為註解備查（座標公式）：
+   corner (x, y) lerp: left = 22 + x*8 + y*5 (%), bottom = 62 - x*3 - y*7 (%)
+   center (格中心) = corner (x+0.5, y+0.5) lerp */
 
 /* 主角站位 — 用 data-x/data-y 對位 */
 .fighter-hero {
@@ -263,32 +239,32 @@
     transition: left 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
                 bottom 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
-/* Y-sort：z-index = (4-y) + (4-x) + 10，近格 (x/y 小) z 大 */
-.fighter-hero[data-x="0"][data-y="0"] { left: 22%; bottom: 62%; z-index: 18; }
-.fighter-hero[data-x="1"][data-y="0"] { left: 30%; bottom: 59%; z-index: 17; }
-.fighter-hero[data-x="2"][data-y="0"] { left: 38%; bottom: 56%; z-index: 16; }
-.fighter-hero[data-x="3"][data-y="0"] { left: 46%; bottom: 53%; z-index: 15; }
-.fighter-hero[data-x="4"][data-y="0"] { left: 54%; bottom: 50%; z-index: 14; }
-.fighter-hero[data-x="0"][data-y="1"] { left: 27%; bottom: 55%; z-index: 17; }
-.fighter-hero[data-x="1"][data-y="1"] { left: 35%; bottom: 52%; z-index: 16; }
-.fighter-hero[data-x="2"][data-y="1"] { left: 43%; bottom: 49%; z-index: 15; }
-.fighter-hero[data-x="3"][data-y="1"] { left: 51%; bottom: 46%; z-index: 14; }
-.fighter-hero[data-x="4"][data-y="1"] { left: 59%; bottom: 43%; z-index: 13; }
-.fighter-hero[data-x="0"][data-y="2"] { left: 32%; bottom: 48%; z-index: 16; }
-.fighter-hero[data-x="1"][data-y="2"] { left: 40%; bottom: 45%; z-index: 15; }
-.fighter-hero[data-x="2"][data-y="2"] { left: 48%; bottom: 42%; z-index: 14; }
-.fighter-hero[data-x="3"][data-y="2"] { left: 56%; bottom: 39%; z-index: 13; }
-.fighter-hero[data-x="4"][data-y="2"] { left: 64%; bottom: 36%; z-index: 12; }
-.fighter-hero[data-x="0"][data-y="3"] { left: 37%; bottom: 41%; z-index: 15; }
-.fighter-hero[data-x="1"][data-y="3"] { left: 45%; bottom: 38%; z-index: 14; }
-.fighter-hero[data-x="2"][data-y="3"] { left: 53%; bottom: 35%; z-index: 13; }
-.fighter-hero[data-x="3"][data-y="3"] { left: 61%; bottom: 32%; z-index: 12; }
-.fighter-hero[data-x="4"][data-y="3"] { left: 69%; bottom: 29%; z-index: 11; }
-.fighter-hero[data-x="0"][data-y="4"] { left: 42%; bottom: 34%; z-index: 14; }
-.fighter-hero[data-x="1"][data-y="4"] { left: 50%; bottom: 31%; z-index: 13; }
-.fighter-hero[data-x="2"][data-y="4"] { left: 58%; bottom: 28%; z-index: 12; }
-.fighter-hero[data-x="3"][data-y="4"] { left: 66%; bottom: 25%; z-index: 11; }
-.fighter-hero[data-x="4"][data-y="4"] { left: 74%; bottom: 22%; z-index: 10; }
+/* hero 位置 = 格中心 (x+0.5, y+0.5) lerp，z-index = (4-y) + (4-x) + 10 */
+.fighter-hero[data-x="0"][data-y="0"] { left: 28.5%; bottom: 57.0%; z-index: 18; }
+.fighter-hero[data-x="1"][data-y="0"] { left: 36.5%; bottom: 54.0%; z-index: 17; }
+.fighter-hero[data-x="2"][data-y="0"] { left: 44.5%; bottom: 51.0%; z-index: 16; }
+.fighter-hero[data-x="3"][data-y="0"] { left: 52.5%; bottom: 48.0%; z-index: 15; }
+.fighter-hero[data-x="4"][data-y="0"] { left: 60.5%; bottom: 45.0%; z-index: 14; }
+.fighter-hero[data-x="0"][data-y="1"] { left: 33.5%; bottom: 50.0%; z-index: 17; }
+.fighter-hero[data-x="1"][data-y="1"] { left: 41.5%; bottom: 47.0%; z-index: 16; }
+.fighter-hero[data-x="2"][data-y="1"] { left: 49.5%; bottom: 44.0%; z-index: 15; }
+.fighter-hero[data-x="3"][data-y="1"] { left: 57.5%; bottom: 41.0%; z-index: 14; }
+.fighter-hero[data-x="4"][data-y="1"] { left: 65.5%; bottom: 38.0%; z-index: 13; }
+.fighter-hero[data-x="0"][data-y="2"] { left: 38.5%; bottom: 43.0%; z-index: 16; }
+.fighter-hero[data-x="1"][data-y="2"] { left: 46.5%; bottom: 40.0%; z-index: 15; }
+.fighter-hero[data-x="2"][data-y="2"] { left: 54.5%; bottom: 37.0%; z-index: 14; }
+.fighter-hero[data-x="3"][data-y="2"] { left: 62.5%; bottom: 34.0%; z-index: 13; }
+.fighter-hero[data-x="4"][data-y="2"] { left: 70.5%; bottom: 31.0%; z-index: 12; }
+.fighter-hero[data-x="0"][data-y="3"] { left: 43.5%; bottom: 36.0%; z-index: 15; }
+.fighter-hero[data-x="1"][data-y="3"] { left: 51.5%; bottom: 33.0%; z-index: 14; }
+.fighter-hero[data-x="2"][data-y="3"] { left: 59.5%; bottom: 30.0%; z-index: 13; }
+.fighter-hero[data-x="3"][data-y="3"] { left: 67.5%; bottom: 27.0%; z-index: 12; }
+.fighter-hero[data-x="4"][data-y="3"] { left: 75.5%; bottom: 24.0%; z-index: 11; }
+.fighter-hero[data-x="0"][data-y="4"] { left: 48.5%; bottom: 29.0%; z-index: 14; }
+.fighter-hero[data-x="1"][data-y="4"] { left: 56.5%; bottom: 26.0%; z-index: 13; }
+.fighter-hero[data-x="2"][data-y="4"] { left: 64.5%; bottom: 23.0%; z-index: 12; }
+.fighter-hero[data-x="3"][data-y="4"] { left: 72.5%; bottom: 20.0%; z-index: 11; }
+.fighter-hero[data-x="4"][data-y="4"] { left: 80.5%; bottom: 17.0%; z-index: 10; }
 .fighter-hero.hit { animation: heroHit 0.5s; }
 .fighter-hero.entering { animation: heroEnter 1.1s cubic-bezier(0.34, 1.3, 0.5, 1) both; }
 .fighter-hero.attacking { animation: heroAttackDash 0.65s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
@@ -382,11 +358,11 @@
     100% { transform: translateX(-50%) translateY(-12px) scale(1.1); filter: drop-shadow(0 0 22px #ffd54d) brightness(1.25); }
 }
 
-/* 魔王站位（5×5 右上角 = (4,4) = left 74%, bottom 22%）*/
+/* 魔王站位（5×5 右上角 (4,4) 格中心 = (80.5%, 17%)）*/
 .fighter-boss {
     position: absolute;
-    left: 74%;
-    bottom: 22%;
+    left: 80.5%;
+    bottom: 17%;
     width: 100px;
     height: auto;
     transform: translateX(-50%);
