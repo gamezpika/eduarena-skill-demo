@@ -223,21 +223,36 @@ import * as THREE from 'three';
         })
         .catch(e => console.warn('[chibi] config load failed:', e));
 
-    // ─── bbox 擋區判斷：點是否在任何 building bbox 內 = 不可走
+    // ─── Polygon 點包含判斷（ray casting 演算法）
+    function pointInPolygon(px, py, polygon) {
+        let inside = false;
+        const n = polygon.length;
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+            const xi = polygon[i].x, yi = polygon[i].y;
+            const xj = polygon[j].x, yj = polygon[j].y;
+            const intersect = ((yi > py) !== (yj > py)) &&
+                (px < (xj - xi) * (py - yi) / ((yj - yi) || 1e-9) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
+    // ─── 擋區判斷：點是否在任何 building polygon 內 = 不可走
     function isWalkable(sceneX, sceneZ) {
         if (!mapConfig) return true;
         const { nx, ny } = sceneToNorm(sceneX, sceneZ);
         // 場景邊界
         if (nx < 0.02 || nx > 0.98 || ny < 0.02 || ny > 0.98) return false;
-        // 任一 building bbox 內 = 擋
+        // 任一 building polygon 內 = 擋
         for (const b of mapConfig.buildings) {
-            const bb = b.bounding_box;
-            // 收縮一點 (margin 0.015) 讓 chibi 能貼牆走到 building 邊緣
-            const margin = 0.015;
-            if (nx >= bb.x_min + margin && nx <= bb.x_max - margin &&
-                ny >= bb.y_min + margin && ny <= bb.y_max - margin) {
-                return false;
-            }
+            const poly = b.polygon || (b.bounding_box ? [
+                {x: b.bounding_box.x_min, y: b.bounding_box.y_min},
+                {x: b.bounding_box.x_max, y: b.bounding_box.y_min},
+                {x: b.bounding_box.x_max, y: b.bounding_box.y_max},
+                {x: b.bounding_box.x_min, y: b.bounding_box.y_max},
+            ] : null);
+            if (!poly) continue;
+            if (pointInPolygon(nx, ny, poly)) return false;
         }
         return true;
     }

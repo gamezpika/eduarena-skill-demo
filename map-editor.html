@@ -52,6 +52,17 @@
         .bbox-handle.ne { top: -7px;    right: -7px;   cursor: nesw-resize; }
         .bbox-handle.sw { bottom: -7px; left: -7px;    cursor: nesw-resize; }
         .bbox-handle.se { bottom: -7px; right: -7px;   cursor: nwse-resize; }
+        /* polygon vertex（可拖拉 + 雙擊刪除） */
+        .poly-vertex {
+            position: absolute; width: 14px; height: 14px;
+            background: #fdc500; border: 2px solid #fff;
+            border-radius: 50%; cursor: grab;
+            transform: translate(-50%, -50%);
+            z-index: 60;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .poly-vertex:active { cursor: grabbing; background: #ff9500; }
+        .poly-vertex:hover { background: #ff5050; }
         /* path overlay */
         .path-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -300,9 +311,21 @@ fetch('assets/world_map_config.json?v=' + Date.now())
 
 function renderAll() {
     renderBuildingList();
-    renderBboxes();
+    renderPolygons();
     renderPathOverlay();
     renderDetail();
+}
+
+// 從 polygon vertices 算 bbox（同步用）
+function bboxFromPolygon(poly) {
+    let x_min = Infinity, y_min = Infinity, x_max = -Infinity, y_max = -Infinity;
+    poly.forEach(p => {
+        if (p.x < x_min) x_min = p.x;
+        if (p.y < y_min) y_min = p.y;
+        if (p.x > x_max) x_max = p.x;
+        if (p.y > y_max) y_max = p.y;
+    });
+    return { x_min, y_min, x_max, y_max };
 }
 
 function renderBuildingList() {
@@ -323,94 +346,152 @@ function renderBuildingList() {
     });
 }
 
-function renderBboxes() {
-    // 清掉舊 bbox div
-    mapFrame.querySelectorAll('.bbox').forEach(el => el.remove());
+function renderPolygons() {
+    // 清舊 polygon SVG + vertex div
+    pathSvg.innerHTML = '';
+    mapFrame.querySelectorAll('.poly-vertex').forEach(el => el.remove());
+    mapFrame.querySelectorAll('.bbox-label').forEach(el => el.remove());
     if (!mapConfig) return;
 
-    const mw = mapImg.clientWidth;
-    const mh = mapImg.clientHeight;
+    const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
+    pathSvg.setAttribute('width', mw);
+    pathSvg.setAttribute('height', mh);
+    pathSvg.style.pointerEvents = 'auto';  // 讓 polygon 可以被 click
 
-    mapConfig.buildings.forEach(b => {
-        const bb = b.bounding_box;
-        const div = document.createElement('div');
-        div.className = 'bbox' + (b.id === selectedBuildingId ? ' selected' : '');
-        div.dataset.id = b.id;
-        div.style.left = (bb.x_min * mw) + 'px';
-        div.style.top = (bb.y_min * mh) + 'px';
-        div.style.width = ((bb.x_max - bb.x_min) * mw) + 'px';
-        div.style.height = ((bb.y_max - bb.y_min) * mh) + 'px';
-        div.style.background = b.mask_color + '33';  // 20% alpha
-
-        // label
-        const label = document.createElement('div');
-        label.className = 'bbox-label';
-        label.textContent = b.name;
-        div.appendChild(label);
-
-        // 4 corner handles (只在 selected 時顯示)
-        if (b.id === selectedBuildingId) {
-            ['nw','ne','sw','se'].forEach(corner => {
-                const h = document.createElement('div');
-                h.className = 'bbox-handle ' + corner;
-                h.dataset.corner = corner;
-                div.appendChild(h);
-            });
+    // 依 render_order 由小到大畫
+    const buildings = [...mapConfig.buildings].sort((a, b) => a.render_order - b.render_order);
+    buildings.forEach(b => {
+        if (!b.polygon || b.polygon.length < 3) {
+            // 沒 polygon 或太少點 → 從 bbox 推 4 點
+            if (b.bounding_box) {
+                const bb = b.bounding_box;
+                b.polygon = [
+                    {x: bb.x_min, y: bb.y_min}, {x: bb.x_max, y: bb.y_min},
+                    {x: bb.x_max, y: bb.y_max}, {x: bb.x_min, y: bb.y_max},
+                ];
+            } else return;
         }
+        const points = b.polygon.map(p => `${p.x * mw},${p.y * mh}`).join(' ');
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', points);
+        const isSelected = b.id === selectedBuildingId;
+        poly.setAttribute('fill', b.mask_color + (isSelected ? '66' : '33'));
+        poly.setAttribute('stroke', isSelected ? '#fdc500' : 'rgba(255,255,255,0.6)');
+        poly.setAttribute('stroke-width', isSelected ? '3' : '2');
+        poly.style.cursor = mode === 'bbox' ? 'move' : 'pointer';
+        poly.style.pointerEvents = 'auto';
+        poly.dataset.id = b.id;
 
-        // 拖拉移動 + 角點縮放
-        attachBboxDrag(div, b);
-        mapFrame.appendChild(div);
+        // 點 polygon 體 → 選中 / 拖整塊
+        poly.addEventListener('mousedown', e => {
+            if (mode !== 'bbox') return;
+            e.stopPropagation();
+            selectedBuildingId = b.id;
+            startPolygonDrag(b, e, null);  // null = 拖整塊（不是 vertex）
+        });
+        // 點 polygon 邊 → 在最近邊插入 vertex（雙擊）
+        poly.addEventListener('dblclick', e => {
+            if (mode !== 'bbox') return;
+            e.stopPropagation();
+            const rect = mapImg.getBoundingClientRect();
+            const px = (e.clientX - rect.left) / rect.width;
+            const py = (e.clientY - rect.top) / rect.height;
+            // 找最近邊插入
+            let minDist = Infinity, insertAt = 0;
+            for (let i = 0; i < b.polygon.length; i++) {
+                const a = b.polygon[i];
+                const c = b.polygon[(i + 1) % b.polygon.length];
+                const d = distToSegment({x: px, y: py}, a, c);
+                if (d < minDist) { minDist = d; insertAt = i + 1; }
+            }
+            b.polygon.splice(insertAt, 0, { x: parseFloat(px.toFixed(3)), y: parseFloat(py.toFixed(3)) });
+            b.bounding_box = bboxFromPolygon(b.polygon);
+            selectedBuildingId = b.id;
+            renderAll();
+        });
+        pathSvg.appendChild(poly);
+
+        // selected building 顯示 vertex 拖拉點
+        if (isSelected) {
+            b.polygon.forEach((v, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'poly-vertex';
+                dot.style.left = (v.x * mw) + 'px';
+                dot.style.top = (v.y * mh) + 'px';
+                dot.title = `頂點 ${i+1} (${v.x.toFixed(3)}, ${v.y.toFixed(3)}) — 拖拉移動 / 雙擊刪除`;
+                dot.addEventListener('mousedown', e => {
+                    if (mode !== 'bbox') return;
+                    e.stopPropagation();
+                    startPolygonDrag(b, e, i);
+                });
+                dot.addEventListener('dblclick', e => {
+                    if (mode !== 'bbox') return;
+                    e.stopPropagation();
+                    if (b.polygon.length <= 3) {
+                        alert('polygon 最少 3 個頂點');
+                        return;
+                    }
+                    b.polygon.splice(i, 1);
+                    b.bounding_box = bboxFromPolygon(b.polygon);
+                    renderAll();
+                });
+                mapFrame.appendChild(dot);
+            });
+
+            // selected building 名稱浮在上方
+            const label = document.createElement('div');
+            label.className = 'bbox-label';
+            const bb = b.bounding_box;
+            label.style.left = (bb.x_min * mw) + 'px';
+            label.style.top = ((bb.y_min * mh) - 22) + 'px';
+            label.textContent = b.name + ' (' + b.polygon.length + ' 點)';
+            mapFrame.appendChild(label);
+        }
     });
 }
 
-function attachBboxDrag(div, building) {
-    let dragData = null;
-    div.addEventListener('mousedown', e => {
-        if (mode !== 'bbox') return;
-        e.stopPropagation();
-        selectedBuildingId = building.id;
-        renderAll();
-
-        const corner = e.target.dataset?.corner;
-        const rect = mapImg.getBoundingClientRect();
-        dragData = {
-            startX: e.clientX, startY: e.clientY,
-            startBB: { ...building.bounding_box },
-            corner,
-            mw: rect.width, mh: rect.height,
-        };
-    });
-    window.addEventListener('mousemove', e => {
-        if (!dragData) return;
-        const dx = (e.clientX - dragData.startX) / dragData.mw;
-        const dy = (e.clientY - dragData.startY) / dragData.mh;
-        const bb = building.bounding_box;
-        const s = dragData.startBB;
-        if (dragData.corner === 'nw') {
-            bb.x_min = clamp(s.x_min + dx, 0, s.x_max - 0.02);
-            bb.y_min = clamp(s.y_min + dy, 0, s.y_max - 0.02);
-        } else if (dragData.corner === 'ne') {
-            bb.x_max = clamp(s.x_max + dx, s.x_min + 0.02, 1);
-            bb.y_min = clamp(s.y_min + dy, 0, s.y_max - 0.02);
-        } else if (dragData.corner === 'sw') {
-            bb.x_min = clamp(s.x_min + dx, 0, s.x_max - 0.02);
-            bb.y_max = clamp(s.y_max + dy, s.y_min + 0.02, 1);
-        } else if (dragData.corner === 'se') {
-            bb.x_max = clamp(s.x_max + dx, s.x_min + 0.02, 1);
-            bb.y_max = clamp(s.y_max + dy, s.y_min + 0.02, 1);
+// 拖 polygon — vertexIdx 為 null 時拖整塊，否則拖該頂點
+function startPolygonDrag(building, e, vertexIdx) {
+    const rect = mapImg.getBoundingClientRect();
+    const dragData = {
+        startX: e.clientX, startY: e.clientY,
+        startPolygon: building.polygon.map(p => ({ ...p })),
+        vertexIdx,
+        mw: rect.width, mh: rect.height,
+        building,
+    };
+    function onMove(ev) {
+        const dx = (ev.clientX - dragData.startX) / dragData.mw;
+        const dy = (ev.clientY - dragData.startY) / dragData.mh;
+        if (dragData.vertexIdx === null) {
+            // 整塊平移
+            dragData.startPolygon.forEach((p, i) => {
+                building.polygon[i].x = clamp(p.x + dx, 0, 1);
+                building.polygon[i].y = clamp(p.y + dy, 0, 1);
+            });
         } else {
-            // 整塊移動
-            const w = s.x_max - s.x_min, h = s.y_max - s.y_min;
-            bb.x_min = clamp(s.x_min + dx, 0, 1 - w);
-            bb.y_min = clamp(s.y_min + dy, 0, 1 - h);
-            bb.x_max = bb.x_min + w;
-            bb.y_max = bb.y_min + h;
+            const p = dragData.startPolygon[dragData.vertexIdx];
+            building.polygon[dragData.vertexIdx].x = clamp(p.x + dx, 0, 1);
+            building.polygon[dragData.vertexIdx].y = clamp(p.y + dy, 0, 1);
         }
-        renderBboxes();
+        building.bounding_box = bboxFromPolygon(building.polygon);
+        renderPolygons();
         renderDetail();
-    });
-    window.addEventListener('mouseup', () => { dragData = null; });
+    }
+    function onUp() {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+}
+
+// 點到線段最短距離（normalized 座標）
+function distToSegment(p, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    if (dx === 0 && dy === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 }
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -470,11 +551,15 @@ function renderDetail() {
         <div class="field"><label>類別</label><input value="${b.category}" data-field="category"></div>
         <div class="field"><label>互動</label><input value="${b.interaction_type}" data-field="interaction_type"></div>
         <div class="field"><label>render_order</label><input type="number" value="${b.render_order}" data-field="render_order"></div>
-        <h3 style="margin-top:14px;">bbox (0~1 normalized)</h3>
-        <div class="field"><label>x_min</label><input type="number" step="0.01" value="${b.bounding_box.x_min.toFixed(3)}" data-bb="x_min"></div>
-        <div class="field"><label>y_min</label><input type="number" step="0.01" value="${b.bounding_box.y_min.toFixed(3)}" data-bb="y_min"></div>
-        <div class="field"><label>x_max</label><input type="number" step="0.01" value="${b.bounding_box.x_max.toFixed(3)}" data-bb="x_max"></div>
-        <div class="field"><label>y_max</label><input type="number" step="0.01" value="${b.bounding_box.y_max.toFixed(3)}" data-bb="y_max"></div>
+        <h3 style="margin-top:14px;">polygon (${b.polygon.length} 頂點)</h3>
+        <div style="font-size:10px;color:#888;margin-bottom:6px;">拖頂點移動・雙擊邊加新頂點・雙擊頂點刪除</div>
+        <div id="vertexList"></div>
+        <button class="btn-secondary" id="btnResetPoly" style="margin-top:6px;padding:6px 10px;font-size:11px;width:100%;">重置為矩形 (從 bbox)</button>
+        <h3 style="margin-top:14px;">bbox (從 polygon 自動算)</h3>
+        <div class="field"><label>x_min</label><input type="number" step="0.01" value="${b.bounding_box.x_min.toFixed(3)}" disabled></div>
+        <div class="field"><label>y_min</label><input type="number" step="0.01" value="${b.bounding_box.y_min.toFixed(3)}" disabled></div>
+        <div class="field"><label>x_max</label><input type="number" step="0.01" value="${b.bounding_box.x_max.toFixed(3)}" disabled></div>
+        <div class="field"><label>y_max</label><input type="number" step="0.01" value="${b.bounding_box.y_max.toFixed(3)}" disabled></div>
         <h3 style="margin-top:14px;">center (建築中心)</h3>
         <div class="field"><label>x</label><input type="number" step="0.01" value="${b.center.x.toFixed(3)}" data-center="x"></div>
         <div class="field"><label>y</label><input type="number" step="0.01" value="${b.center.y.toFixed(3)}" data-center="y"></div>
@@ -482,6 +567,48 @@ function renderDetail() {
         <div id="pathList"></div>
         <button class="btn-secondary" id="btnClearPath" style="margin-top:8px;padding:6px 10px;font-size:11px;">清空 path</button>
     `;
+
+    // vertex list
+    const vertexList = buildingDetail.querySelector('#vertexList');
+    b.polygon.forEach((v, i) => {
+        const row = document.createElement('div');
+        row.className = 'field';
+        row.innerHTML = `<label>P${i+1}</label>
+            <input type="number" step="0.01" value="${v.x.toFixed(3)}" data-vertex-idx="${i}" data-vertex-key="x" style="flex:0 0 70px">
+            <input type="number" step="0.01" value="${v.y.toFixed(3)}" data-vertex-idx="${i}" data-vertex-key="y" style="flex:0 0 70px">
+            <button class="btn-danger" data-vertex-del="${i}" style="padding:4px 8px;font-size:10px;">×</button>
+        `;
+        vertexList.appendChild(row);
+    });
+
+    // bind vertex inputs
+    buildingDetail.querySelectorAll('input[data-vertex-idx]').forEach(input => {
+        input.addEventListener('change', () => {
+            const i = parseInt(input.dataset.vertexIdx);
+            const k = input.dataset.vertexKey;
+            b.polygon[i][k] = parseFloat(input.value);
+            b.bounding_box = bboxFromPolygon(b.polygon);
+            renderPolygons();
+            renderDetail();
+        });
+    });
+    buildingDetail.querySelectorAll('button[data-vertex-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (b.polygon.length <= 3) { alert('polygon 最少 3 個頂點'); return; }
+            b.polygon.splice(parseInt(btn.dataset.vertexDel), 1);
+            b.bounding_box = bboxFromPolygon(b.polygon);
+            renderAll();
+        });
+    });
+    buildingDetail.querySelector('#btnResetPoly')?.addEventListener('click', () => {
+        if (!confirm('重置 polygon 為矩形 (從目前 bbox)？所有頂點調整會丟失')) return;
+        const bb = b.bounding_box;
+        b.polygon = [
+            {x: bb.x_min, y: bb.y_min}, {x: bb.x_max, y: bb.y_min},
+            {x: bb.x_max, y: bb.y_max}, {x: bb.x_min, y: bb.y_max},
+        ];
+        renderAll();
+    });
 
     // path list
     const pathList = buildingDetail.querySelector('#pathList');
@@ -666,11 +793,22 @@ document.getElementById('btnNewBuilding').addEventListener('click', () => {
     if (!id) return;
     const name = prompt('顯示名稱（中文）：', '新建築');
     if (!name) return;
+    // 新 building 預設六邊形 hexagon 在中央
+    const cx = 0.5, cy = 0.5, r = 0.07;
+    const hexagon = [];
+    for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+        hexagon.push({
+            x: parseFloat((cx + Math.cos(a) * r).toFixed(3)),
+            y: parseFloat((cy + Math.sin(a) * r).toFixed(3)),
+        });
+    }
     const newB = {
         id, name,
         category: 'unknown',
-        center: { x: 0.5, y: 0.5 },
-        bounding_box: { x_min: 0.42, y_min: 0.42, x_max: 0.58, y_max: 0.58 },
+        center: { x: cx, y: cy },
+        polygon: hexagon,
+        bounding_box: bboxFromPolygon(hexagon),
         mask_color: pickNewColor(),
         render_order: 500,
         interaction_type: 'open_modal',

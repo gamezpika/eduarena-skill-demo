@@ -39,13 +39,17 @@ def main():
     print(f"Painting {len(buildings)} buildings ({W}×{H})…")
     for b in buildings:
         color = hex_to_rgb(b["mask_color"])
-        bb = b["bounding_box"]
-        x1 = int(bb["x_min"] * W)
-        y1 = int(bb["y_min"] * H)
-        x2 = int(bb["x_max"] * W)
-        y2 = int(bb["y_max"] * H)
-        draw.rectangle([x1, y1, x2, y2], fill=color)
-        print(f"  [{b['render_order']:4d}] {b['id']:18s} {bb['x_min']:.2f},{bb['y_min']:.2f} → {bb['x_max']:.2f},{bb['y_max']:.2f}  {b['mask_color']}")
+        # 優先用 polygon，沒有才 fallback bbox
+        if "polygon" in b and len(b["polygon"]) >= 3:
+            verts = [(int(v["x"] * W), int(v["y"] * H)) for v in b["polygon"]]
+            draw.polygon(verts, fill=color)
+            print(f"  [{b['render_order']:4d}] {b['id']:18s} polygon {len(verts)} 點  {b['mask_color']}")
+        else:
+            bb = b["bounding_box"]
+            x1 = int(bb["x_min"] * W); y1 = int(bb["y_min"] * H)
+            x2 = int(bb["x_max"] * W); y2 = int(bb["y_max"] * H)
+            draw.rectangle([x1, y1, x2, y2], fill=color)
+            print(f"  [{b['render_order']:4d}] {b['id']:18s} bbox  {b['mask_color']}")
 
     img.save(OUT, "PNG", optimize=True)
     print()
