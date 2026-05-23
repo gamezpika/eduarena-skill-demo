@@ -932,18 +932,44 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     100% { transform: translateX(-50%) scale(1.05); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)) brightness(1.2); }
 }
 
-/* B3 魔王投射物（科目 emoji 飛向主角）*/
+/* B3 魔王投射物：能量球（依科目換顏色，不用 emoji）*/
 .boss-proj {
     position: absolute;
-    font-size: 36px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
     z-index: 200;
     pointer-events: none;
     transform-origin: center;
     animation: bossProjFly 0.6s cubic-bezier(0.45, 0, 0.7, 1) forwards;
-    filter: drop-shadow(0 0 8px rgba(255, 80, 60, 0.9));
+    /* 預設紅色能量球（沒套科目時的 fallback）*/
+    background: radial-gradient(circle, #ffffff 0%, #ffaa50 25%, #ff5020 55%, #802010 100%);
+    box-shadow: 0 0 18px rgba(255, 80, 30, 0.9), 0 0 32px rgba(255, 40, 20, 0.5);
 }
-.boss-proj.tier-2 { font-size: 42px; filter: drop-shadow(0 0 12px rgba(255, 60, 40, 1)); }
-.boss-proj.tier-3 { font-size: 52px; filter: drop-shadow(0 0 18px rgba(255, 40, 30, 1)) drop-shadow(0 0 30px rgba(255, 100, 30, 0.7)); }
+.boss-proj.tier-2 { width: 36px; height: 36px; box-shadow: 0 0 24px rgba(255, 60, 30, 1), 0 0 42px rgba(255, 30, 20, 0.6); }
+.boss-proj.tier-3 { width: 48px; height: 48px; box-shadow: 0 0 32px rgba(255, 50, 20, 1), 0 0 56px rgba(255, 100, 40, 0.7); }
+
+/* 5 科色：math 藍 / chinese 紅橘 / english 紫 / science 綠 / social 金 */
+.boss-proj.subj-math {
+    background: radial-gradient(circle, #ffffff 0%, #88ccff 25%, #2080ff 55%, #103080 100%);
+    box-shadow: 0 0 18px rgba(60, 130, 255, 0.95), 0 0 32px rgba(40, 100, 220, 0.55);
+}
+.boss-proj.subj-chinese {
+    background: radial-gradient(circle, #ffffff 0%, #ffb070 25%, #ff5028 55%, #802018 100%);
+    box-shadow: 0 0 18px rgba(255, 90, 40, 0.95), 0 0 32px rgba(220, 60, 30, 0.55);
+}
+.boss-proj.subj-english {
+    background: radial-gradient(circle, #ffffff 0%, #cc8aff 25%, #8030ff 55%, #401080 100%);
+    box-shadow: 0 0 18px rgba(150, 60, 255, 0.95), 0 0 32px rgba(120, 40, 220, 0.55);
+}
+.boss-proj.subj-science {
+    background: radial-gradient(circle, #ffffff 0%, #88ff88 25%, #20c040 55%, #105030 100%);
+    box-shadow: 0 0 18px rgba(60, 220, 80, 0.95), 0 0 32px rgba(40, 180, 60, 0.55);
+}
+.boss-proj.subj-social {
+    background: radial-gradient(circle, #ffffff 0%, #ffe080 25%, #ffa820 55%, #805010 100%);
+    box-shadow: 0 0 18px rgba(255, 180, 40, 0.95), 0 0 32px rgba(230, 140, 30, 0.55);
+}
 @keyframes bossProjFly {
     0%   { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 0; }
     20%  { transform: translate(-50%, -50%) scale(1) rotate(120deg); opacity: 1; }

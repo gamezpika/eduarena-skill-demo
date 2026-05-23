@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=37">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=38">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -713,11 +713,9 @@ async function getHitByBoss() {
     await moveBackward();
 }
 
-// B3 魔王投射物：用科目 emoji，tier 越高越多 + 越大
+// B3 魔王投射物：能量球（依科目換顏色，不用 emoji），tier 越高越多 + 越大
 function spawnBossProjectile(tierLevel) {
     const subjKey = playerSetup.subject;
-    const subj = SUBJECTS_DATA[subjKey];
-    const emoji = subj.emoji;
 
     const bossRect = boss.getBoundingClientRect();
     const heroRect = hero.getBoundingClientRect();
@@ -727,16 +725,15 @@ function spawnBossProjectile(tierLevel) {
     const hx = heroRect.left - stageRect.left + heroRect.width / 2;
     const hy = heroRect.top  - stageRect.top  + heroRect.height * 0.4;
 
-    // tier 1=1 顆, tier 2=2 顆, tier 3=3 顆 + 大字
+    // tier 1=1 顆, tier 2=2 顆, tier 3=3 顆
     const count = tierLevel;
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const proj = document.createElement("div");
             proj.className = `boss-proj subj-${subjKey} tier-${tierLevel}`;
-            proj.textContent = emoji;
             proj.style.left = bx + "px";
             proj.style.top  = by + "px";
-            const jitter = i * 15 - (count - 1) * 7.5;  // 多顆時錯位
+            const jitter = i * 15 - (count - 1) * 7.5;
             proj.style.setProperty("--tx", (hx - bx + jitter) + "px");
             proj.style.setProperty("--ty", (hy - by) + "px");
             stage.appendChild(proj);
