@@ -685,24 +685,24 @@ async function getHitByBoss() {
     const chargeSp = deriveBossFramePath(attackSp, "charge");
     const releaseSp = deriveBossFramePath(attackSp, "release");
 
-    // B2 蓄力前搖 0.4s（魔王發光、scale 變大 + 切 charge.png）
+    // B2 蓄力前搖 0.45s（魔王發光、scale 變大 + 切 charge.png）
     boss.classList.add("charging");
     swapBossSprite(chargeSp, attackSp);  // charge 圖；不存在 fallback attack
-    await sleep(400);
+    await sleep(450);
     boss.classList.remove("charging");
 
-    // B1 切到 attack sprite (peak attack pose)
+    // B1 切到 attack sprite (peak attack pose) — 維持 0.45s 讓肉眼看得到
     if (attackSp) {
         boss.src = `assets/images/${attackSp}?v=1`;
     }
 
-    await sleep(120);
+    await sleep(50);
 
     // B3 投射物：boss → hero，tier 越高越多
     spawnBossProjectile(tierLevel);
 
-    // 出招中段切到 release（follow-through 跟進姿勢）
-    setTimeout(() => swapBossSprite(releaseSp, attackSp), 180);
+    // 0.4s 後切到 release（follow-through 跟進姿勢）
+    setTimeout(() => swapBossSprite(releaseSp, attackSp), 400);
 
     // 飛行時間 0.5s
     await sleep(500);
@@ -1162,6 +1162,17 @@ function startArena() {
     state.bossHP = tierData.hp;
     boss.src = `assets/images/${tierData.sprite}?v=1`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
+
+    // 預載連續動作幀（charge / attack / release / hit / death）→ 避免戰鬥中切圖載入延遲
+    const framesToPreload = [
+        tierData.sprite,
+        tierData.hit_sprite,
+        tierData.attack_sprite,
+        tierData.defeat_sprite,
+        deriveBossFramePath(tierData.attack_sprite, "charge"),
+        deriveBossFramePath(tierData.attack_sprite, "release"),
+    ].filter(Boolean);
+    framesToPreload.forEach(p => { const im = new Image(); im.src = `assets/images/${p}?v=1`; });
 
     // 戰場用 tier 的 bg（15 張 boss 各自背景），5×5 棋盤是 CSS overlay 疊在上面
     stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
