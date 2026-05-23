@@ -64,7 +64,7 @@ def run_codex(job):
 
 
 def post_process(key):
-    """resize 512 — 派派 5/23：拿掉 flip（codex 直出已面向右朝魔王）"""
+    """resize 512 + flip（派派 5/23 修正：codex 直出面向左，需 flip 朝右才對魔王）"""
     p = OUT_DIR / f"hero_job_{key}.png"
     if not p.exists():
         return False
@@ -73,6 +73,7 @@ def post_process(key):
         img = img.convert("RGBA")
     if max(img.size) > 600:
         img.thumbnail((512, 512), Image.LANCZOS)
+    img = img.transpose(Image.FLIP_LEFT_RIGHT)
     img.save(p, "PNG", optimize=True)
     return True
 
