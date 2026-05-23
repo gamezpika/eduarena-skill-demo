@@ -239,7 +239,7 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* 主角站位 — 用 data-x/data-y 對位 */
 .fighter-hero {
     position: absolute;
-    width: 80px;
+    width: 120px;
     height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
@@ -373,7 +373,7 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     position: absolute;
     left: 66.8%;
     bottom: 57%;
-    width: 100px;
+    width: 150px;
     height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
@@ -675,20 +675,21 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* ===== 題目區 ===== */
 .arena-question {
     flex-shrink: 0;
-    margin: 8px 14px 0;
-    padding: 12px 14px;
+    margin: 10px 14px 0;
+    padding: 18px 18px;
     background:
         linear-gradient(135deg, rgba(255, 250, 230, 0.95) 0%, rgba(245, 230, 200, 0.92) 100%);
     border: 2px solid #6b4a22;
-    border-radius: 12px;
+    border-radius: 14px;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.7),
         0 4px 10px rgba(0, 0, 0, 0.5);
     color: #3d2810;
     text-align: center;
-    font-size: 18px;
+    font-size: 23px;
+    line-height: 1.4;
     font-weight: 700;
-    min-height: 50px;
+    min-height: 68px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -697,20 +698,20 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 
 .arena-options {
     flex-shrink: 0;
-    padding: 10px 14px 16px;
+    padding: 12px 14px 18px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
     z-index: 2;
 }
 .opt-btn {
-    padding: 12px 6px;
+    padding: 16px 8px;
     background:
         linear-gradient(180deg, #c79a5a 0%, #a37840 50%, #8a6332 100%);
     border: 2px solid #3d2810;
     border-radius: 10px;
     color: #fff;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 700;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     box-shadow:
