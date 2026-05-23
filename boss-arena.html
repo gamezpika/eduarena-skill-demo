@@ -946,6 +946,11 @@ function pMapleVfx(pos, subj, tier, motion, opts = {}) {
         setTimeout(() => {
             const img = document.createElement("img");
             img.className = `boss-vfx motion-${motion} tier-${tier}`;
+            // onerror 必須在 src 之前綁定，404 才一定攔得到
+            img.onerror = () => {
+                img.classList.add("vfx-fallback", `subj-${subj}`);
+                img.removeAttribute("src");
+            };
             img.src = url;
             // 預設定位：hero 中心；rain motion 從上方隨機 x
             let x = pos.hx, y = pos.hy;
@@ -958,11 +963,6 @@ function pMapleVfx(pos, subj, tier, motion, opts = {}) {
                 img.style.width  = opts.size + "px";
                 img.style.height = opts.size + "px";
             }
-            // 圖 404 → 改用 fallback CSS aura（純色光暈）
-            img.onerror = () => {
-                img.classList.add("vfx-fallback", `subj-${subj}`);
-                img.removeAttribute("src");
-            };
             stage.appendChild(img);
             setTimeout(() => img.remove(), opts.lifetime || 850);
         }, i * stagger);
@@ -1196,7 +1196,8 @@ function startArena() {
     boss.src = `assets/images/${tierData.sprite}?v=1`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
 
-    // 預載連續動作幀（charge / attack / release / hit / death）→ 避免戰鬥中切圖載入延遲
+    // 預載連續動作幀 + 楓之谷 VFX 圖（避免戰鬥中切圖載入延遲）
+    const tierKey = playerSetup.tier;  // "t1"/"t2"/"t3"
     const framesToPreload = [
         tierData.sprite,
         tierData.hit_sprite,
@@ -1204,6 +1205,7 @@ function startArena() {
         tierData.defeat_sprite,
         deriveBossFramePath(tierData.attack_sprite, "charge"),
         deriveBossFramePath(tierData.attack_sprite, "release"),
+        `boss/v2/${playerSetup.subject}/${tierKey}/vfx.png`,
     ].filter(Boolean);
     framesToPreload.forEach(p => { const im = new Image(); im.src = `assets/images/${p}?v=1`; });
 
