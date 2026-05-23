@@ -209,6 +209,12 @@
 .fighter-hero.hit { animation: heroHit 0.5s; }
 .fighter-hero.entering { animation: heroEnter 1.1s cubic-bezier(0.34, 1.3, 0.5, 1) both; }
 .fighter-hero.attacking { animation: heroAttackDash 0.65s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
+.fighter-hero.attacking-fist     { animation: heroAttackDash 0.65s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
+.fighter-hero.attacking-sword    { animation: heroSwordArc 0.7s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
+.fighter-hero.attacking-book     { animation: heroBookSlam 0.7s cubic-bezier(0.42, 0, 1, 0.6); }
+.fighter-hero.attacking-pencil   { animation: heroPencilThrust 0.5s cubic-bezier(0.7, 0, 0.3, 1.6); }
+.fighter-hero.attacking-staff    { animation: heroStaffCast 0.75s ease-in-out; }
+.fighter-hero.attacking-gauntlet { animation: heroGauntletPunch 0.6s cubic-bezier(0.6, 0, 0.3, 1.6); }
 .fighter-hero.victory { animation: heroVictoryPose 1.4s cubic-bezier(0.34, 1.5, 0.64, 1) forwards; }
 
 @keyframes heroIdle {
@@ -231,12 +237,57 @@
     100% { transform: translateX(-50%) translateX(0) translateY(0) rotate(0); opacity: 1; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
 }
 
-/* B. 攻擊衝刺：往右衝 + 揮拳 + 復位 */
+/* B. 攻擊衝刺（拳頭 fist 預設）：往右衝 + 揮拳 + 復位 */
 @keyframes heroAttackDash {
     0%   { transform: translateX(-50%) translateX(0); }
-    25%  { transform: translateX(-50%) translateX(-15px); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)) brightness(1.1); }  /* 蓄力後拉 */
-    50%  { transform: translateX(-50%) translateX(80px) scale(1.1, 0.9) rotate(8deg); filter: drop-shadow(0 0 20px #ffd54d) brightness(1.4); }  /* 衝刺 + 揮拳 */
+    25%  { transform: translateX(-50%) translateX(-15px); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)) brightness(1.1); }
+    50%  { transform: translateX(-50%) translateX(80px) scale(1.1, 0.9) rotate(8deg); filter: drop-shadow(0 0 20px #ffd54d) brightness(1.4); }
     65%  { transform: translateX(-50%) translateX(60px) scale(1.05, 0.95) rotate(4deg); filter: drop-shadow(0 0 12px #ffd54d); }
+    100% { transform: translateX(-50%) translateX(0); }
+}
+
+/* 劍 sword 劃弧：往前傾 + 大幅旋轉做劃弧效果 */
+@keyframes heroSwordArc {
+    0%   { transform: translateX(-50%) translateX(0) rotate(0); }
+    20%  { transform: translateX(-50%) translateX(-10px) rotate(-15deg); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)) brightness(1.1); }  /* 蓄力後拉 + 反向旋轉 */
+    50%  { transform: translateX(-50%) translateX(70px) rotate(20deg) scale(1.05, 0.98); filter: drop-shadow(0 0 18px #ffe34d) brightness(1.35); }  /* 揮砍劃弧 */
+    70%  { transform: translateX(-50%) translateX(55px) rotate(12deg); filter: drop-shadow(0 0 10px #ffe34d); }
+    100% { transform: translateX(-50%) translateX(0) rotate(0); }
+}
+
+/* 書 book 砸下：抬高 + 向下砸 */
+@keyframes heroBookSlam {
+    0%   { transform: translateX(-50%) translateY(0) rotate(0); }
+    25%  { transform: translateX(-50%) translateY(-30px) rotate(-8deg); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.7)) brightness(1.15); }  /* 抬高蓄力 */
+    50%  { transform: translateX(-50%) translateX(50px) translateY(10px) rotate(15deg) scale(1.1, 0.92); filter: drop-shadow(0 0 18px #66c2ff) brightness(1.35); }  /* 砸下 */
+    70%  { transform: translateX(-50%) translateX(40px) translateY(5px) rotate(8deg); }
+    100% { transform: translateX(-50%) translateY(0) rotate(0); }
+}
+
+/* 鉛筆 pencil 直線刺擊：快速直線突刺 */
+@keyframes heroPencilThrust {
+    0%   { transform: translateX(-50%) translateX(0); }
+    15%  { transform: translateX(-50%) translateX(-20px); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)) brightness(1.05); }  /* 拉後蓄力 */
+    45%  { transform: translateX(-50%) translateX(95px) scale(1.15, 0.85); filter: drop-shadow(0 0 22px #fff) brightness(1.5); }  /* 大幅突刺 */
+    65%  { transform: translateX(-50%) translateX(70px) scale(1.08, 0.92); filter: drop-shadow(0 0 12px #fff); }
+    100% { transform: translateX(-50%) translateX(0); }
+}
+
+/* 法杖 staff 詠唱：原地停 + 抬手 + 光波釋放（往前推 staff） */
+@keyframes heroStaffCast {
+    0%   { transform: translateX(-50%); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
+    25%  { transform: translateX(-50%) translateY(-8px) scale(1.04); filter: drop-shadow(0 0 16px #4dd0e1) brightness(1.2); }  /* 抬高蓄魔 */
+    55%  { transform: translateX(-50%) translateX(15px) translateY(-3px) scale(1.06); filter: drop-shadow(0 0 24px #4dd0e1) brightness(1.5); }  /* 揮杖放波 */
+    75%  { transform: translateX(-50%) translateX(8px); filter: drop-shadow(0 0 14px #4dd0e1); }
+    100% { transform: translateX(-50%); }
+}
+
+/* 拳套 gauntlet 重拳衝擊：跟拳頭類似但更狠 */
+@keyframes heroGauntletPunch {
+    0%   { transform: translateX(-50%) translateX(0); }
+    20%  { transform: translateX(-50%) translateX(-22px) scale(0.95, 1.05); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)) brightness(1.1); }  /* 大幅蓄力 */
+    50%  { transform: translateX(-50%) translateX(90px) scale(1.18, 0.85) rotate(5deg); filter: drop-shadow(0 0 26px #b388ff) brightness(1.45); }  /* 重拳衝擊 */
+    70%  { transform: translateX(-50%) translateX(70px) scale(1.10, 0.92); filter: drop-shadow(0 0 14px #b388ff); }
     100% { transform: translateX(-50%) translateX(0); }
 }
 
@@ -320,6 +371,94 @@
     0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
     25%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
+
+/* 武器專屬命中特效：依 state.weapon 加 hit-flash 上 */
+.hit-flash.weapon-sword {
+    background: radial-gradient(ellipse 100% 50% at center, rgba(255, 240, 130, 1) 0%, rgba(255, 200, 60, 0.8) 30%, rgba(255, 100, 0, 0.2) 70%, transparent 100%);
+    width: 140px; height: 70px;  /* 扁長弧形 */
+}
+.hit-flash.weapon-book {
+    background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(180, 220, 255, 0.7) 35%, rgba(100, 180, 255, 0.2) 75%, transparent 100%);
+    width: 140px; height: 140px;  /* 大白色震波 */
+}
+.hit-flash.weapon-pencil {
+    background: radial-gradient(ellipse 100% 20% at center, rgba(255, 255, 255, 1) 0%, rgba(255, 230, 130, 0.6) 40%, transparent 100%);
+    width: 180px; height: 36px;  /* 直線突刺光 */
+}
+.hit-flash.weapon-staff {
+    background: radial-gradient(circle, rgba(180, 240, 255, 1) 0%, rgba(77, 208, 225, 0.7) 35%, rgba(0, 150, 200, 0.2) 75%, transparent 100%);
+    width: 160px; height: 160px;  /* 藍色光波 */
+    animation: flashSpin 0.6s ease-out forwards;
+}
+.hit-flash.weapon-gauntlet {
+    background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(179, 136, 255, 0.75) 30%, rgba(120, 60, 220, 0.25) 70%, transparent 100%);
+    width: 130px; height: 130px;
+}
+@keyframes flashSpin {
+    0%   { transform: translate(-50%, -50%) scale(0.3) rotate(0); opacity: 0; }
+    25%  { transform: translate(-50%, -50%) scale(1.4) rotate(180deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2.4) rotate(360deg); opacity: 0; }
+}
+
+/* 武器軌跡（攻擊期間從主角往魔王劃過去） */
+.weapon-trail {
+    position: absolute;
+    pointer-events: none;
+    z-index: 18;
+    mix-blend-mode: screen;
+    opacity: 0;
+    animation: trailFade 0.5s ease-out forwards;
+}
+@keyframes trailFade {
+    0%   { opacity: 0; transform: scaleX(0.3); }
+    25%  { opacity: 1; transform: scaleX(1.0); }
+    100% { opacity: 0; transform: scaleX(1.1); }
+}
+/* 劍弧形軌跡：黃色弧 */
+.weapon-trail.trail-sword {
+    width: 160px; height: 70px;
+    border-top: 6px solid transparent;
+    border-image: linear-gradient(90deg, transparent, #ffe34d 30%, #fff 50%, #ffe34d 70%, transparent) 1;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    background: radial-gradient(ellipse 100% 60% at center, rgba(255, 220, 80, 0.55) 0%, transparent 70%);
+    transform-origin: left center;
+}
+/* 書震波圓圈 */
+.weapon-trail.trail-book {
+    width: 100px; height: 100px;
+    border: 5px solid rgba(180, 220, 255, 0.85);
+    border-radius: 50%;
+    background: transparent;
+    animation: trailRingExpand 0.5s ease-out forwards;
+}
+@keyframes trailRingExpand {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+}
+/* 鉛筆直線突刺 */
+.weapon-trail.trail-pencil {
+    width: 140px; height: 8px;
+    background: linear-gradient(90deg, transparent, #fff 50%, transparent);
+    box-shadow: 0 0 16px #fff;
+    transform-origin: left center;
+}
+/* 法杖圓波（藍色擴散）*/
+.weapon-trail.trail-staff {
+    width: 80px; height: 80px;
+    border: 4px solid rgba(77, 208, 225, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 0 24px rgba(77, 208, 225, 0.7);
+    animation: trailRingExpand 0.6s ease-out forwards;
+}
+/* 拳套衝擊波（紫色） */
+.weapon-trail.trail-gauntlet {
+    width: 90px; height: 90px;
+    border: 5px solid rgba(179, 136, 255, 0.95);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(179, 136, 255, 0.8);
+    animation: trailRingExpand 0.45s ease-out forwards;
 }
 
 /* ===== D. Combo 大字 ===== */

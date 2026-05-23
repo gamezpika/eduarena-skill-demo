@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=9">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=10">
 </head>
 <body>
 
@@ -254,19 +254,19 @@ function getComboMultiplier() {
 }
 
 // C. 命中閃光 + 6 粒子（在 target sprite 中心放）
-function spawnHitFX(targetEl) {
+function spawnHitFX(targetEl, weaponKey) {
     const rect = targetEl.getBoundingClientRect();
     const stageRect = stage.getBoundingClientRect();
     const cx = rect.left - stageRect.left + rect.width / 2;
     const cy = rect.top  - stageRect.top  + rect.height / 2;
 
-    // 中央閃光
+    // 中央閃光（武器專屬色彩 / 形狀）
     const flash = document.createElement("div");
-    flash.className = "hit-flash";
+    flash.className = "hit-flash" + (weaponKey ? ` weapon-${weaponKey}` : "");
     flash.style.left = cx + "px";
     flash.style.top  = cy + "px";
     stage.appendChild(flash);
-    setTimeout(() => flash.remove(), 500);
+    setTimeout(() => flash.remove(), 700);
 
     // 6 粒子四散
     for (let i = 0; i < 6; i++) {
@@ -308,15 +308,20 @@ async function attackBoss() {
     const dmg = Math.floor(baseDmg * mult);
     state.bossHP = Math.max(0, state.bossHP - dmg);
 
-    // B. 主角攻擊衝刺動畫
-    hero.classList.add("attacking");
-    setTimeout(() => hero.classList.remove("attacking"), 650);
+    // B. 武器專屬攻擊動畫（依當前武器套對應 keyframes）
+    const attackClass = `attacking-${state.weapon}`;
+    hero.classList.add(attackClass);
+    const attackDur = state.weapon === "pencil" ? 500 : (state.weapon === "staff" ? 750 : 700);
+    setTimeout(() => hero.classList.remove(attackClass), attackDur);
+
+    // 武器專屬軌跡（從主角往魔王劃過去）
+    spawnWeaponTrail();
 
     // 衝刺中段（接觸時）觸發特效
-    await sleep(280);
+    await sleep(state.weapon === "pencil" ? 220 : 320);
     boss.classList.add("hit");
     popDamage(boss, "-" + dmg, false);
-    spawnHitFX(boss);                          // C. 粒子 + 閃光
+    spawnHitFX(boss, state.weapon);            // 武器專屬命中閃光 + 粒子
     stage.classList.add("impact");             // F. 鏡頭衝擊
     setTimeout(() => stage.classList.remove("impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
@@ -324,6 +329,41 @@ async function attackBoss() {
 
     await sleep(400);
     boss.classList.remove("hit");
+}
+
+// 武器軌跡：從 hero 中心 → boss 中心劃過去
+function spawnWeaponTrail() {
+    if (state.weapon === "fist") return;  // 拳頭不畫軌跡
+    const heroRect = hero.getBoundingClientRect();
+    const bossRect = boss.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const hx = heroRect.left - stageRect.left + heroRect.width / 2;
+    const hy = heroRect.top  - stageRect.top  + heroRect.height * 0.45;
+    const bx = bossRect.left - stageRect.left + bossRect.width / 2;
+    const by = bossRect.top  - stageRect.top  + bossRect.height * 0.55;
+    const midX = (hx + bx) / 2;
+    const midY = (hy + by) / 2;
+
+    const trail = document.createElement("div");
+    trail.className = `weapon-trail trail-${state.weapon}`;
+
+    if (state.weapon === "sword" || state.weapon === "pencil") {
+        // 直/弧線：從 hero 拉到 boss
+        const dx = bx - hx, dy = by - hy;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        trail.style.left = hx + "px";
+        trail.style.top  = hy + "px";
+        trail.style.width = len + "px";
+        trail.style.transform = `rotate(${angle}deg)`;
+    } else {
+        // 圓波：放魔王中心
+        trail.style.left = bx + "px";
+        trail.style.top  = by + "px";
+        trail.style.transform = "translate(-50%, -50%)";
+    }
+    stage.appendChild(trail);
+    setTimeout(() => trail.remove(), 700);
 }
 
 async function getHitByBoss() {
