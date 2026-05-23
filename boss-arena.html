@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=4">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=5">
 </head>
 <body>
 
@@ -71,6 +71,18 @@
 
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
+
+                <!-- 左下：科目固定資訊 -->
+                <div class="info-panel info-subject">
+                    <div class="panel-title">📘 數學</div>
+                    <div class="panel-sub">五年級 · G5</div>
+                </div>
+
+                <!-- 右下：戰況動態 -->
+                <div class="info-panel info-status" id="combat-status">
+                    <div class="status-line" id="status-line">📍 接近中</div>
+                    <div class="status-detail" id="status-detail">距離魔王 3 格</div>
+                </div>
             </div>
 
             <!-- 題目卡 -->
@@ -132,6 +144,23 @@ function updateGridHighlight() {
     // 派派 5/23 指示：移動格不用顯示
     // 只更新 hero 的 data-col 觸發 CSS 位置 + z-index 變更（P3 Y-sort 由 CSS 自動套）
     hero.dataset.col = state.heroCol;
+
+    // 右下戰況面板同步更新
+    const statusPanel = $("combat-status");
+    const statusLine  = $("status-line");
+    const statusDetail = $("status-detail");
+    const distance = IN_RANGE - state.heroCol;  // 距離魔王還剩幾格
+
+    if (state.heroCol >= IN_RANGE) {
+        // 進入攻擊範圍
+        statusPanel.classList.add("in-range");
+        statusLine.innerHTML = "⚔ 攻擊範圍！";
+        statusDetail.innerHTML = "下一題答對 = 攻擊";
+    } else {
+        statusPanel.classList.remove("in-range");
+        statusLine.innerHTML = "📍 接近中";
+        statusDetail.innerHTML = `距離魔王 ${distance} 格`;
+    }
 }
 
 function loadQuestion() {
