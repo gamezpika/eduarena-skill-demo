@@ -175,7 +175,7 @@ import * as THREE from 'three';
     let py = -SCENE_H * 0.20;  // 偏上一點，避開頂部建築初始位置
     player.position.set(px, 0, py);
 
-    // ─── Debug: polygon 邊框視覺化（紅色線條）讓派派看對齊狀況
+    // ─── Debug: polygon 視覺化（紅色填充 + 邊框）讓派派一眼看對齊
     const debugLines = [];
     function renderPolygonDebug() {
         debugLines.forEach(l => scene.remove(l));
@@ -183,16 +183,32 @@ import * as THREE from 'three';
         if (!mapConfig || !DEBUG_POLYGON) return;
         mapConfig.buildings.forEach(b => {
             if (!b.polygon || b.polygon.length < 3) return;
+            // 紅色半透明填充（ShapeGeometry 躺平到 XZ 平面）
+            const shape = new THREE.Shape(b.polygon.map(p => {
+                const { x, z } = normToScene(p.x, p.y);
+                return new THREE.Vector2(x, z);
+            }));
+            const fillGeo = new THREE.ShapeGeometry(shape);
+            const fillMat = new THREE.MeshBasicMaterial({
+                color: 0xff2050, transparent: true, opacity: 0.4, side: THREE.DoubleSide
+            });
+            const fill = new THREE.Mesh(fillGeo, fillMat);
+            fill.rotation.x = -Math.PI / 2;
+            fill.position.y = 0.3;
+            scene.add(fill);
+            debugLines.push(fill);
+
+            // 邊框 LineLoop
             const points = b.polygon.map(p => {
                 const { x, z } = normToScene(p.x, p.y);
-                return new THREE.Vector3(x, 0.5, z);
+                return new THREE.Vector3(x, 0.4, z);
             });
-            points.push(points[0].clone());  // 閉合
-            const geo = new THREE.BufferGeometry().setFromPoints(points);
-            const mat = new THREE.LineBasicMaterial({ color: 0xff0040 });
-            const loop = new THREE.Line(geo, mat);
-            scene.add(loop);
-            debugLines.push(loop);
+            points.push(points[0].clone());
+            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xff0040 });
+            const line = new THREE.Line(lineGeo, lineMat);
+            scene.add(line);
+            debugLines.push(line);
         });
     }
     let DEBUG_POLYGON = true;  // 預設開，派派看完可 console eduChibi.toggleDebug() 關
