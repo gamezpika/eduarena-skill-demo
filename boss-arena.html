@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=32">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=33">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -115,8 +115,22 @@
                     <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
-                <!-- 5×5 SVG 真等距菱形（對稱 col↘ + row↗，平行線、無透視收斂）— 派派 5/23 放大 1.4× -->
+                <!-- 5×5 SVG 真等距菱形（對稱 col↘ + row↗）— 1.4× 放大 + FFT 風 3D 立方體（外圍 10 格見側壁） -->
                 <svg class="grid-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- 側壁先畫（painter algo：背景層）-->
+                  <!-- 右側壁 (x=4 那 5 格) -->
+                  <polygon class="grid-wall-right" data-x="4" data-y="0" points="50.0,67.5 58.4,64.0 58.4,69.0 50.0,72.5" />
+                  <polygon class="grid-wall-right" data-x="4" data-y="1" points="58.4,64.0 66.8,60.5 66.8,65.5 58.4,69.0" />
+                  <polygon class="grid-wall-right" data-x="4" data-y="2" points="66.8,60.5 75.2,57.0 75.2,62.0 66.8,65.5" />
+                  <polygon class="grid-wall-right" data-x="4" data-y="3" points="75.2,57.0 83.6,53.5 83.6,58.5 75.2,62.0" />
+                  <polygon class="grid-wall-right" data-x="4" data-y="4" points="83.6,53.5 92.0,50.0 92.0,55.0 83.6,58.5" />
+                  <!-- 前左壁 (y=0 那 5 格) -->
+                  <polygon class="grid-wall-front" data-x="0" data-y="0" points="8.0,50.0 16.4,53.5 16.4,58.5 8.0,55.0" />
+                  <polygon class="grid-wall-front" data-x="1" data-y="0" points="16.4,53.5 24.8,57.0 24.8,62.0 16.4,58.5" />
+                  <polygon class="grid-wall-front" data-x="2" data-y="0" points="24.8,57.0 33.2,60.5 33.2,65.5 24.8,62.0" />
+                  <polygon class="grid-wall-front" data-x="3" data-y="0" points="33.2,60.5 41.6,64.0 41.6,69.0 33.2,65.5" />
+                  <polygon class="grid-wall-front" data-x="4" data-y="0" points="41.6,64.0 50.0,67.5 50.0,72.5 41.6,69.0" />
+                  <!-- 25 個頂面 -->
                   <polygon class="grid-tile" data-x="0" data-y="0" points="8.0,50.0 16.4,53.5 24.8,50.0 16.4,46.5" />
                   <polygon class="grid-tile" data-x="1" data-y="0" points="16.4,53.5 24.8,57.0 33.2,53.5 24.8,50.0" />
                   <polygon class="grid-tile" data-x="2" data-y="0" points="24.8,57.0 33.2,60.5 41.6,57.0 33.2,53.5" />

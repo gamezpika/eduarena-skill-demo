@@ -181,12 +181,25 @@
     overflow: visible;
 }
 .grid-tile {
-    fill: transparent;
-    stroke: rgba(120, 200, 255, 0.85);
-    stroke-width: 0.4;
+    fill: rgba(186, 174, 150, 0.92);  /* 石板砂岩色 */
+    stroke: rgba(60, 50, 40, 0.55);
+    stroke-width: 0.25;
     vector-effect: non-scaling-stroke;
-    filter: drop-shadow(0 0 3px rgba(100, 180, 255, 0.7));
+    filter: drop-shadow(0 0.8px 1.2px rgba(0, 0, 0, 0.6));
     transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s;
+}
+/* FFT 風 3D 立方體側壁（外圍 10 格） */
+.grid-wall-right {
+    fill: rgba(126, 116, 96, 0.95);  /* 中灰 — 右側面 */
+    stroke: rgba(50, 42, 32, 0.7);
+    stroke-width: 0.25;
+    vector-effect: non-scaling-stroke;
+}
+.grid-wall-front {
+    fill: rgba(82, 74, 60, 0.96);  /* 深灰 — 左前面 */
+    stroke: rgba(40, 32, 24, 0.7);
+    stroke-width: 0.25;
+    vector-effect: non-scaling-stroke;
 }
 /* 主角當前格：金色 */
 .grid-tile.hero-pos {
