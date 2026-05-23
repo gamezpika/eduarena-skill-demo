@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=19">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=20">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -115,25 +115,14 @@
                     <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
-                <!-- 4×4 隱形錨點，視覺由 arena_4x4.png 提供 -->
-                <div class="grid-cell" data-x="0" data-y="0"></div>
-                <div class="grid-cell" data-x="1" data-y="0"></div>
-                <div class="grid-cell" data-x="2" data-y="0"></div>
-                <div class="grid-cell" data-x="3" data-y="0"></div>
-                <div class="grid-cell" data-x="0" data-y="1"></div>
-                <div class="grid-cell" data-x="1" data-y="1"></div>
-                <div class="grid-cell" data-x="2" data-y="1"></div>
-                <div class="grid-cell" data-x="3" data-y="1"></div>
-                <div class="grid-cell" data-x="0" data-y="2"></div>
-                <div class="grid-cell" data-x="1" data-y="2"></div>
-                <div class="grid-cell" data-x="2" data-y="2"></div>
-                <div class="grid-cell" data-x="3" data-y="2"></div>
-                <div class="grid-cell" data-x="0" data-y="3"></div>
-                <div class="grid-cell" data-x="1" data-y="3"></div>
-                <div class="grid-cell" data-x="2" data-y="3"></div>
-                <div class="grid-cell" data-x="3" data-y="3"></div>
+                <!-- 5×5 隱形錨點，視覺由 arena_5x5.png 提供 -->
+                <div class="grid-cell" data-x="0" data-y="0"></div><div class="grid-cell" data-x="1" data-y="0"></div><div class="grid-cell" data-x="2" data-y="0"></div><div class="grid-cell" data-x="3" data-y="0"></div><div class="grid-cell" data-x="4" data-y="0"></div>
+                <div class="grid-cell" data-x="0" data-y="1"></div><div class="grid-cell" data-x="1" data-y="1"></div><div class="grid-cell" data-x="2" data-y="1"></div><div class="grid-cell" data-x="3" data-y="1"></div><div class="grid-cell" data-x="4" data-y="1"></div>
+                <div class="grid-cell" data-x="0" data-y="2"></div><div class="grid-cell" data-x="1" data-y="2"></div><div class="grid-cell" data-x="2" data-y="2"></div><div class="grid-cell" data-x="3" data-y="2"></div><div class="grid-cell" data-x="4" data-y="2"></div>
+                <div class="grid-cell" data-x="0" data-y="3"></div><div class="grid-cell" data-x="1" data-y="3"></div><div class="grid-cell" data-x="2" data-y="3"></div><div class="grid-cell" data-x="3" data-y="3"></div><div class="grid-cell" data-x="4" data-y="3"></div>
+                <div class="grid-cell" data-x="0" data-y="4"></div><div class="grid-cell" data-x="1" data-y="4"></div><div class="grid-cell" data-x="2" data-y="4"></div><div class="grid-cell" data-x="3" data-y="4"></div><div class="grid-cell" data-x="4" data-y="4"></div>
 
-                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="3" alt="hero">
+                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="4" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
 
                 <!-- 左下：科目固定資訊（JS 依選擇填） -->
@@ -211,16 +200,17 @@ function pickWeaponByJob(job) {
     return map[job.attr_key] || "sword";
 }
 
-/* P0 Grid Data Structure 升級成 4×4（派派 5/23）
-   主角在 (x, y) 2D 座標，魔王固定 (3, 3) 右上角
-   攻擊範圍 = Chebyshev 距離 ≤ 1（魔王相鄰格） */
-const GRID = { cols: 4, rows: 4 };
-const BOSS_POS = { x: 3, y: 3 };
-// 嘍囉位置預留（demo 暫不啟用，未來可放敵方單位）
+/* P0 Grid Data Structure 升級成 5×5（派派 5/23）
+   主角 (x,y) 2D，魔王固定 (4,4) 右上角
+   攻擊範圍 = Chebyshev ≤ 1 */
+const GRID = { cols: 5, rows: 5 };
+const BOSS_POS = { x: 4, y: 4 };
+// 嘍囉位置預留（demo 暫不啟用）
 const ENEMY_SLOTS_RESERVED = [
-    { x: 3, y: 2 },  // 魔王正下方
-    { x: 1, y: 3 },  // 魔王左 2 格
-    { x: 2, y: 2 },  // 魔王左下對角
+    { x: 4, y: 3 },  // 魔王正下方
+    { x: 3, y: 4 },  // 魔王正左方
+    { x: 3, y: 3 },  // 魔王左下對角
+    { x: 2, y: 4 },  // 魔王左 2 格
 ];
 function chebyshev(a, b) {
     return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -241,7 +231,7 @@ const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
     bossHP: 250, bossMaxHP: 250,
-    heroPos: { x: 2, y: 3 },   // 起始離魔王 1 步（魔王 (3,3) 左 1 格）
+    heroPos: { x: 2, y: 4 },   // 起始離魔王 2 步（魔王 (4,4) 左 2 格）
     combo: 0,
     qIdx: 0,
     busy: false,

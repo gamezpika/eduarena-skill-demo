@@ -125,7 +125,7 @@
     flex: 1;
     position: relative;
     min-height: 0;
-    background-image: url("../../assets/images/arena/arena_4x4.png?v=1");
+    background-image: url("../../assets/images/arena/arena_5x5.png?v=1");
     background-size: cover;
     background-position: center;
     overflow: hidden;
@@ -181,27 +181,32 @@
     z-index: 1;
 }
 
-/* 16 格位置（手動 lerp 等距 pos）*/
-/* row 0 (最近) */
-.grid-cell[data-x="0"][data-y="0"] { left: 28%; bottom: 25%; }
-.grid-cell[data-x="1"][data-y="0"] { left: 36%; bottom: 22%; }
-.grid-cell[data-x="2"][data-y="0"] { left: 44%; bottom: 19%; }
-.grid-cell[data-x="3"][data-y="0"] { left: 52%; bottom: 16%; }
-/* row 1 */
-.grid-cell[data-x="0"][data-y="1"] { left: 33%; bottom: 32%; }
-.grid-cell[data-x="1"][data-y="1"] { left: 41%; bottom: 29%; }
-.grid-cell[data-x="2"][data-y="1"] { left: 49%; bottom: 26%; }
-.grid-cell[data-x="3"][data-y="1"] { left: 57%; bottom: 23%; }
-/* row 2 */
-.grid-cell[data-x="0"][data-y="2"] { left: 38%; bottom: 39%; }
-.grid-cell[data-x="1"][data-y="2"] { left: 46%; bottom: 36%; }
-.grid-cell[data-x="2"][data-y="2"] { left: 54%; bottom: 33%; }
-.grid-cell[data-x="3"][data-y="2"] { left: 62%; bottom: 30%; }
-/* row 3 (最遠) */
-.grid-cell[data-x="0"][data-y="3"] { left: 43%; bottom: 46%; }
-.grid-cell[data-x="1"][data-y="3"] { left: 51%; bottom: 43%; }
-.grid-cell[data-x="2"][data-y="3"] { left: 59%; bottom: 40%; }
-.grid-cell[data-x="3"][data-y="3"] { left: 67%; bottom: 37%; }
+/* 25 格 5×5 位置（對齊 arena_5x5.png 等距 lerp） */
+.grid-cell[data-x="0"][data-y="0"] { left: 22%; bottom: 62%; }
+.grid-cell[data-x="1"][data-y="0"] { left: 30%; bottom: 59%; }
+.grid-cell[data-x="2"][data-y="0"] { left: 38%; bottom: 56%; }
+.grid-cell[data-x="3"][data-y="0"] { left: 46%; bottom: 53%; }
+.grid-cell[data-x="4"][data-y="0"] { left: 54%; bottom: 50%; }
+.grid-cell[data-x="0"][data-y="1"] { left: 27%; bottom: 55%; }
+.grid-cell[data-x="1"][data-y="1"] { left: 35%; bottom: 52%; }
+.grid-cell[data-x="2"][data-y="1"] { left: 43%; bottom: 49%; }
+.grid-cell[data-x="3"][data-y="1"] { left: 51%; bottom: 46%; }
+.grid-cell[data-x="4"][data-y="1"] { left: 59%; bottom: 43%; }
+.grid-cell[data-x="0"][data-y="2"] { left: 32%; bottom: 48%; }
+.grid-cell[data-x="1"][data-y="2"] { left: 40%; bottom: 45%; }
+.grid-cell[data-x="2"][data-y="2"] { left: 48%; bottom: 42%; }
+.grid-cell[data-x="3"][data-y="2"] { left: 56%; bottom: 39%; }
+.grid-cell[data-x="4"][data-y="2"] { left: 64%; bottom: 36%; }
+.grid-cell[data-x="0"][data-y="3"] { left: 37%; bottom: 41%; }
+.grid-cell[data-x="1"][data-y="3"] { left: 45%; bottom: 38%; }
+.grid-cell[data-x="2"][data-y="3"] { left: 53%; bottom: 35%; }
+.grid-cell[data-x="3"][data-y="3"] { left: 61%; bottom: 32%; }
+.grid-cell[data-x="4"][data-y="3"] { left: 69%; bottom: 29%; }
+.grid-cell[data-x="0"][data-y="4"] { left: 42%; bottom: 34%; }
+.grid-cell[data-x="1"][data-y="4"] { left: 50%; bottom: 31%; }
+.grid-cell[data-x="2"][data-y="4"] { left: 58%; bottom: 28%; }
+.grid-cell[data-x="3"][data-y="4"] { left: 66%; bottom: 25%; }
+.grid-cell[data-x="4"][data-y="4"] { left: 74%; bottom: 22%; }
 
 /* 主角站位 — 用 data-x/data-y 對位 */
 .fighter-hero {
@@ -215,23 +220,32 @@
     transition: left 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
                 bottom 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
-/* Y-sort：z-index = (3-y) + (3-x) + 10，近格 (y/x 小) z 大 */
-.fighter-hero[data-x="0"][data-y="0"] { left: 28%; bottom: 25%; z-index: 18; }
-.fighter-hero[data-x="1"][data-y="0"] { left: 36%; bottom: 22%; z-index: 17; }
-.fighter-hero[data-x="2"][data-y="0"] { left: 44%; bottom: 19%; z-index: 16; }
-.fighter-hero[data-x="3"][data-y="0"] { left: 52%; bottom: 16%; z-index: 15; }
-.fighter-hero[data-x="0"][data-y="1"] { left: 33%; bottom: 32%; z-index: 17; }
-.fighter-hero[data-x="1"][data-y="1"] { left: 41%; bottom: 29%; z-index: 16; }
-.fighter-hero[data-x="2"][data-y="1"] { left: 49%; bottom: 26%; z-index: 15; }
-.fighter-hero[data-x="3"][data-y="1"] { left: 57%; bottom: 23%; z-index: 14; }
-.fighter-hero[data-x="0"][data-y="2"] { left: 38%; bottom: 39%; z-index: 16; }
-.fighter-hero[data-x="1"][data-y="2"] { left: 46%; bottom: 36%; z-index: 15; }
-.fighter-hero[data-x="2"][data-y="2"] { left: 54%; bottom: 33%; z-index: 14; }
-.fighter-hero[data-x="3"][data-y="2"] { left: 62%; bottom: 30%; z-index: 13; }
-.fighter-hero[data-x="0"][data-y="3"] { left: 43%; bottom: 46%; z-index: 15; }
-.fighter-hero[data-x="1"][data-y="3"] { left: 51%; bottom: 43%; z-index: 14; }
-.fighter-hero[data-x="2"][data-y="3"] { left: 59%; bottom: 40%; z-index: 13; }
-.fighter-hero[data-x="3"][data-y="3"] { left: 67%; bottom: 37%; z-index: 12; }
+/* Y-sort：z-index = (4-y) + (4-x) + 10，近格 (x/y 小) z 大 */
+.fighter-hero[data-x="0"][data-y="0"] { left: 22%; bottom: 62%; z-index: 18; }
+.fighter-hero[data-x="1"][data-y="0"] { left: 30%; bottom: 59%; z-index: 17; }
+.fighter-hero[data-x="2"][data-y="0"] { left: 38%; bottom: 56%; z-index: 16; }
+.fighter-hero[data-x="3"][data-y="0"] { left: 46%; bottom: 53%; z-index: 15; }
+.fighter-hero[data-x="4"][data-y="0"] { left: 54%; bottom: 50%; z-index: 14; }
+.fighter-hero[data-x="0"][data-y="1"] { left: 27%; bottom: 55%; z-index: 17; }
+.fighter-hero[data-x="1"][data-y="1"] { left: 35%; bottom: 52%; z-index: 16; }
+.fighter-hero[data-x="2"][data-y="1"] { left: 43%; bottom: 49%; z-index: 15; }
+.fighter-hero[data-x="3"][data-y="1"] { left: 51%; bottom: 46%; z-index: 14; }
+.fighter-hero[data-x="4"][data-y="1"] { left: 59%; bottom: 43%; z-index: 13; }
+.fighter-hero[data-x="0"][data-y="2"] { left: 32%; bottom: 48%; z-index: 16; }
+.fighter-hero[data-x="1"][data-y="2"] { left: 40%; bottom: 45%; z-index: 15; }
+.fighter-hero[data-x="2"][data-y="2"] { left: 48%; bottom: 42%; z-index: 14; }
+.fighter-hero[data-x="3"][data-y="2"] { left: 56%; bottom: 39%; z-index: 13; }
+.fighter-hero[data-x="4"][data-y="2"] { left: 64%; bottom: 36%; z-index: 12; }
+.fighter-hero[data-x="0"][data-y="3"] { left: 37%; bottom: 41%; z-index: 15; }
+.fighter-hero[data-x="1"][data-y="3"] { left: 45%; bottom: 38%; z-index: 14; }
+.fighter-hero[data-x="2"][data-y="3"] { left: 53%; bottom: 35%; z-index: 13; }
+.fighter-hero[data-x="3"][data-y="3"] { left: 61%; bottom: 32%; z-index: 12; }
+.fighter-hero[data-x="4"][data-y="3"] { left: 69%; bottom: 29%; z-index: 11; }
+.fighter-hero[data-x="0"][data-y="4"] { left: 42%; bottom: 34%; z-index: 14; }
+.fighter-hero[data-x="1"][data-y="4"] { left: 50%; bottom: 31%; z-index: 13; }
+.fighter-hero[data-x="2"][data-y="4"] { left: 58%; bottom: 28%; z-index: 12; }
+.fighter-hero[data-x="3"][data-y="4"] { left: 66%; bottom: 25%; z-index: 11; }
+.fighter-hero[data-x="4"][data-y="4"] { left: 74%; bottom: 22%; z-index: 10; }
 .fighter-hero.hit { animation: heroHit 0.5s; }
 .fighter-hero.entering { animation: heroEnter 1.1s cubic-bezier(0.34, 1.3, 0.5, 1) both; }
 .fighter-hero.attacking { animation: heroAttackDash 0.65s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
@@ -325,18 +339,18 @@
     100% { transform: translateX(-50%) translateY(-12px) scale(1.1); filter: drop-shadow(0 0 22px #ffd54d) brightness(1.25); }
 }
 
-/* 魔王站位（4×4 右上角 = (3,3) = left 67%, bottom 37%）*/
+/* 魔王站位（5×5 右上角 = (4,4) = left 74%, bottom 22%）*/
 .fighter-boss {
     position: absolute;
-    left: 67%;
-    bottom: 37%;
+    left: 74%;
+    bottom: 22%;
     width: 100px;
     height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
     animation: bossIdle 3s ease-in-out infinite;
-    z-index: 12;   /* (3,3) Y-sort = 12，主角靠近的格子會在前 */
+    z-index: 10;   /* (4,4) Y-sort = 10，主角任意位置 z 都 >= 10 */
 }
 .fighter-boss.hit { animation: bossHit 0.5s; }
 .fighter-boss.defeated {
