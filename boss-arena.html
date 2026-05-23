@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=34">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=35">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -446,6 +446,71 @@ function getComboMultiplier() {
 }
 
 // C. 命中閃光 + 6 粒子（在 target sprite 中心放）
+// P4 武器專屬大畫面（4 武器各一套華麗 VFX）
+function spawnBigImpact(weaponKey) {
+    const rect = boss.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const cx = rect.left - stageRect.left + rect.width / 2;
+    const cy = rect.top  - stageRect.top  + rect.height * 0.5;
+
+    const wrap = document.createElement("div");
+    wrap.className = `big-impact big-impact-${weaponKey}`;
+    wrap.style.left = cx + "px";
+    wrap.style.top  = cy + "px";
+
+    if (weaponKey === "sword") {
+        // 8 道交叉劍光（X 字 + 星形）
+        for (let i = 0; i < 8; i++) {
+            const ray = document.createElement("div");
+            ray.className = "sword-ray";
+            ray.style.transform = `translate(-50%, -50%) rotate(${i * 45}deg)`;
+            ray.style.animationDelay = `${i * 20}ms`;
+            wrap.appendChild(ray);
+        }
+    } else if (weaponKey === "book") {
+        // 法陣（旋轉圓 + 8 道符文）
+        const circle = document.createElement("div");
+        circle.className = "book-circle";
+        wrap.appendChild(circle);
+        const runes = ["✦", "✧", "★", "☆", "✦", "✧", "★", "☆"];
+        for (let i = 0; i < 8; i++) {
+            const r = document.createElement("div");
+            r.className = "book-rune";
+            r.textContent = runes[i];
+            r.style.transform = `translate(-50%, -50%) rotate(${i * 45}deg) translateY(-60px)`;
+            r.style.animationDelay = `${i * 50}ms`;
+            wrap.appendChild(r);
+        }
+    } else if (weaponKey === "staff") {
+        // 12 個光點環繞 boss 匯聚 + 爆炸
+        for (let i = 0; i < 12; i++) {
+            const orb = document.createElement("div");
+            orb.className = "staff-orb";
+            const angle = (i / 12) * Math.PI * 2;
+            const radius = 90;
+            orb.style.setProperty("--sx", Math.cos(angle) * radius + "px");
+            orb.style.setProperty("--sy", Math.sin(angle) * radius + "px");
+            orb.style.animationDelay = `${i * 30}ms`;
+            wrap.appendChild(orb);
+        }
+    } else if (weaponKey === "gauntlet") {
+        // 大拳印 ✊ + 3 環衝擊波
+        const fist = document.createElement("div");
+        fist.className = "gauntlet-fist";
+        fist.textContent = "✊";
+        wrap.appendChild(fist);
+        for (let i = 0; i < 3; i++) {
+            const ring = document.createElement("div");
+            ring.className = "gauntlet-ring";
+            ring.style.animationDelay = `${i * 100}ms`;
+            wrap.appendChild(ring);
+        }
+    }
+
+    stage.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 900);
+}
+
 function spawnHitFX(targetEl, weaponKey) {
     const rect = targetEl.getBoundingClientRect();
     const stageRect = stage.getBoundingClientRect();
@@ -535,8 +600,9 @@ async function attackBoss() {
     }
     popDamage(boss, "-" + dmg, false);
     spawnHitFX(boss, state.weapon);
-    stage.classList.add("impact");
-    setTimeout(() => stage.classList.remove("impact"), 500);
+    spawnBigImpact(state.weapon);  // P4 武器專屬大畫面
+    stage.classList.add("impact", "zoom-impact");  // P3 命中 zoom-in + slow-mo
+    setTimeout(() => stage.classList.remove("impact", "zoom-impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
     updateBars();
 
@@ -584,18 +650,101 @@ function spawnWeaponTrail() {
 }
 
 async function getHitByBoss() {
-    const dmg = 18 + Math.floor(Math.random() * 12);  // 18-29
+    // tier 等級 (t1/t2/t3 → 1/2/3)
+    const tierLevel = parseInt((playerSetup.tier || "t1").replace("t", ""), 10) || 1;
+
+    // B2 蓄力前搖 0.4s（魔王發光、scale 變大）
+    boss.classList.add("charging");
+    // B5 tier 3 額外 dramatic 大字
+    if (tierLevel >= 3) {
+        showAttackName("⚠ 終極魔王發動 ⚠");
+    }
+    await sleep(400);
+    boss.classList.remove("charging");
+
+    // B1 切到 attack sprite
+    if (state.bossData && state.bossData.attack_sprite) {
+        boss.src = `assets/images/${state.bossData.attack_sprite}?v=1`;
+    }
+
+    await sleep(120);
+
+    // B3 投射物：boss → hero，tier 越高越多
+    spawnBossProjectile(tierLevel);
+
+    // 飛行時間 0.5s
+    await sleep(500);
+
+    // 命中：扣血 + shake + vignette + damage popup
+    const dmg = (18 + Math.floor(Math.random() * 12)) * (1 + (tierLevel - 1) * 0.3) | 0;  // tier 越高傷害越高
     state.heroHP = Math.max(0, state.heroHP - dmg);
     hero.classList.add("hit");
     stage.classList.add("shake", "player-hit");
     popDamage(hero, "-" + dmg, true);
-    if (navigator.vibrate) navigator.vibrate(30);
+
+    // B5 tier 3 stage flash + 大震動
+    if (tierLevel >= 3) {
+        const flash = document.createElement("div");
+        flash.className = "stage-mega-flash";
+        stage.appendChild(flash);
+        setTimeout(() => flash.remove(), 350);
+    }
+
+    if (navigator.vibrate) navigator.vibrate(tierLevel >= 3 ? 60 : (tierLevel >= 2 ? 40 : 30));
     updateBars();
     await sleep(500);
+
     hero.classList.remove("hit");
     stage.classList.remove("shake", "player-hit");
+
+    // B4 切回 idle sprite
+    if (state.bossHP > 0 && state.bossData) {
+        boss.src = `assets/images/${state.bossData.sprite}?v=1`;
+    }
+
     // 答錯後退 1 格
     await moveBackward();
+}
+
+// B3 魔王投射物：用科目 emoji，tier 越高越多 + 越大
+function spawnBossProjectile(tierLevel) {
+    const subjKey = playerSetup.subject;
+    const subj = SUBJECTS_DATA[subjKey];
+    const emoji = subj.emoji;
+
+    const bossRect = boss.getBoundingClientRect();
+    const heroRect = hero.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const bx = bossRect.left - stageRect.left + bossRect.width / 2;
+    const by = bossRect.top  - stageRect.top  + bossRect.height * 0.5;
+    const hx = heroRect.left - stageRect.left + heroRect.width / 2;
+    const hy = heroRect.top  - stageRect.top  + heroRect.height * 0.4;
+
+    // tier 1=1 顆, tier 2=2 顆, tier 3=3 顆 + 大字
+    const count = tierLevel;
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const proj = document.createElement("div");
+            proj.className = `boss-proj subj-${subjKey} tier-${tierLevel}`;
+            proj.textContent = emoji;
+            proj.style.left = bx + "px";
+            proj.style.top  = by + "px";
+            const jitter = i * 15 - (count - 1) * 7.5;  // 多顆時錯位
+            proj.style.setProperty("--tx", (hx - bx + jitter) + "px");
+            proj.style.setProperty("--ty", (hy - by) + "px");
+            stage.appendChild(proj);
+            setTimeout(() => proj.remove(), 700);
+        }, i * 80);
+    }
+}
+
+// B5 tier 3 中二大字
+function showAttackName(text) {
+    const el = document.createElement("div");
+    el.className = "attack-name";
+    el.textContent = text;
+    stage.appendChild(el);
+    setTimeout(() => el.remove(), 1400);
 }
 
 function showToast(text) {

@@ -920,6 +920,185 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     100% { opacity: 0; transform: scale(2.2); }
 }
 
+/* ===== 魔王出招動畫（B1-B5）===== */
+/* B2 蓄力前搖 */
+.fighter-boss.charging {
+    animation: bossCharging 0.4s ease-in-out;
+}
+@keyframes bossCharging {
+    0%   { transform: translateX(-50%) scale(1); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)); }
+    40%  { transform: translateX(-50%) scale(1.18) translateY(-6px); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)) brightness(1.6) drop-shadow(0 0 24px #ff4030); }
+    70%  { transform: translateX(-50%) scale(1.12) translateY(-3px); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)) brightness(1.4) drop-shadow(0 0 18px #ff5040); }
+    100% { transform: translateX(-50%) scale(1.05); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.8)) brightness(1.2); }
+}
+
+/* B3 魔王投射物（科目 emoji 飛向主角）*/
+.boss-proj {
+    position: absolute;
+    font-size: 36px;
+    z-index: 200;
+    pointer-events: none;
+    transform-origin: center;
+    animation: bossProjFly 0.6s cubic-bezier(0.45, 0, 0.7, 1) forwards;
+    filter: drop-shadow(0 0 8px rgba(255, 80, 60, 0.9));
+}
+.boss-proj.tier-2 { font-size: 42px; filter: drop-shadow(0 0 12px rgba(255, 60, 40, 1)); }
+.boss-proj.tier-3 { font-size: 52px; filter: drop-shadow(0 0 18px rgba(255, 40, 30, 1)) drop-shadow(0 0 30px rgba(255, 100, 30, 0.7)); }
+@keyframes bossProjFly {
+    0%   { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 0; }
+    20%  { transform: translate(-50%, -50%) scale(1) rotate(120deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.4) rotate(720deg); opacity: 1; }
+}
+
+/* B5 tier 3 中二大字 */
+.attack-name {
+    position: absolute;
+    left: 50%; top: 28%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: 900;
+    color: #ff3030;
+    text-shadow: 0 0 6px rgba(0,0,0,1), 0 0 12px rgba(255, 40, 30, 0.9), 0 0 24px rgba(255, 80, 30, 0.6);
+    letter-spacing: 2px;
+    z-index: 300;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: attackNameDrop 1.4s ease-out forwards;
+}
+@keyframes attackNameDrop {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.5); }
+    25%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.25); }
+    55%  { transform: translateX(-50%) translateY(0) scale(1); }
+    85%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.9); }
+}
+
+/* ===== P3 命中 zoom-in + slow-mo（命中瞬間定鏡）===== */
+.arena-stage.zoom-impact {
+    animation: zoomImpact 0.38s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+@keyframes zoomImpact {
+    0%   { transform: scale(1); filter: brightness(1); }
+    18%  { transform: scale(1.12); filter: brightness(1.25) saturate(1.4) contrast(1.1); }
+    35%  { transform: scale(1.08); filter: brightness(1.15) saturate(1.2); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ===== P4 武器專屬大畫面 ===== */
+.big-impact {
+    position: absolute;
+    width: 0;
+    height: 0;
+    z-index: 18;
+    pointer-events: none;
+}
+
+/* sword - 8 道交叉劍光（X + 星）*/
+.sword-ray {
+    position: absolute;
+    width: 130px;
+    height: 6px;
+    left: 50%;
+    top: 50%;
+    background: linear-gradient(90deg, transparent 0%, rgba(220, 240, 255, 0.95) 35%, rgba(255, 255, 255, 1) 50%, rgba(180, 220, 255, 0.9) 65%, transparent 100%);
+    box-shadow: 0 0 10px rgba(180, 220, 255, 0.95), 0 0 20px rgba(120, 180, 255, 0.7);
+    border-radius: 50%;
+    transform-origin: center;
+    animation: swordRayExpand 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+}
+@keyframes swordRayExpand {
+    0%   { width: 0; opacity: 0; }
+    25%  { width: 160px; opacity: 1; }
+    100% { width: 80px; opacity: 0; }
+}
+
+/* book - 法陣 + 8 道符文 */
+.book-circle {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid rgba(150, 100, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(150, 100, 255, 0.7), inset 0 0 30px rgba(180, 120, 255, 0.5);
+    background: conic-gradient(from 0deg, rgba(150, 100, 255, 0.4), rgba(220, 150, 255, 0.6), rgba(150, 100, 255, 0.4), rgba(220, 150, 255, 0.6), rgba(150, 100, 255, 0.4));
+    animation: bookCircle 0.7s ease-out forwards;
+}
+@keyframes bookCircle {
+    0%   { transform: translate(-50%, -50%) scale(0.2) rotate(0); opacity: 0; }
+    40%  { transform: translate(-50%, -50%) scale(1.1) rotate(180deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.7) rotate(540deg); opacity: 0; }
+}
+.book-rune {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    font-size: 22px;
+    color: #f0d8ff;
+    text-shadow: 0 0 10px rgba(200, 130, 255, 1), 0 0 20px rgba(180, 100, 255, 0.7);
+    transform-origin: center;
+    animation: bookRune 0.7s ease-out forwards;
+}
+@keyframes bookRune {
+    0%   { opacity: 0; }
+    30%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* staff - 12 個光點環繞匯聚 + 爆炸 */
+.staff-orb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #88ddff 40%, transparent 100%);
+    box-shadow: 0 0 12px #aaccff, 0 0 24px #4488ff;
+    transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy)));
+    animation: staffOrb 0.65s cubic-bezier(0.5, 0, 0.4, 1.5) forwards;
+}
+@keyframes staffOrb {
+    0%   { transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(0.4); opacity: 0; }
+    30%  { transform: translate(calc(-50% + var(--sx) * 0.6), calc(-50% + var(--sy) * 0.6)) scale(1.2); opacity: 1; }
+    70%  { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+}
+
+/* gauntlet - 大拳印 + 3 環衝擊波 */
+.gauntlet-fist {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    filter: drop-shadow(0 0 12px rgba(255, 180, 60, 0.9));
+    animation: gauntletFist 0.5s cubic-bezier(0.4, 1.6, 0.5, 1) forwards;
+}
+@keyframes gauntletFist {
+    0%   { transform: translate(-50%, -180%) scale(0.4) rotate(-30deg); opacity: 0; }
+    50%  { transform: translate(-50%, -50%) scale(1.3) rotate(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.6) rotate(0); opacity: 0; }
+}
+.gauntlet-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 200, 80, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 0 18px rgba(255, 160, 60, 0.7);
+    transform: translate(-50%, -50%);
+    animation: gauntletRing 0.7s ease-out forwards;
+}
+@keyframes gauntletRing {
+    0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; border-width: 5px; }
+    100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; border-width: 1px; }
+}
+
 /* ===== 示範技能按鈕列（戰場頂部） ===== */
 .skill-bar {
     position: absolute;
