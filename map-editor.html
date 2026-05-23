@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地圖配置編輯器 — EduArena</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, "PingFang TC", sans-serif;
+            background: #1a1f2e; color: #e0e0e0;
+            display: flex; height: 100vh; overflow: hidden;
+        }
+        /* 主視覺：地圖區 */
+        .map-area {
+            flex: 1; position: relative;
+            background: #0d1019;
+            display: flex; align-items: center; justify-content: center;
+            overflow: auto;
+        }
+        .map-frame {
+            position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
+        }
+        #map-img {
+            display: block; max-height: 90vh; height: auto;
+        }
+        /* bbox overlay */
+        .bbox {
+            position: absolute; border: 2px solid rgba(255,255,255,0.6);
+            cursor: move; user-select: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .bbox.selected {
+            border: 3px solid #fdc500;
+            box-shadow: 0 0 16px rgba(253,197,0,0.5);
+            z-index: 100;
+        }
+        .bbox-label {
+            position: absolute; top: -22px; left: 0;
+            background: rgba(0,0,0,0.7); color: #fff;
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 11px; font-weight: 700;
+            pointer-events: none; white-space: nowrap;
+        }
+        .bbox-handle {
+            position: absolute; width: 14px; height: 14px;
+            background: #fdc500; border: 2px solid #fff;
+            border-radius: 50%; z-index: 10;
+        }
+        .bbox-handle.nw { top: -7px;    left: -7px;    cursor: nwse-resize; }
+        .bbox-handle.ne { top: -7px;    right: -7px;   cursor: nesw-resize; }
+        .bbox-handle.sw { bottom: -7px; left: -7px;    cursor: nesw-resize; }
+        .bbox-handle.se { bottom: -7px; right: -7px;   cursor: nwse-resize; }
+        /* path overlay */
+        .path-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .path-waypoint {
+            position: absolute; width: 18px; height: 18px;
+            background: #00d4ff; border: 2px solid #fff;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            cursor: pointer; z-index: 50;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        .path-waypoint:hover { background: #ff5050; }
+        .path-waypoint.start { background: #34c759; }
+
+        /* 右側 panel */
+        .panel {
+            width: 340px; background: #232938; color: #e0e0e0;
+            display: flex; flex-direction: column;
+            border-left: 2px solid #0d1019;
+        }
+        .panel-header {
+            padding: 12px 14px; background: #1a1f2e;
+            font-size: 14px; font-weight: 700;
+            border-bottom: 1px solid #0d1019;
+        }
+        .mode-tabs { display: flex; }
+        .mode-tabs button {
+            flex: 1; padding: 10px; background: #1a1f2e; color: #888;
+            border: none; cursor: pointer; font-weight: 700;
+            border-bottom: 2px solid transparent;
+        }
+        .mode-tabs button.active { color: #fdc500; border-bottom-color: #fdc500; background: #232938; }
+
+        .building-list {
+            overflow-y: auto;
+            border-bottom: 1px solid #0d1019;
+            max-height: 280px;
+        }
+        .building-row {
+            padding: 8px 14px; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #1a1f2e;
+        }
+        .building-row:hover { background: #2a3144; }
+        .building-row.selected { background: #fdc500; color: #1a1f2e; font-weight: 700; }
+        .building-color {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .building-name { flex: 1; }
+        .building-count { font-size: 10px; color: #888; }
+
+        .building-detail {
+            padding: 14px; overflow-y: auto; flex: 1;
+            font-size: 12px;
+        }
+        .building-detail h3 {
+            font-size: 13px; color: #fdc500; margin-bottom: 8px;
+            border-bottom: 1px solid #444; padding-bottom: 4px;
+        }
+        .building-detail .field {
+            display: flex; gap: 6px; margin-bottom: 6px; align-items: center;
+        }
+        .building-detail .field label {
+            width: 60px; color: #888; font-size: 11px;
+        }
+        .building-detail .field input {
+            flex: 1; background: #1a1f2e; color: #e0e0e0;
+            border: 1px solid #444; padding: 4px 6px;
+            border-radius: 3px; font-size: 11px;
+            font-family: monospace;
+        }
+        .help {
+            padding: 10px 14px; font-size: 11px; color: #aaa;
+            background: #1a1f2e; line-height: 1.5;
+            border-top: 1px solid #0d1019;
+        }
+        .help b { color: #fdc500; }
+
+        .panel-footer {
+            padding: 12px 14px; background: #1a1f2e;
+            border-top: 1px solid #0d1019;
+            display: flex; gap: 8px;
+        }
+        .panel-footer button {
+            flex: 1; padding: 8px; border: none; border-radius: 4px;
+            font-weight: 700; cursor: pointer; font-size: 12px;
+        }
+        .btn-primary { background: #fdc500; color: #1a1f2e; }
+        .btn-secondary { background: #444; color: #fff; }
+        .btn-danger { background: #ff5050; color: #fff; }
+
+        .export-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8); z-index: 999;
+            align-items: center; justify-content: center;
+        }
+        .export-modal.show { display: flex; }
+        .export-modal-card {
+            background: #232938; padding: 20px; border-radius: 8px;
+            width: 80%; max-width: 800px; max-height: 80vh;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .export-modal-card h2 { font-size: 16px; color: #fdc500; }
+        .export-modal-card textarea {
+            flex: 1; min-height: 400px; background: #0d1019; color: #00ff88;
+            font-family: monospace; font-size: 11px; padding: 12px;
+            border: 1px solid #444; border-radius: 4px; resize: vertical;
+        }
+        .export-modal-card .controls { display: flex; gap: 8px; }
+        .export-modal-card .controls button {
+            padding: 8px 16px; border: none; border-radius: 4px;
+            font-weight: 700; cursor: pointer;
+        }
+
+        .path-mode-hint {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,180,80,0.95); color: #fff;
+            padding: 10px 20px; border-radius: 999px;
+            font-size: 13px; font-weight: 700; z-index: 200;
+            display: none;
+            pointer-events: none;
+        }
+        .path-mode-hint.show { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="map-area" id="mapArea">
+    <div class="map-frame" id="mapFrame">
+        <img id="map-img" src="assets/images/world_map_v4.png" alt="map">
+        <svg class="path-svg" id="pathSvg"></svg>
+    </div>
+</div>
+
+<aside class="panel">
+    <div class="panel-header">
+        🗺 地圖配置編輯器
+        <div style="font-size: 10px; color: #aaa; margin-top: 4px;">
+            world_map_v4.png × world_map_config.json
+        </div>
+    </div>
+
+    <div class="mode-tabs">
+        <button id="tab-bbox" class="active">📦 編輯 bbox</button>
+        <button id="tab-path">🚶 編輯 path</button>
+    </div>
+
+    <div class="building-list" id="buildingList"></div>
+
+    <div class="building-detail" id="buildingDetail">
+        <div style="text-align:center; color:#888; padding:20px 0;">
+            從左側選一個 building 開始編輯
+        </div>
+    </div>
+
+    <div class="help">
+        <b>bbox 模式</b>：拖拉 bbox 框中間移動、4 角拖拉縮放<br>
+        <b>path 模式</b>：點地圖任一處新增 waypoint；點 waypoint 刪除<br>
+        <b>右側欄</b>：手動輸入 bbox 4 值或 path 座標
+    </div>
+
+    <div class="panel-footer">
+        <button class="btn-secondary" id="btnReset">重置</button>
+        <button class="btn-primary" id="btnExport">匯出 JSON</button>
+    </div>
+</aside>
+
+<div class="path-mode-hint" id="pathHint">🚶 path 編輯模式 — 點地圖加 waypoint</div>
+
+<div class="export-modal" id="exportModal">
+    <div class="export-modal-card">
+        <h2>📋 匯出 JSON config</h2>
+        <textarea id="exportText" readonly></textarea>
+        <div class="controls">
+            <button class="btn-primary" id="btnCopy">複製到剪貼簿</button>
+            <button class="btn-secondary" id="btnDownload">下載 .json</button>
+            <button class="btn-danger" id="btnCloseExport">關閉</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let mapConfig = null;
+let selectedBuildingId = null;
+let mode = 'bbox';  // 'bbox' or 'path'
+
+const mapImg = document.getElementById('map-img');
+const mapFrame = document.getElementById('mapFrame');
+const pathSvg = document.getElementById('pathSvg');
+const buildingList = document.getElementById('buildingList');
+const buildingDetail = document.getElementById('buildingDetail');
+const tabBbox = document.getElementById('tab-bbox');
+const tabPath = document.getElementById('tab-path');
+const pathHint = document.getElementById('pathHint');
+
+// 載入 config
+fetch('assets/world_map_config.json?v=' + Date.now())
+    .then(r => r.json())
+    .then(json => {
+        mapConfig = json.map_config;
+        // 確保 buildings 都有 path（沒有就空陣列）
+        mapConfig.buildings.forEach(b => {
+            if (!b.path) b.path = [];
+        });
+        renderAll();
+    });
+
+function renderAll() {
+    renderBuildingList();
+    renderBboxes();
+    renderPathOverlay();
+    renderDetail();
+}
+
+function renderBuildingList() {
+    buildingList.innerHTML = '';
+    mapConfig.buildings.forEach(b => {
+        const row = document.createElement('div');
+        row.className = 'building-row' + (b.id === selectedBuildingId ? ' selected' : '');
+        row.innerHTML = `
+            <div class="building-color" style="background:${b.mask_color}"></div>
+            <div class="building-name">${b.name}</div>
+            <div class="building-count">${b.path ? b.path.length : 0} pts</div>
+        `;
+        row.addEventListener('click', () => {
+            selectedBuildingId = b.id;
+            renderAll();
+        });
+        buildingList.appendChild(row);
+    });
+}
+
+function renderBboxes() {
+    // 清掉舊 bbox div
+    mapFrame.querySelectorAll('.bbox').forEach(el => el.remove());
+    if (!mapConfig) return;
+
+    const mw = mapImg.clientWidth;
+    const mh = mapImg.clientHeight;
+
+    mapConfig.buildings.forEach(b => {
+        const bb = b.bounding_box;
+        const div = document.createElement('div');
+        div.className = 'bbox' + (b.id === selectedBuildingId ? ' selected' : '');
+        div.dataset.id = b.id;
+        div.style.left = (bb.x_min * mw) + 'px';
+        div.style.top = (bb.y_min * mh) + 'px';
+        div.style.width = ((bb.x_max - bb.x_min) * mw) + 'px';
+        div.style.height = ((bb.y_max - bb.y_min) * mh) + 'px';
+        div.style.background = b.mask_color + '33';  // 20% alpha
+
+        // label
+        const label = document.createElement('div');
+        label.className = 'bbox-label';
+        label.textContent = b.name;
+        div.appendChild(label);
+
+        // 4 corner handles (只在 selected 時顯示)
+        if (b.id === selectedBuildingId) {
+            ['nw','ne','sw','se'].forEach(corner => {
+                const h = document.createElement('div');
+                h.className = 'bbox-handle ' + corner;
+                h.dataset.corner = corner;
+                div.appendChild(h);
+            });
+        }
+
+        // 拖拉移動 + 角點縮放
+        attachBboxDrag(div, b);
+        mapFrame.appendChild(div);
+    });
+}
+
+function attachBboxDrag(div, building) {
+    let dragData = null;
+    div.addEventListener('mousedown', e => {
+        if (mode !== 'bbox') return;
+        e.stopPropagation();
+        selectedBuildingId = building.id;
+        renderAll();
+
+        const corner = e.target.dataset?.corner;
+        const rect = mapImg.getBoundingClientRect();
+        dragData = {
+            startX: e.clientX, startY: e.clientY,
+            startBB: { ...building.bounding_box },
+            corner,
+            mw: rect.width, mh: rect.height,
+        };
+    });
+    window.addEventListener('mousemove', e => {
+        if (!dragData) return;
+        const dx = (e.clientX - dragData.startX) / dragData.mw;
+        const dy = (e.clientY - dragData.startY) / dragData.mh;
+        const bb = building.bounding_box;
+        const s = dragData.startBB;
+        if (dragData.corner === 'nw') {
+            bb.x_min = clamp(s.x_min + dx, 0, s.x_max - 0.02);
+            bb.y_min = clamp(s.y_min + dy, 0, s.y_max - 0.02);
+        } else if (dragData.corner === 'ne') {
+            bb.x_max = clamp(s.x_max + dx, s.x_min + 0.02, 1);
+            bb.y_min = clamp(s.y_min + dy, 0, s.y_max - 0.02);
+        } else if (dragData.corner === 'sw') {
+            bb.x_min = clamp(s.x_min + dx, 0, s.x_max - 0.02);
+            bb.y_max = clamp(s.y_max + dy, s.y_min + 0.02, 1);
+        } else if (dragData.corner === 'se') {
+            bb.x_max = clamp(s.x_max + dx, s.x_min + 0.02, 1);
+            bb.y_max = clamp(s.y_max + dy, s.y_min + 0.02, 1);
+        } else {
+            // 整塊移動
+            const w = s.x_max - s.x_min, h = s.y_max - s.y_min;
+            bb.x_min = clamp(s.x_min + dx, 0, 1 - w);
+            bb.y_min = clamp(s.y_min + dy, 0, 1 - h);
+            bb.x_max = bb.x_min + w;
+            bb.y_max = bb.y_min + h;
+        }
+        renderBboxes();
+        renderDetail();
+    });
+    window.addEventListener('mouseup', () => { dragData = null; });
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function renderPathOverlay() {
+    pathSvg.innerHTML = '';
+    if (!mapConfig) return;
+    const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
+    pathSvg.setAttribute('width', mw);
+    pathSvg.setAttribute('height', mh);
+
+    // 清掉舊 waypoint dot
+    mapFrame.querySelectorAll('.path-waypoint').forEach(el => el.remove());
+
+    // 只顯示 selected building 的 path
+    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
+    if (!b || !b.path || b.path.length === 0) return;
+
+    // SVG 連線
+    if (b.path.length >= 2) {
+        const points = b.path.map(p => `${p.x * mw},${p.y * mh}`).join(' ');
+        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        polyline.setAttribute('points', points);
+        polyline.setAttribute('fill', 'none');
+        polyline.setAttribute('stroke', '#00d4ff');
+        polyline.setAttribute('stroke-width', '3');
+        polyline.setAttribute('stroke-dasharray', '8 4');
+        pathSvg.appendChild(polyline);
+    }
+
+    // waypoint dots
+    b.path.forEach((p, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'path-waypoint' + (i === 0 ? ' start' : '');
+        dot.style.left = (p.x * mw) + 'px';
+        dot.style.top = (p.y * mh) + 'px';
+        dot.title = `Waypoint ${i+1}: (${p.x.toFixed(3)}, ${p.y.toFixed(3)}) — 點刪除`;
+        dot.addEventListener('click', e => {
+            e.stopPropagation();
+            b.path.splice(i, 1);
+            renderAll();
+        });
+        mapFrame.appendChild(dot);
+    });
+}
+
+function renderDetail() {
+    if (!selectedBuildingId) {
+        buildingDetail.innerHTML = '<div style="text-align:center;color:#888;padding:20px 0;">選一個 building</div>';
+        return;
+    }
+    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
+    if (!b) return;
+
+    buildingDetail.innerHTML = `
+        <h3>${b.name} <span style="font-size:10px;color:#888;">${b.id}</span></h3>
+        <div class="field"><label>類別</label><input value="${b.category}" data-field="category"></div>
+        <div class="field"><label>互動</label><input value="${b.interaction_type}" data-field="interaction_type"></div>
+        <div class="field"><label>render_order</label><input type="number" value="${b.render_order}" data-field="render_order"></div>
+        <h3 style="margin-top:14px;">bbox (0~1 normalized)</h3>
+        <div class="field"><label>x_min</label><input type="number" step="0.01" value="${b.bounding_box.x_min.toFixed(3)}" data-bb="x_min"></div>
+        <div class="field"><label>y_min</label><input type="number" step="0.01" value="${b.bounding_box.y_min.toFixed(3)}" data-bb="y_min"></div>
+        <div class="field"><label>x_max</label><input type="number" step="0.01" value="${b.bounding_box.x_max.toFixed(3)}" data-bb="x_max"></div>
+        <div class="field"><label>y_max</label><input type="number" step="0.01" value="${b.bounding_box.y_max.toFixed(3)}" data-bb="y_max"></div>
+        <h3 style="margin-top:14px;">center (建築中心)</h3>
+        <div class="field"><label>x</label><input type="number" step="0.01" value="${b.center.x.toFixed(3)}" data-center="x"></div>
+        <div class="field"><label>y</label><input type="number" step="0.01" value="${b.center.y.toFixed(3)}" data-center="y"></div>
+        <h3 style="margin-top:14px;">path (${b.path.length} waypoints)</h3>
+        <div id="pathList"></div>
+        <button class="btn-secondary" id="btnClearPath" style="margin-top:8px;padding:6px 10px;font-size:11px;">清空 path</button>
+    `;
+
+    // path list
+    const pathList = buildingDetail.querySelector('#pathList');
+    b.path.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'field';
+        row.innerHTML = `<label>#${i+1}</label>
+            <input type="number" step="0.01" value="${p.x.toFixed(3)}" data-path-idx="${i}" data-path-key="x" style="flex:0 0 70px">
+            <input type="number" step="0.01" value="${p.y.toFixed(3)}" data-path-idx="${i}" data-path-key="y" style="flex:0 0 70px">
+            <button class="btn-danger" data-path-del="${i}" style="padding:4px 8px;font-size:10px;">刪</button>
+        `;
+        pathList.appendChild(row);
+    });
+
+    // 綁定 input change
+    buildingDetail.querySelectorAll('input[data-field]').forEach(input => {
+        input.addEventListener('change', e => {
+            const k = input.dataset.field;
+            b[k] = k === 'render_order' ? parseInt(input.value) : input.value;
+        });
+    });
+    buildingDetail.querySelectorAll('input[data-bb]').forEach(input => {
+        input.addEventListener('change', e => {
+            b.bounding_box[input.dataset.bb] = parseFloat(input.value);
+            renderBboxes();
+        });
+    });
+    buildingDetail.querySelectorAll('input[data-center]').forEach(input => {
+        input.addEventListener('change', e => {
+            b.center[input.dataset.center] = parseFloat(input.value);
+        });
+    });
+    buildingDetail.querySelectorAll('input[data-path-idx]').forEach(input => {
+        input.addEventListener('change', e => {
+            const i = parseInt(input.dataset.pathIdx);
+            const k = input.dataset.pathKey;
+            b.path[i][k] = parseFloat(input.value);
+            renderPathOverlay();
+        });
+    });
+    buildingDetail.querySelectorAll('button[data-path-del]').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const i = parseInt(btn.dataset.pathDel);
+            b.path.splice(i, 1);
+            renderAll();
+        });
+    });
+    buildingDetail.querySelector('#btnClearPath')?.addEventListener('click', () => {
+        b.path = [];
+        renderAll();
+    });
+}
+
+// 點地圖加 waypoint (path 模式)
+mapFrame.addEventListener('click', e => {
+    if (mode !== 'path' || !selectedBuildingId) return;
+    if (e.target.classList.contains('path-waypoint')) return;
+    if (e.target.classList.contains('bbox') || e.target.classList.contains('bbox-handle')) return;
+
+    const rect = mapImg.getBoundingClientRect();
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
+    if (!b) return;
+    b.path.push({ x: parseFloat(nx.toFixed(3)), y: parseFloat(ny.toFixed(3)) });
+    renderAll();
+});
+
+// Tab 切換
+tabBbox.addEventListener('click', () => {
+    mode = 'bbox'; tabBbox.classList.add('active'); tabPath.classList.remove('active');
+    pathHint.classList.remove('show');
+});
+tabPath.addEventListener('click', () => {
+    mode = 'path'; tabPath.classList.add('active'); tabBbox.classList.remove('active');
+    pathHint.classList.add('show');
+});
+
+// 匯出 JSON
+document.getElementById('btnExport').addEventListener('click', () => {
+    const out = JSON.stringify({ map_config: mapConfig }, null, 2);
+    document.getElementById('exportText').value = out;
+    document.getElementById('exportModal').classList.add('show');
+});
+document.getElementById('btnCloseExport').addEventListener('click', () => {
+    document.getElementById('exportModal').classList.remove('show');
+});
+document.getElementById('btnCopy').addEventListener('click', () => {
+    const t = document.getElementById('exportText');
+    t.select();
+    document.execCommand('copy');
+    alert('已複製到剪貼簿！貼到對話傳給 Claude');
+});
+document.getElementById('btnDownload').addEventListener('click', () => {
+    const blob = new Blob([document.getElementById('exportText').value], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'world_map_config.json';
+    a.click();
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+    if (!confirm('真的要重置嗎？所有未匯出的編輯都會失去')) return;
+    fetch('assets/world_map_config.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(json => {
+            mapConfig = json.map_config;
+            mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            renderAll();
+        });
+});
+
+// 圖片載入完才能算尺寸
+mapImg.addEventListener('load', () => {
+    if (mapConfig) renderAll();
+});
+window.addEventListener('resize', () => { if (mapConfig) renderAll(); });
+</script>
+
+</body>
+</html>
