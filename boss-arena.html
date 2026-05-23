@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=28">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=27">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -115,34 +115,33 @@
                     <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
-                <!-- 5×5 SVG Dimetric 平行四邊形 — 派派要 (0,0)左下 / (4,4)右上 對角分布
-                     主對角線視覺 ≈ ±30° (從派派之前覺得太斜的 ±55° 降下來) -->
+                <!-- 5×5 SVG 真等距菱形（對稱 col↘ + row↗，平行線、無透視收斂） -->
                 <svg class="grid-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                  <polygon class="grid-tile" data-x="0" data-y="0" points="12.5,62.5 24.5,60.0 27.5,57.5 15.5,60.0" />
-                  <polygon class="grid-tile" data-x="1" data-y="0" points="24.5,60.0 36.5,57.5 39.5,55.0 27.5,57.5" />
-                  <polygon class="grid-tile" data-x="2" data-y="0" points="36.5,57.5 48.5,55.0 51.5,52.5 39.5,55.0" />
-                  <polygon class="grid-tile" data-x="3" data-y="0" points="48.5,55.0 60.5,52.5 63.5,50.0 51.5,52.5" />
-                  <polygon class="grid-tile" data-x="4" data-y="0" points="60.5,52.5 72.5,50.0 75.5,47.5 63.5,50.0" />
-                  <polygon class="grid-tile" data-x="0" data-y="1" points="15.5,60.0 27.5,57.5 30.5,55.0 18.5,57.5" />
-                  <polygon class="grid-tile" data-x="1" data-y="1" points="27.5,57.5 39.5,55.0 42.5,52.5 30.5,55.0" />
-                  <polygon class="grid-tile" data-x="2" data-y="1" points="39.5,55.0 51.5,52.5 54.5,50.0 42.5,52.5" />
-                  <polygon class="grid-tile" data-x="3" data-y="1" points="51.5,52.5 63.5,50.0 66.5,47.5 54.5,50.0" />
-                  <polygon class="grid-tile" data-x="4" data-y="1" points="63.5,50.0 75.5,47.5 78.5,45.0 66.5,47.5" />
-                  <polygon class="grid-tile" data-x="0" data-y="2" points="18.5,57.5 30.5,55.0 33.5,52.5 21.5,55.0" />
-                  <polygon class="grid-tile" data-x="1" data-y="2" points="30.5,55.0 42.5,52.5 45.5,50.0 33.5,52.5" />
-                  <polygon class="grid-tile" data-x="2" data-y="2" points="42.5,52.5 54.5,50.0 57.5,47.5 45.5,50.0" />
-                  <polygon class="grid-tile" data-x="3" data-y="2" points="54.5,50.0 66.5,47.5 69.5,45.0 57.5,47.5" />
-                  <polygon class="grid-tile" data-x="4" data-y="2" points="66.5,47.5 78.5,45.0 81.5,42.5 69.5,45.0" />
-                  <polygon class="grid-tile" data-x="0" data-y="3" points="21.5,55.0 33.5,52.5 36.5,50.0 24.5,52.5" />
-                  <polygon class="grid-tile" data-x="1" data-y="3" points="33.5,52.5 45.5,50.0 48.5,47.5 36.5,50.0" />
-                  <polygon class="grid-tile" data-x="2" data-y="3" points="45.5,50.0 57.5,47.5 60.5,45.0 48.5,47.5" />
-                  <polygon class="grid-tile" data-x="3" data-y="3" points="57.5,47.5 69.5,45.0 72.5,42.5 60.5,45.0" />
-                  <polygon class="grid-tile" data-x="4" data-y="3" points="69.5,45.0 81.5,42.5 84.5,40.0 72.5,42.5" />
-                  <polygon class="grid-tile" data-x="0" data-y="4" points="24.5,52.5 36.5,50.0 39.5,47.5 27.5,50.0" />
-                  <polygon class="grid-tile" data-x="1" data-y="4" points="36.5,50.0 48.5,47.5 51.5,45.0 39.5,47.5" />
-                  <polygon class="grid-tile" data-x="2" data-y="4" points="48.5,47.5 60.5,45.0 63.5,42.5 51.5,45.0" />
-                  <polygon class="grid-tile" data-x="3" data-y="4" points="60.5,45.0 72.5,42.5 75.5,40.0 63.5,42.5" />
-                  <polygon class="grid-tile" data-x="4" data-y="4" points="72.5,42.5 84.5,40.0 87.5,37.5 75.5,40.0" />
+                  <polygon class="grid-tile" data-x="0" data-y="0" points="20.0,50.0 26.0,52.5 32.0,50.0 26.0,47.5" />
+                  <polygon class="grid-tile" data-x="1" data-y="0" points="26.0,52.5 32.0,55.0 38.0,52.5 32.0,50.0" />
+                  <polygon class="grid-tile" data-x="2" data-y="0" points="32.0,55.0 38.0,57.5 44.0,55.0 38.0,52.5" />
+                  <polygon class="grid-tile" data-x="3" data-y="0" points="38.0,57.5 44.0,60.0 50.0,57.5 44.0,55.0" />
+                  <polygon class="grid-tile" data-x="4" data-y="0" points="44.0,60.0 50.0,62.5 56.0,60.0 50.0,57.5" />
+                  <polygon class="grid-tile" data-x="0" data-y="1" points="26.0,47.5 32.0,50.0 38.0,47.5 32.0,45.0" />
+                  <polygon class="grid-tile" data-x="1" data-y="1" points="32.0,50.0 38.0,52.5 44.0,50.0 38.0,47.5" />
+                  <polygon class="grid-tile" data-x="2" data-y="1" points="38.0,52.5 44.0,55.0 50.0,52.5 44.0,50.0" />
+                  <polygon class="grid-tile" data-x="3" data-y="1" points="44.0,55.0 50.0,57.5 56.0,55.0 50.0,52.5" />
+                  <polygon class="grid-tile" data-x="4" data-y="1" points="50.0,57.5 56.0,60.0 62.0,57.5 56.0,55.0" />
+                  <polygon class="grid-tile" data-x="0" data-y="2" points="32.0,45.0 38.0,47.5 44.0,45.0 38.0,42.5" />
+                  <polygon class="grid-tile" data-x="1" data-y="2" points="38.0,47.5 44.0,50.0 50.0,47.5 44.0,45.0" />
+                  <polygon class="grid-tile" data-x="2" data-y="2" points="44.0,50.0 50.0,52.5 56.0,50.0 50.0,47.5" />
+                  <polygon class="grid-tile" data-x="3" data-y="2" points="50.0,52.5 56.0,55.0 62.0,52.5 56.0,50.0" />
+                  <polygon class="grid-tile" data-x="4" data-y="2" points="56.0,55.0 62.0,57.5 68.0,55.0 62.0,52.5" />
+                  <polygon class="grid-tile" data-x="0" data-y="3" points="38.0,42.5 44.0,45.0 50.0,42.5 44.0,40.0" />
+                  <polygon class="grid-tile" data-x="1" data-y="3" points="44.0,45.0 50.0,47.5 56.0,45.0 50.0,42.5" />
+                  <polygon class="grid-tile" data-x="2" data-y="3" points="50.0,47.5 56.0,50.0 62.0,47.5 56.0,45.0" />
+                  <polygon class="grid-tile" data-x="3" data-y="3" points="56.0,50.0 62.0,52.5 68.0,50.0 62.0,47.5" />
+                  <polygon class="grid-tile" data-x="4" data-y="3" points="62.0,52.5 68.0,55.0 74.0,52.5 68.0,50.0" />
+                  <polygon class="grid-tile" data-x="0" data-y="4" points="44.0,40.0 50.0,42.5 56.0,40.0 50.0,37.5" />
+                  <polygon class="grid-tile" data-x="1" data-y="4" points="50.0,42.5 56.0,45.0 62.0,42.5 56.0,40.0" />
+                  <polygon class="grid-tile" data-x="2" data-y="4" points="56.0,45.0 62.0,47.5 68.0,45.0 62.0,42.5" />
+                  <polygon class="grid-tile" data-x="3" data-y="4" points="62.0,47.5 68.0,50.0 74.0,47.5 68.0,45.0" />
+                  <polygon class="grid-tile" data-x="4" data-y="4" points="68.0,50.0 74.0,52.5 80.0,50.0 74.0,47.5" />
                 </svg>
 
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
