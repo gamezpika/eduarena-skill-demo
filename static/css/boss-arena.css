@@ -125,7 +125,7 @@
     flex: 1;
     position: relative;
     min-height: 0;
-    background-image: url("../../assets/images/arena/dungeon_bg.png?v=1");
+    background-image: url("../../assets/images/arena/dungeon_bg.png?v=2");
     background-size: cover;
     background-position: center;
     overflow: hidden;
