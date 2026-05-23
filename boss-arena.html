@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=35">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=36">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -655,10 +655,6 @@ async function getHitByBoss() {
 
     // B2 蓄力前搖 0.4s（魔王發光、scale 變大）
     boss.classList.add("charging");
-    // B5 tier 3 額外 dramatic 大字
-    if (tierLevel >= 3) {
-        showAttackName("⚠ 終極魔王發動 ⚠");
-    }
     await sleep(400);
     boss.classList.remove("charging");
 
@@ -738,14 +734,6 @@ function spawnBossProjectile(tierLevel) {
     }
 }
 
-// B5 tier 3 中二大字
-function showAttackName(text) {
-    const el = document.createElement("div");
-    el.className = "attack-name";
-    el.textContent = text;
-    stage.appendChild(el);
-    setTimeout(() => el.remove(), 1400);
-}
 
 function showToast(text) {
     const t = document.createElement("div");

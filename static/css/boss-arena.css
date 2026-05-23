@@ -950,29 +950,6 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.4) rotate(720deg); opacity: 1; }
 }
 
-/* B5 tier 3 中二大字 */
-.attack-name {
-    position: absolute;
-    left: 50%; top: 28%;
-    transform: translateX(-50%);
-    font-size: 28px;
-    font-weight: 900;
-    color: #ff3030;
-    text-shadow: 0 0 6px rgba(0,0,0,1), 0 0 12px rgba(255, 40, 30, 0.9), 0 0 24px rgba(255, 80, 30, 0.6);
-    letter-spacing: 2px;
-    z-index: 300;
-    pointer-events: none;
-    white-space: nowrap;
-    animation: attackNameDrop 1.4s ease-out forwards;
-}
-@keyframes attackNameDrop {
-    0%   { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.5); }
-    25%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.25); }
-    55%  { transform: translateX(-50%) translateY(0) scale(1); }
-    85%  { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.9); }
-}
-
 /* ===== P3 命中 zoom-in + slow-mo（命中瞬間定鏡）===== */
 .arena-stage.zoom-impact {
     animation: zoomImpact 0.38s cubic-bezier(0.3, 1.2, 0.5, 1);
