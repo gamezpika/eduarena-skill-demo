@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=44">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=45">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -96,6 +96,18 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 狀態欄下方：科目 + 戰況距離（派派 5/24 從戰場左下右下移過來，讓題目區可往上推）-->
+            <div class="arena-info-strip">
+                <div class="info-panel info-subject">
+                    <div class="panel-title" id="info-subject-name">📘 數學</div>
+                    <div class="panel-sub" id="info-subject-sub">五年級 · G5</div>
+                </div>
+                <div class="info-panel info-status" id="combat-status">
+                    <div class="status-line" id="status-line">📍 接近中</div>
+                    <div class="status-detail" id="status-detail">距離魔王 3 格</div>
                 </div>
             </div>
 
@@ -196,18 +208,6 @@
 
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
-
-                <!-- 左下：科目固定資訊（JS 依選擇填） -->
-                <div class="info-panel info-subject">
-                    <div class="panel-title" id="info-subject-name">📘 數學</div>
-                    <div class="panel-sub" id="info-subject-sub">五年級 · G5</div>
-                </div>
-
-                <!-- 右下：戰況動態 -->
-                <div class="info-panel info-status" id="combat-status">
-                    <div class="status-line" id="status-line">📍 接近中</div>
-                    <div class="status-detail" id="status-detail">距離魔王 3 格</div>
-                </div>
             </div>
 
             <!-- 題目卡 -->
