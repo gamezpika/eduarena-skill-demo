@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=1">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=2">
 </head>
 <body>
 
@@ -62,8 +62,15 @@
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
                 </div>
 
-                <img src="assets/images/arena/hero.png" class="fighter-hero" id="fighter-hero" alt="hero">
-                <img src="assets/images/arena/boss_idle.png" class="fighter-boss" id="fighter-boss" alt="boss">
+                <!-- 5 列等距棋盤格（col 0 起始 → col 3 攻擊範圍 → col 4 魔王） -->
+                <div class="grid-cell" data-col="0"></div>
+                <div class="grid-cell" data-col="1"></div>
+                <div class="grid-cell" data-col="2"></div>
+                <div class="grid-cell" data-col="3"></div>
+                <div class="grid-cell" data-col="4"></div>
+
+                <img src="assets/images/arena/hero_iso.png?v=1" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
+                <img src="assets/images/arena/boss_iso.png?v=1" class="fighter-boss" id="fighter-boss" alt="boss">
             </div>
 
             <!-- 題目卡 -->
@@ -92,10 +99,13 @@ const QUESTIONS = [
     { q: "7 × 9 = ?",    options: ["56", "72", "63", "65"],  ans: 2 },
 ];
 
+// IN_RANGE = 3 = 攻擊範圍。col 0 起始，col 3 進入攻擊範圍可打魔王，col 4 是魔王
+const IN_RANGE = 3;
 const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
     bossHP: 250, bossMaxHP: 250,
+    heroCol: 0,            // 主角當前棋盤格 (0~3)
     qIdx: 0,
     busy: false,
     finished: false,
@@ -112,6 +122,16 @@ function updateBars() {
     $("hero-mp-num").textContent = `${state.heroMP} / ${state.heroMaxMP}`;
     $("hero-mp-fill").style.width = (state.heroMP / state.heroMaxMP * 100) + "%";
     $("boss-hp-fill").style.width = (state.bossHP / state.bossMaxHP * 100) + "%";
+}
+
+function updateGridHighlight() {
+    document.querySelectorAll(".grid-cell").forEach(el => {
+        el.classList.remove("active", "attack-range");
+        const c = parseInt(el.dataset.col, 10);
+        if (c === IN_RANGE) el.classList.add("attack-range");  // col 3 永遠標紅
+        if (c === state.heroCol) el.classList.add("active");
+    });
+    hero.dataset.col = state.heroCol;
 }
 
 function loadQuestion() {
@@ -146,16 +166,20 @@ async function handleAnswer(idx, btn) {
 
     if (idx === q.ans) {
         btn.classList.add("correct");
-        await attackBoss();
+        if (state.heroCol < IN_RANGE) {
+            await moveForward();
+        } else {
+            await attackBoss();
+        }
     } else {
         btn.classList.add("wrong");
-        // 顯示正解
         document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
         await getHitByBoss();
     }
 
-    if (state.bossHP <= 0)      return endGame(true);
-    if (state.heroHP <= 0)      return endGame(false);
+    if (state.bossHP <= 0)             return endGame("win");
+    if (state.heroHP <= 0)             return endGame("dead");
+    if (state.heroCol < 0)             return endGame("retreat");
 
     await sleep(700);
     state.qIdx++;
@@ -163,16 +187,31 @@ async function handleAnswer(idx, btn) {
     loadQuestion();
 }
 
+async function moveForward() {
+    state.heroCol = Math.min(IN_RANGE, state.heroCol + 1);
+    showToast("⬆ 前進！" + (state.heroCol === IN_RANGE ? " 進入攻擊範圍！" : ""));
+    updateGridHighlight();
+    await sleep(550);  // 等 CSS transition
+}
+
+async function moveBackward() {
+    state.heroCol -= 1;  // 可能變 -1（觸發 retreat fail）
+    if (state.heroCol >= 0) {
+        showToast("⬇ 被打退...");
+        updateGridHighlight();
+    }
+    await sleep(550);
+}
+
 async function attackBoss() {
     const dmg = 40 + Math.floor(Math.random() * 30);  // 40-69
     state.bossHP = Math.max(0, state.bossHP - dmg);
-    boss.src = "assets/images/arena/boss_hurt.png";
+    // 等距風格只有 1 張 boss_iso（不切 hurt 圖避免風格不一致），靠 hit class 閃白動畫表達受擊
     boss.classList.add("hit");
     popDamage(boss, "-" + dmg, false);
     updateBars();
     await sleep(500);
     boss.classList.remove("hit");
-    if (state.bossHP > 0) boss.src = "assets/images/arena/boss_idle.png";
 }
 
 async function getHitByBoss() {
@@ -186,34 +225,50 @@ async function getHitByBoss() {
     await sleep(500);
     hero.classList.remove("hit");
     stage.classList.remove("shake", "player-hit");
+    // 答錯後退 1 格
+    await moveBackward();
 }
 
-function endGame(win) {
+function showToast(text) {
+    const t = document.createElement("div");
+    t.className = "arena-toast";
+    t.textContent = text;
+    stage.appendChild(t);
+    setTimeout(() => t.remove(), 1200);
+}
+
+function endGame(outcome) {
     state.finished = true;
-    if (win) {
+    let emoji, title, titleClass, sub;
+    if (outcome === "win") {
+        // 等距 sprite 沒有 defeated 變體，靠 defeated class 的 fade-fall 動畫
         boss.classList.add("defeated");
-        boss.src = "assets/images/arena/boss_defeated.png";
+        emoji = "🎉"; title = "勝利！"; titleClass = "";
+        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
+    } else if (outcome === "retreat") {
+        emoji = "🏳"; title = "撤退失敗..."; titleClass = "lose";
+        sub = "被打出戰場！魔王還剩 HP " + state.bossHP;
+    } else {
+        emoji = "💀"; title = "失敗..."; titleClass = "lose";
+        sub = "魔王還剩 HP " + state.bossHP;
     }
     setTimeout(() => {
         const overlay = document.createElement("div");
         overlay.className = "arena-overlay";
-        overlay.innerHTML = win
-            ? `<div class="overlay-emoji">🎉</div>
-               <div class="overlay-title">勝利！</div>
-               <div class="overlay-sub">剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題</div>
-               <button class="overlay-btn" onclick="location.reload()">再戰一次</button>`
-            : `<div class="overlay-emoji">💀</div>
-               <div class="overlay-title lose">失敗...</div>
-               <div class="overlay-sub">魔王還剩 HP ${state.bossHP}</div>
-               <button class="overlay-btn" onclick="location.reload()">再來一次</button>`;
+        overlay.innerHTML =
+            `<div class="overlay-emoji">${emoji}</div>
+             <div class="overlay-title ${titleClass}">${title}</div>
+             <div class="overlay-sub">${sub}</div>
+             <button class="overlay-btn" onclick="location.reload()">再戰一次</button>`;
         stage.appendChild(overlay);
-    }, win ? 1300 : 600);
+    }, outcome === "win" ? 1300 : 600);
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // 開場
 updateBars();
+updateGridHighlight();
 loadQuestion();
 </script>
 

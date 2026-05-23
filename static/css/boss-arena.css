@@ -157,38 +157,67 @@
     100% { opacity: 0; }
 }
 
-/* 主角站位（等距畫面左下） */
+/* ===== 等距棋盤格（5 列，從左下逼近右上的魔王） ===== */
+/* col 0 起始 → col 3 攻擊範圍 → col 4 魔王 */
+.grid-cell {
+    position: absolute;
+    width: 22%;
+    aspect-ratio: 2 / 1;
+    border: 2px dashed rgba(255, 230, 160, 0.0);
+    border-radius: 6px;
+    pointer-events: none;
+    transition: border-color 0.3s, background 0.3s;
+    transform: translate(-50%, 50%);
+    z-index: 1;
+}
+.grid-cell.active   { border-color: rgba(255, 230, 160, 0.55); background: rgba(255, 200, 100, 0.10); }
+.grid-cell.attack-range { border-color: rgba(255, 80, 80, 0.7); background: rgba(255, 50, 50, 0.18); }
+
+/* 5 格位置（沿等距路徑由左下→右上，配 dungeon_bg.png 的視覺平台） */
+.grid-cell[data-col="0"] { left: 28%; bottom: 26%; }
+.grid-cell[data-col="1"] { left: 36%; bottom: 32%; }
+.grid-cell[data-col="2"] { left: 44%; bottom: 38%; }
+.grid-cell[data-col="3"] { left: 52%; bottom: 44%; }
+.grid-cell[data-col="4"] { left: 60%; bottom: 50%; }
+
+/* 主角站位（依 data-col 切換 grid 位置） */
 .fighter-hero {
     position: absolute;
-    left: 22%;
-    bottom: 18%;
-    width: 90px;
+    width: 80px;
     height: auto;
+    transform: translate(-50%, 30%);
     transform-origin: 50% 100%;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
     animation: heroIdle 2.4s ease-in-out infinite;
     z-index: 3;
+    transition: left 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+                bottom 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
+.fighter-hero[data-col="0"] { left: 28%; bottom: 18%; }
+.fighter-hero[data-col="1"] { left: 36%; bottom: 24%; }
+.fighter-hero[data-col="2"] { left: 44%; bottom: 30%; }
+.fighter-hero[data-col="3"] { left: 52%; bottom: 36%; }
 .fighter-hero.hit { animation: heroHit 0.5s; }
 @keyframes heroIdle {
-    0%, 100% { transform: translateY(0) scale(1, 1); }
-    50% { transform: translateY(-3px) scale(0.99, 1.01); }
+    0%, 100% { transform: translate(-50%, 30%) translateY(0) scale(1, 1); }
+    50%      { transform: translate(-50%, 30%) translateY(-3px) scale(0.99, 1.01); }
 }
 @keyframes heroHit {
-    0% { transform: translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
-    15% { transform: translateX(-8px) rotate(-3deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
-    30% { transform: translateX(8px) rotate(2deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
-    50% { transform: translateX(-5px); filter: brightness(1.3); }
-    100% { transform: translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
+    0%   { transform: translate(-50%, 30%) translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
+    15%  { transform: translate(-50%, 30%) translateX(-8px) rotate(-3deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
+    30%  { transform: translate(-50%, 30%) translateX(8px) rotate(2deg); filter: brightness(1.8) drop-shadow(0 0 12px #ff4040); }
+    50%  { transform: translate(-50%, 30%) translateX(-5px); filter: brightness(1.3); }
+    100% { transform: translate(-50%, 30%) translateX(0); filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7)); }
 }
 
-/* 魔王站位（等距畫面右上） */
+/* 魔王站位（固定在 col 4） */
 .fighter-boss {
     position: absolute;
-    right: 14%;
-    top: 22%;
-    width: 130px;
+    left: 60%;
+    bottom: 42%;
+    width: 110px;
     height: auto;
+    transform: translate(-50%, 30%);
     transform-origin: 50% 100%;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
     animation: bossIdle 3s ease-in-out infinite;
@@ -199,21 +228,21 @@
     animation: bossDefeated 1.2s forwards;
 }
 @keyframes bossIdle {
-    0%, 100% { transform: translateY(0) scale(1, 1); }
-    50% { transform: translateY(-5px) scale(1.02, 0.98); }
+    0%, 100% { transform: translate(-50%, 30%) translateY(0) scale(1, 1); }
+    50%      { transform: translate(-50%, 30%) translateY(-5px) scale(1.02, 0.98); }
 }
 @keyframes bossHit {
-    0%   { transform: translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
-    20%  { transform: translateX(10px) scale(0.96, 1.04); filter: brightness(3.2) saturate(0.2); }
-    45%  { transform: translateX(-8px) scale(1.04, 0.96); filter: brightness(3.2) saturate(0.2); }
-    65%  { transform: translateX(5px); filter: brightness(1.5); }
-    100% { transform: translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
+    0%   { transform: translate(-50%, 30%) translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
+    20%  { transform: translate(-50%, 30%) translateX(10px) scale(0.96, 1.04); filter: brightness(3.2) saturate(0.2); }
+    45%  { transform: translate(-50%, 30%) translateX(-8px) scale(1.04, 0.96); filter: brightness(3.2) saturate(0.2); }
+    65%  { transform: translate(-50%, 30%) translateX(5px); filter: brightness(1.5); }
+    100% { transform: translate(-50%, 30%) translateX(0); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8)); }
 }
 @keyframes bossDefeated {
-    0%   { transform: translateY(0) rotate(0); opacity: 1; }
-    30%  { transform: translateY(-10px) rotate(-5deg); opacity: 1; }
-    60%  { transform: translateY(20px) rotate(15deg); opacity: 0.7; }
-    100% { transform: translateY(40px) rotate(25deg); opacity: 0; }
+    0%   { transform: translate(-50%, 30%) translateY(0) rotate(0); opacity: 1; }
+    30%  { transform: translate(-50%, 30%) translateY(-10px) rotate(-5deg); opacity: 1; }
+    60%  { transform: translate(-50%, 30%) translateY(20px) rotate(15deg); opacity: 0.7; }
+    100% { transform: translate(-50%, 30%) translateY(40px) rotate(25deg); opacity: 0; }
 }
 
 /* 魔王 HP 條（戰場內懸浮） */
@@ -421,6 +450,31 @@
     cursor: pointer;
 }
 .overlay-btn:active { transform: scale(0.96); }
+
+/* 移動 toast（在戰場中央上方飄出） */
+.arena-toast {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.78);
+    color: #ffe6a8;
+    border: 1px solid rgba(255, 220, 160, 0.5);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px #000;
+    pointer-events: none;
+    z-index: 20;
+    animation: toastIn 1.2s forwards;
+}
+@keyframes toastIn {
+    0%   { opacity: 0; transform: translate(-50%, 10px); }
+    15%  { opacity: 1; transform: translate(-50%, 0); }
+    80%  { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -10px); }
+}
 
 /* 返回首頁鈕（左上） */
 .arena-back {
