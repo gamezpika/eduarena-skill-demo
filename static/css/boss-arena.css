@@ -201,41 +201,36 @@
     stroke-width: 0.25;
     vector-effect: non-scaling-stroke;
 }
-/* 主角當前格：金色 */
+/* 主角當前格：金色（派派 5/23 拿掉藍紅 range，只留金色 hero-pos） */
 .grid-tile.hero-pos {
     fill: rgba(255, 220, 100, 0.32);
     stroke: rgba(255, 230, 100, 1);
     stroke-width: 0.32;
 }
-/* 移動範圍：淺藍 fill */
-.grid-tile.move-range {
-    fill: rgba(100, 180, 255, 0.22);
-    stroke: rgba(140, 200, 255, 0.65);
-    stroke-width: 0.22;
-}
-/* 攻擊範圍：紅色 */
-.grid-tile.attack-range {
-    fill: rgba(255, 80, 80, 0.25);
-    stroke: rgba(255, 100, 100, 0.85);
-    stroke-width: 0.24;
-}
-/* 主角站攻擊範圍 = 橘紅脈動（用 CSS animation on opacity 模擬） */
-.grid-tile.attack-range.hero-pos {
-    fill: rgba(255, 170, 60, 0.42);
-    stroke: rgba(255, 150, 60, 1);
-    stroke-width: 0.36;
-    animation: tilePulse 1.4s ease-in-out infinite;
-}
-@keyframes tilePulse {
-    0%, 100% { fill-opacity: 0.6; }
-    50%      { fill-opacity: 1.0; }
-}
-/* 魔王格：紅色（對齊參考圖 Boss 紅格） */
-.grid-tile.boss-pos {
-    fill: rgba(255, 60, 60, 0.30);
-    stroke: rgba(255, 80, 80, 1);
-    stroke-width: 0.42;
-}
+/* 移動範圍 / 攻擊範圍 / 魔王格：派派要求拿掉藍紅顯示（class 仍存在但不渲染） */
+
+/* ===== 5 種棋盤主題（URL ?theme=sandstone|rocky|marble|volcanic|ice）===== */
+/* sandstone (default) — 已在 .grid-tile 預設 */
+
+/* rocky — 帶圓形石頭顆粒 */
+body[data-theme="rocky"] .grid-tile      { fill: url(#pat-rocky); }
+body[data-theme="rocky"] .grid-wall-right { fill: rgba(95, 88, 78, 0.95); }
+body[data-theme="rocky"] .grid-wall-front { fill: rgba(54, 48, 42, 0.96); }
+
+/* marble — 淡冷灰加紋路 */
+body[data-theme="marble"] .grid-tile      { fill: url(#pat-marble); }
+body[data-theme="marble"] .grid-wall-right { fill: rgba(170, 175, 185, 0.95); }
+body[data-theme="marble"] .grid-wall-front { fill: rgba(118, 124, 134, 0.96); }
+
+/* volcanic — 黑岩加紅色裂縫 */
+body[data-theme="volcanic"] .grid-tile      { fill: url(#pat-volcanic); }
+body[data-theme="volcanic"] .grid-wall-right { fill: rgba(45, 22, 18, 0.95); }
+body[data-theme="volcanic"] .grid-wall-front { fill: rgba(22, 10, 8, 0.96); }
+
+/* ice — 冰藍加亮點 */
+body[data-theme="ice"] .grid-tile      { fill: url(#pat-ice); }
+body[data-theme="ice"] .grid-wall-right { fill: rgba(166, 188, 208, 0.95); }
+body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 
 /* grid-cell DIV 已改用 SVG，這 25 條規則保留為註解備查（座標公式）：
    corner (x, y) lerp: left = 22 + x*8 + y*5 (%), bottom = 62 - x*3 - y*7 (%)
