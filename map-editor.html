@@ -105,6 +105,17 @@
             flex: 1; padding: 7px 4px; border: none; border-radius: 4px;
             font-size: 11px; font-weight: 700; cursor: pointer;
         }
+        .autosave-row {
+            display: flex; gap: 8px; padding: 6px 12px;
+            background: #1a3014; border-top: 1px solid #0d1019;
+            font-size: 11px; color: #8fbe6f; align-items: center;
+        }
+        .autosave-row #autosaveStatus { flex: 1; }
+        .autosave-row button {
+            padding: 4px 10px; border: none; border-radius: 3px;
+            font-size: 10px; font-weight: 700; cursor: pointer;
+            background: #444; color: #fff;
+        }
 
         .building-list {
             overflow-y: auto;
@@ -242,6 +253,10 @@
         <b>右側欄</b>：手動輸入 bbox 4 值或 path 座標
     </div>
 
+    <div class="autosave-row">
+        <span id="autosaveStatus">💾 localStorage 自動存</span>
+        <button class="btn-secondary" id="btnClearCache">清暫存</button>
+    </div>
     <div class="panel-footer">
         <button class="btn-secondary" id="btnReset">重置</button>
         <button class="btn-primary" id="btnExport">匯出 JSON</button>
@@ -338,23 +353,63 @@ function defaultEduArenaConfig(w, h) {
     return { dimensions: {width: w, height: h}, buildings, connections: [] };
 }
 
-// 載入 config
-fetch('assets/world_map_config.json?v=' + Date.now())
-    .then(r => r.json())
-    .then(json => {
-        mapConfig = json.map_config;
-        // 確保 buildings 都有 path（沒有就空陣列）
-        mapConfig.buildings.forEach(b => {
-            if (!b.path) b.path = [];
+// ─── localStorage 自動儲存
+const LS_KEY = 'eduarena_map_config_draft';
+let saveTimer = null;
+function autoSave() {
+    if (!mapConfig) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify({
+                ts: Date.now(),
+                config: mapConfig,
+            }));
+            const ts = new Date().toLocaleTimeString();
+            const el = document.getElementById('autosaveStatus');
+            if (el) el.textContent = `💾 已存 ${ts}（瀏覽器本地）`;
+        } catch (e) {
+            console.warn('autosave fail:', e);
+        }
+    }, 300);  // debounce 300ms
+}
+
+// 載入 config — 優先讀 localStorage 暫存
+function loadInitialConfig() {
+    const cached = localStorage.getItem(LS_KEY);
+    if (cached) {
+        try {
+            const data = JSON.parse(cached);
+            const age = (Date.now() - data.ts) / 1000 / 60;  // 分鐘
+            const ageStr = age < 1 ? '剛剛' : age < 60 ? `${Math.floor(age)} 分鐘前` : `${Math.floor(age/60)} 小時前`;
+            if (confirm(`偵測到瀏覽器有 ${ageStr} 的編輯暫存\n\n` +
+                        '按「確定」載入暫存版本（繼續上次編輯）\n' +
+                        '按「取消」載入 server config（最新已部署版本）')) {
+                mapConfig = data.config;
+                mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+                renderAll();
+                document.getElementById('autosaveStatus').textContent =
+                    `💾 已載入暫存（${ageStr}存的）`;
+                return;
+            }
+        } catch (e) { console.warn('load cache fail:', e); }
+    }
+    fetch('assets/world_map_config.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(json => {
+            mapConfig = json.map_config;
+            mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            renderAll();
         });
-        renderAll();
-    });
+}
+loadInitialConfig();
 
 function renderAll() {
     renderBuildingList();
     renderPolygons();
     renderPathOverlay();
     renderDetail();
+    autoSave();  // 每次 render 觸發 debounced save
 }
 
 // 從 polygon vertices 算 bbox（同步用）
@@ -752,14 +807,23 @@ document.getElementById('btnDownload').addEventListener('click', () => {
     a.click();
 });
 document.getElementById('btnReset').addEventListener('click', () => {
-    if (!confirm('真的要重置嗎？所有未匯出的編輯都會失去')) return;
+    if (!confirm('真的要重置嗎？所有未匯出的編輯會失去，重新從 server 載入')) return;
+    localStorage.removeItem(LS_KEY);
     fetch('assets/world_map_config.json?v=' + Date.now())
         .then(r => r.json())
         .then(json => {
             mapConfig = json.map_config;
             mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
             renderAll();
+            document.getElementById('autosaveStatus').textContent = '💾 已重置，重新載入 server';
         });
+});
+
+// 清暫存按鈕
+document.getElementById('btnClearCache').addEventListener('click', () => {
+    if (!confirm('清掉瀏覽器暫存？下次重新整理會載入 server config')) return;
+    localStorage.removeItem(LS_KEY);
+    document.getElementById('autosaveStatus').textContent = '💾 暫存已清';
 });
 
 // 圖片載入完才能算尺寸
