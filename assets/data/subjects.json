@@ -1,7 +1,39 @@
 {
   "math": {
-    "name": "數學魔王",
-    "boss_sprite": "boss/math/idle.png",
+    "label": "數學",
+    "emoji": "📐",
+    "tiers": {
+      "t1": {
+        "name": "數學初級魔王",
+        "label": "T1 初級",
+        "sprite": "boss/v2/math/t1/idle.png",
+        "hit_sprite": "boss/v2/math/t1/hit.png",
+        "attack_sprite": "boss/v2/math/t1/attack.png",
+        "defeat_sprite": "boss/v2/math/t1/death.png",
+        "bg": "boss/v2/math/t1/bg.png",
+        "hp": 200
+      },
+      "t2": {
+        "name": "數學中級魔王",
+        "label": "T2 中級",
+        "sprite": "boss/v2/math/t2/idle.png",
+        "hit_sprite": "boss/v2/math/t2/hit.png",
+        "attack_sprite": "boss/v2/math/t2/attack.png",
+        "defeat_sprite": "boss/v2/math/t2/death.png",
+        "bg": "boss/v2/math/t2/bg.png",
+        "hp": 300
+      },
+      "t3": {
+        "name": "數學終極魔王",
+        "label": "T3 終極",
+        "sprite": "boss/v2/math/t3/idle.png",
+        "hit_sprite": "boss/v2/math/t3/hit.png",
+        "attack_sprite": "boss/v2/math/t3/attack.png",
+        "defeat_sprite": "boss/v2/math/t3/death.png",
+        "bg": "boss/v2/math/t3/bg.png",
+        "hp": 400
+      }
+    },
     "questions": [
       {
         "q": "12 × 8 = ?",
@@ -116,8 +148,40 @@
     ]
   },
   "chinese": {
-    "name": "國文魔王",
-    "boss_sprite": "boss/chinese/idle.png",
+    "label": "國語",
+    "emoji": "📕",
+    "tiers": {
+      "t1": {
+        "name": "國語初級魔王",
+        "label": "T1 初級",
+        "sprite": "boss/v2/chinese/t1/idle.png",
+        "hit_sprite": "boss/v2/chinese/t1/hit.png",
+        "attack_sprite": "boss/v2/chinese/t1/attack.png",
+        "defeat_sprite": "boss/v2/chinese/t1/death.png",
+        "bg": "boss/v2/chinese/t1/bg.png",
+        "hp": 200
+      },
+      "t2": {
+        "name": "國語中級魔王",
+        "label": "T2 中級",
+        "sprite": "boss/v2/chinese/t2/idle.png",
+        "hit_sprite": "boss/v2/chinese/t2/hit.png",
+        "attack_sprite": "boss/v2/chinese/t2/attack.png",
+        "defeat_sprite": "boss/v2/chinese/t2/death.png",
+        "bg": "boss/v2/chinese/t2/bg.png",
+        "hp": 300
+      },
+      "t3": {
+        "name": "國語終極魔王",
+        "label": "T3 終極",
+        "sprite": "boss/v2/chinese/t3/idle.png",
+        "hit_sprite": "boss/v2/chinese/t3/hit.png",
+        "attack_sprite": "boss/v2/chinese/t3/attack.png",
+        "defeat_sprite": "boss/v2/chinese/t3/death.png",
+        "bg": "boss/v2/chinese/t3/bg.png",
+        "hp": 400
+      }
+    },
     "questions": [
       {
         "q": "「日新月異」的意思是？",
@@ -210,8 +274,40 @@
     ]
   },
   "english": {
-    "name": "英文魔王",
-    "boss_sprite": "boss/english/idle.png",
+    "label": "英文",
+    "emoji": "🔤",
+    "tiers": {
+      "t1": {
+        "name": "英文初級魔王",
+        "label": "T1 初級",
+        "sprite": "boss/v2/english/t1/idle.png",
+        "hit_sprite": "boss/v2/english/t1/hit.png",
+        "attack_sprite": "boss/v2/english/t1/attack.png",
+        "defeat_sprite": "boss/v2/english/t1/death.png",
+        "bg": "boss/v2/english/t1/bg.png",
+        "hp": 200
+      },
+      "t2": {
+        "name": "英文中級魔王",
+        "label": "T2 中級",
+        "sprite": "boss/v2/english/t2/idle.png",
+        "hit_sprite": "boss/v2/english/t2/hit.png",
+        "attack_sprite": "boss/v2/english/t2/attack.png",
+        "defeat_sprite": "boss/v2/english/t2/death.png",
+        "bg": "boss/v2/english/t2/bg.png",
+        "hp": 300
+      },
+      "t3": {
+        "name": "英文終極魔王",
+        "label": "T3 終極",
+        "sprite": "boss/v2/english/t3/idle.png",
+        "hit_sprite": "boss/v2/english/t3/hit.png",
+        "attack_sprite": "boss/v2/english/t3/attack.png",
+        "defeat_sprite": "boss/v2/english/t3/death.png",
+        "bg": "boss/v2/english/t3/bg.png",
+        "hp": 400
+      }
+    },
     "questions": [
       {
         "q": "What is 'apple' in Chinese?",
@@ -304,8 +400,40 @@
     ]
   },
   "science": {
-    "name": "自然魔王",
-    "boss_sprite": "boss/science/idle.png",
+    "label": "自然",
+    "emoji": "🔬",
+    "tiers": {
+      "t1": {
+        "name": "自然初級魔王",
+        "label": "T1 初級",
+        "sprite": "boss/v2/science/t1/idle.png",
+        "hit_sprite": "boss/v2/science/t1/hit.png",
+        "attack_sprite": "boss/v2/science/t1/attack.png",
+        "defeat_sprite": "boss/v2/science/t1/death.png",
+        "bg": "boss/v2/science/t1/bg.png",
+        "hp": 200
+      },
+      "t2": {
+        "name": "自然中級魔王",
+        "label": "T2 中級",
+        "sprite": "boss/v2/science/t2/idle.png",
+        "hit_sprite": "boss/v2/science/t2/hit.png",
+        "attack_sprite": "boss/v2/science/t2/attack.png",
+        "defeat_sprite": "boss/v2/science/t2/death.png",
+        "bg": "boss/v2/science/t2/bg.png",
+        "hp": 300
+      },
+      "t3": {
+        "name": "自然終極魔王",
+        "label": "T3 終極",
+        "sprite": "boss/v2/science/t3/idle.png",
+        "hit_sprite": "boss/v2/science/t3/hit.png",
+        "attack_sprite": "boss/v2/science/t3/attack.png",
+        "defeat_sprite": "boss/v2/science/t3/death.png",
+        "bg": "boss/v2/science/t3/bg.png",
+        "hp": 400
+      }
+    },
     "questions": [
       {
         "q": "下列何者不是植物？",
@@ -398,8 +526,40 @@
     ]
   },
   "social": {
-    "name": "社會魔王",
-    "boss_sprite": "boss/social/idle.png",
+    "label": "社會",
+    "emoji": "🌏",
+    "tiers": {
+      "t1": {
+        "name": "社會初級魔王",
+        "label": "T1 初級",
+        "sprite": "boss/v2/social/t1/idle.png",
+        "hit_sprite": "boss/v2/social/t1/hit.png",
+        "attack_sprite": "boss/v2/social/t1/attack.png",
+        "defeat_sprite": "boss/v2/social/t1/death.png",
+        "bg": "boss/v2/social/t1/bg.png",
+        "hp": 200
+      },
+      "t2": {
+        "name": "社會中級魔王",
+        "label": "T2 中級",
+        "sprite": "boss/v2/social/t2/idle.png",
+        "hit_sprite": "boss/v2/social/t2/hit.png",
+        "attack_sprite": "boss/v2/social/t2/attack.png",
+        "defeat_sprite": "boss/v2/social/t2/death.png",
+        "bg": "boss/v2/social/t2/bg.png",
+        "hp": 300
+      },
+      "t3": {
+        "name": "社會終極魔王",
+        "label": "T3 終極",
+        "sprite": "boss/v2/social/t3/idle.png",
+        "hit_sprite": "boss/v2/social/t3/hit.png",
+        "attack_sprite": "boss/v2/social/t3/attack.png",
+        "defeat_sprite": "boss/v2/social/t3/death.png",
+        "bg": "boss/v2/social/t3/bg.png",
+        "hp": 400
+      }
+    },
     "questions": [
       {
         "q": "台灣最高的山是？",

@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=12">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=13">
 </head>
 <body>
 
@@ -38,6 +38,13 @@
                 <h3>📚 選擇科目（決定魔王）</h3>
                 <div class="subject-grid" id="setup-subjects">
                     <!-- 5 科 button JS render -->
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h3>👹 魔王難度（3 個 tier）</h3>
+                <div class="subject-grid" id="setup-tiers">
+                    <!-- 3 tier button JS render -->
                 </div>
             </div>
 
@@ -193,7 +200,8 @@ const IN_RANGE = 3;   // col 3 進入攻擊範圍可打魔王，col 4 是魔王
 const playerSetup = {
     name: "派派",
     subject: "math",
-    jobKey: null,   // 沒選 = 學生
+    tier: "t3",       // 預設挑戰終極
+    jobKey: null,
 };
 
 const state = {
@@ -389,15 +397,23 @@ async function attackBoss() {
     // 衝刺中段（接觸時）觸發特效
     await sleep(state.weapon === "pencil" ? 220 : 320);
     boss.classList.add("hit");
+    // 切到 tier 的 hit sprite
+    if (state.bossData && state.bossData.hit_sprite) {
+        boss.src = `assets/images/${state.bossData.hit_sprite}?v=1`;
+    }
     popDamage(boss, "-" + dmg, false);
-    spawnHitFX(boss, state.weapon);            // 武器專屬命中閃光 + 粒子
-    stage.classList.add("impact");             // F. 鏡頭衝擊
+    spawnHitFX(boss, state.weapon);
+    stage.classList.add("impact");
     setTimeout(() => stage.classList.remove("impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
     updateBars();
 
     await sleep(400);
     boss.classList.remove("hit");
+    // 還原成 idle
+    if (state.bossHP > 0 && state.bossData) {
+        boss.src = `assets/images/${state.bossData.sprite}?v=1`;
+    }
 }
 
 // 武器軌跡：從 hero 中心 → boss 中心劃過去
@@ -466,8 +482,11 @@ function endGame(outcome) {
     if (outcome === "win") {
         // H. 勝利 cinematic（拿掉光柱、拿掉 combo 顯示）
         boss.classList.add("defeated");
+        // 切到 tier 的 death sprite
+        if (state.bossData && state.bossData.defeat_sprite) {
+            boss.src = `assets/images/${state.bossData.defeat_sprite}?v=1`;
+        }
         stage.classList.add("slow-mo");
-        // 主角擺勝利姿勢
         hero.classList.remove("attacking");
         hero.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
@@ -546,11 +565,36 @@ function renderSubjectPicker() {
         btn.innerHTML = `<span class="emoji">${meta.emoji}</span><span>${meta.label}</span>`;
         btn.onclick = () => {
             playerSetup.subject = key;
-            document.querySelectorAll(".subject-btn").forEach(b => b.classList.toggle("active", b.dataset.subject === key));
+            document.querySelectorAll(".subject-btn[data-subject]").forEach(b => b.classList.toggle("active", b.dataset.subject === key));
         };
         if (key === playerSetup.subject) btn.classList.add("active");
         container.appendChild(btn);
     }
+}
+
+function renderTierPicker() {
+    const container = document.getElementById("setup-tiers");
+    container.innerHTML = "";
+    const TIERS = [
+        { key: "t1", label: "T1 初級", emoji: "😈", color: "#6fcf3f" },
+        { key: "t2", label: "T2 中級", emoji: "👺", color: "#ffd54d" },
+        { key: "t3", label: "T3 終極", emoji: "👹", color: "#ff5050" },
+    ];
+    TIERS.forEach(t => {
+        const btn = document.createElement("button");
+        btn.className = "subject-btn";
+        btn.dataset.tier = t.key;
+        btn.style.gridColumn = "span 1";
+        btn.innerHTML = `<span class="emoji">${t.emoji}</span><span>${t.label}</span>`;
+        btn.onclick = () => {
+            playerSetup.tier = t.key;
+            document.querySelectorAll(".subject-btn[data-tier]").forEach(b => b.classList.toggle("active", b.dataset.tier === t.key));
+        };
+        if (t.key === playerSetup.tier) btn.classList.add("active");
+        container.appendChild(btn);
+    });
+    // 設成 3 列
+    container.style.gridTemplateColumns = "repeat(3, 1fr)";
 }
 
 function renderJobPicker() {
@@ -611,22 +655,26 @@ function startArena() {
     // 套用題庫
     const subj = SUBJECTS_DATA[playerSetup.subject];
     QUESTIONS = subj.questions.slice();
-    // 隨機洗牌
     for (let i = QUESTIONS.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [QUESTIONS[i], QUESTIONS[j]] = [QUESTIONS[j], QUESTIONS[i]];
     }
 
-    // 套用 boss sprite
-    const bossPath = `assets/images/${subj.boss_sprite}?v=1`;
-    boss.src = bossPath;
-    document.getElementById("boss-name-display").textContent = `★ ${subj.name} ★`;
+    // 套用 tier 對應的 boss + bg
+    const tierData = subj.tiers[playerSetup.tier];
+    state.bossData = tierData;
+    state.bossMaxHP = tierData.hp;
+    state.bossHP = tierData.hp;
+    boss.src = `assets/images/${tierData.sprite}?v=1`;
+    document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
+
+    // 戰場背景換成 tier 的 bg
+    stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
-    const meta = SUBJECT_META[playerSetup.subject];
-    document.getElementById("info-subject-name").textContent = meta.emoji + " " + meta.label;
-    document.getElementById("info-subject-sub").textContent = "五年級 · G5";
+    document.getElementById("info-subject-name").textContent = subj.emoji + " " + subj.label;
+    document.getElementById("info-subject-sub").textContent = `五年級 · ${tierData.label}`;
 
     // 套用職業 buff + 武器
     applyJobBuff();
@@ -668,6 +716,7 @@ function restoreSetup() {
     restoreSetup();
     renderSubjectPicker();
     renderJobPicker();
+    renderTierPicker();
     // 套上恢復的職業
     const savedJob = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
     selectJob(savedJob);
