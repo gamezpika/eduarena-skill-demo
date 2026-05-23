@@ -938,9 +938,10 @@ function pStampFromSky(pos, subj, tier, shape = "shape-disc") {
 
 // ----- 楓之谷風 VFX primitive：直接顯示 vfx.png 並套用 motion class -----
 function pMapleVfx(pos, subj, tier, motion, opts = {}) {
-    const url = `assets/images/boss/v2/${subj}/t${tier}/vfx.png?v=1`;
+    const url = `assets/images/boss/v2/${subj}/t${tier}/vfx.png?v=2`;
     const count = opts.count || 1;
     const stagger = opts.stagger || 0;
+    console.log(`[boss-vfx] ${subj}-t${tier} motion=${motion} count=${count} url=${url}`);
 
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
@@ -948,8 +949,12 @@ function pMapleVfx(pos, subj, tier, motion, opts = {}) {
             img.className = `boss-vfx motion-${motion} tier-${tier}`;
             // onerror 必須在 src 之前綁定，404 才一定攔得到
             img.onerror = () => {
+                console.warn(`[boss-vfx] onerror fired for ${url} → fallback aura`);
                 img.classList.add("vfx-fallback", `subj-${subj}`);
                 img.removeAttribute("src");
+            };
+            img.onload = () => {
+                console.log(`[boss-vfx] loaded OK: ${url} (${img.naturalWidth}x${img.naturalHeight})`);
             };
             img.src = url;
             // 預設定位：hero 中心；rain motion 從上方隨機 x
