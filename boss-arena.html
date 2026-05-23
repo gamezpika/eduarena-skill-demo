@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=40">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=41">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -936,28 +936,61 @@ function pStampFromSky(pos, subj, tier, shape = "shape-disc") {
     setTimeout(() => stamp.remove(), 750);
 }
 
-// ----- 15 隻魔王絕招 dispatcher -----
+// ----- 楓之谷風 VFX primitive：直接顯示 vfx.png 並套用 motion class -----
+function pMapleVfx(pos, subj, tier, motion, opts = {}) {
+    const url = `assets/images/boss/v2/${subj}/t${tier}/vfx.png?v=1`;
+    const count = opts.count || 1;
+    const stagger = opts.stagger || 0;
+
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const img = document.createElement("img");
+            img.className = `boss-vfx motion-${motion} tier-${tier}`;
+            img.src = url;
+            // 預設定位：hero 中心；rain motion 從上方隨機 x
+            let x = pos.hx, y = pos.hy;
+            if (opts.at === "boss")    { x = pos.bx; y = pos.by; }
+            if (opts.at === "midpoint"){ x = (pos.bx + pos.hx) / 2; y = (pos.by + pos.hy) / 2; }
+            if (motion === "rain")     { x = pos.hx + (Math.random() - 0.5) * 240; y = -60; }
+            img.style.left = x + "px";
+            img.style.top  = y + "px";
+            if (opts.size) {
+                img.style.width  = opts.size + "px";
+                img.style.height = opts.size + "px";
+            }
+            // 圖 404 → 改用 fallback CSS aura（純色光暈）
+            img.onerror = () => {
+                img.classList.add("vfx-fallback", `subj-${subj}`);
+                img.removeAttribute("src");
+            };
+            stage.appendChild(img);
+            setTimeout(() => img.remove(), opts.lifetime || 850);
+        }, i * stagger);
+    }
+}
+
+// ----- 15 隻魔王 楓之谷風絕招 dispatcher -----
 const BOSS_ATTACKS = {
-    // 📐 數學：公式彈幕 / 方程式追擊 / 圓周率風暴
-    "math-t1":    (p, s, t) => pStraightShot(p, s, t, 1),
-    "math-t2":    (p, s, t) => pFanSpray(p, s, t, 3, 28),
-    "math-t3":    (p, s, t) => { pSpiralVolley(p, s, t, 9); setTimeout(() => pStraightShot(p, s, 3, 1, 0), 480); },
-    // 📕 國語：成語投擲 / 典故狂流 / 萬卷書海
-    "chinese-t1": (p, s, t) => pStraightShot(p, s, t, 1),
-    "chinese-t2": (p, s, t) => pRainFromAbove(p, s, t, 5),
-    "chinese-t3": (p, s, t) => { pRainFromAbove(p, s, t, 7); setTimeout(() => pFanSpray(p, s, 3, 5, 60), 280); },
-    // 🔤 英文：字母飛彈 / 單字漩渦 / 文法審判
-    "english-t1": (p, s, t) => pStraightShot(p, s, t, 1),
-    "english-t2": (p, s, t) => pSpiralVolley(p, s, t, 5),
-    "english-t3": (p, s, t) => { pStampFromSky(p, s, t, "shape-star"); setTimeout(() => pStraightShot(p, s, 3, 3, 20), 180); },
-    // 🔬 自然：酸液腐蝕 / 閃電鏈 / 核融合爆破
-    "science-t1": (p, s, t) => pStraightShot(p, s, t, 1),
-    "science-t2": (p, s, t) => pLightningLine(p, s, t),
-    "science-t3": (p, s, t) => pConvergenceBlast(p, s, t, 12),
-    // 🌏 社會：歷史長矛 / 地理風暴 / 文明審判
-    "social-t1":  (p, s, t) => pStraightShot(p, s, t, 1),
-    "social-t2":  (p, s, t) => pOrbitBlast(p, s, t, 3),
-    "social-t3":  (p, s, t) => pStampFromSky(p, s, t, "shape-disc"),
+    // 📐 數學：三角函數彈幕 / 幾何圖形爆裂 / 圓周率黑洞
+    "math-t1":    (p, s, t) => pMapleVfx(p, s, t, "burst",   { count: 5, stagger: 70, size: 200 }),
+    "math-t2":    (p, s, t) => pMapleVfx(p, s, t, "expand",  { size: 340 }),
+    "math-t3":    (p, s, t) => { pMapleVfx(p, s, t, "vortex", { size: 460, lifetime: 1000 }); setTimeout(() => stage.classList.add("color-flash-blue"), 400); setTimeout(() => stage.classList.remove("color-flash-blue"), 700); },
+    // 📕 國語：毛筆掃刷 / 詩詞風暴 / 萬卷天降
+    "chinese-t1": (p, s, t) => pMapleVfx(p, s, t, "sweep",   { size: 380 }),
+    "chinese-t2": (p, s, t) => pMapleVfx(p, s, t, "rain",    { count: 5, stagger: 110, size: 200 }),
+    "chinese-t3": (p, s, t) => { pMapleVfx(p, s, t, "rain", { count: 7, stagger: 90, size: 240 }); setTimeout(() => pMapleVfx(p, s, t, "expand", { size: 380 }), 380); },
+    // 🔤 英文：ABC 連發 / 拼字法陣 / GRAMMAR 雷射
+    "english-t1": (p, s, t) => pMapleVfx(p, s, t, "burst",   { count: 5, stagger: 80, size: 200 }),
+    "english-t2": (p, s, t) => pMapleVfx(p, s, t, "vortex",  { size: 360, lifetime: 900 }),
+    "english-t3": (p, s, t) => { pMapleVfx(p, s, t, "beam",  { size: 520, lifetime: 700 }); setTimeout(() => stage.classList.add("color-flash-purple"), 200); setTimeout(() => stage.classList.remove("color-flash-purple"), 500); },
+    // 🔬 自然：元素彈 / 連鎖閃電 / 元素風暴
+    "science-t1": (p, s, t) => pMapleVfx(p, s, t, "expand",  { size: 220 }),
+    "science-t2": (p, s, t) => pMapleVfx(p, s, t, "sweep",   { size: 420 }),
+    "science-t3": (p, s, t) => { pMapleVfx(p, s, t, "expand", { size: 500, lifetime: 1000 }); setTimeout(() => stage.classList.add("color-flash-green"), 350); setTimeout(() => stage.classList.remove("color-flash-green"), 650); },
+    // 🌏 社會：地圖長矛 / 時空漩渦 / 大陸壓制
+    "social-t1":  (p, s, t) => pMapleVfx(p, s, t, "sweep",   { size: 320 }),
+    "social-t2":  (p, s, t) => pMapleVfx(p, s, t, "vortex",  { size: 380, lifetime: 950 }),
+    "social-t3":  (p, s, t) => { pMapleVfx(p, s, t, "drop",  { size: 460, lifetime: 800 }); setTimeout(() => stage.classList.add("color-flash-gold"), 350); setTimeout(() => stage.classList.remove("color-flash-gold"), 650); },
 };
 
 

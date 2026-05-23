@@ -970,6 +970,128 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     box-shadow: 0 0 18px rgba(255, 180, 40, 0.95), 0 0 32px rgba(230, 140, 30, 0.55);
 }
 
+/* ===== 楓之谷風 VFX：6 motion + 全螢幕彩色閃 + fallback aura ===== */
+.boss-vfx {
+    position: absolute;
+    z-index: 200;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 0 18px rgba(255, 220, 100, 0.4));
+}
+
+/* burst: 在 hero 處出現 + 微微飄動 + 淡出（連發小招用）*/
+.boss-vfx.motion-burst {
+    animation: vfxBurst 0.75s cubic-bezier(0.3, 1.2, 0.5, 1) forwards;
+}
+@keyframes vfxBurst {
+    0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-10deg); opacity: 0; }
+    20%  { transform: translate(-50%, -50%) scale(1.15) rotate(0deg);  opacity: 1; }
+    70%  { transform: translate(-50%, -50%) scale(1.05) rotate(5deg);  opacity: 1; }
+    100% { transform: translate(-60%, -120%) scale(0.9) rotate(10deg); opacity: 0; }
+}
+
+/* expand: hero 處原地放大 + 淡出（爆破/法陣）*/
+.boss-vfx.motion-expand {
+    animation: vfxExpand 0.85s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+}
+@keyframes vfxExpand {
+    0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+    25%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* vortex: 旋轉放大 + 淡出（漩渦/法陣旋轉）*/
+.boss-vfx.motion-vortex {
+    animation: vfxVortex 0.95s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes vfxVortex {
+    0%   { transform: translate(-50%, -50%) scale(0.3) rotate(0deg);    opacity: 0; }
+    25%  { transform: translate(-50%, -50%) scale(1.1) rotate(180deg);  opacity: 1; }
+    75%  { transform: translate(-50%, -50%) scale(1.3) rotate(540deg);  opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.9) rotate(720deg);  opacity: 0; }
+}
+
+/* sweep: 從 boss 端橫掃到 hero 端（揮砍/雷電/長矛）*/
+.boss-vfx.motion-sweep {
+    animation: vfxSweep 0.65s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes vfxSweep {
+    0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-25deg) translateX(-80px); opacity: 0; }
+    25%  { transform: translate(-50%, -50%) scale(1.1) rotate(0deg)   translateX(0);     opacity: 1; }
+    75%  { transform: translate(-50%, -50%) scale(1.2) rotate(15deg)  translateX(40px);  opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.9) rotate(30deg)  translateX(80px);  opacity: 0; }
+}
+
+/* beam: 拉長橫向雷射光束（GRAMMAR 雷射等）*/
+.boss-vfx.motion-beam {
+    animation: vfxBeam 0.7s cubic-bezier(0.3, 0.8, 0.5, 1) forwards;
+}
+@keyframes vfxBeam {
+    0%   { transform: translate(-50%, -50%) scaleX(0.1) scaleY(0.6); opacity: 0; }
+    15%  { transform: translate(-50%, -50%) scaleX(1.4) scaleY(1.1); opacity: 1; }
+    70%  { transform: translate(-50%, -50%) scaleX(1.3) scaleY(1.0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scaleX(1.0) scaleY(0.4); opacity: 0; }
+}
+
+/* drop: 從天上砸下到 hero 處（大陸/書本/印章）*/
+.boss-vfx.motion-drop {
+    animation: vfxDrop 0.75s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+}
+@keyframes vfxDrop {
+    0%   { transform: translate(-50%, -350%) scale(0.5) rotate(-15deg); opacity: 0; }
+    50%  { transform: translate(-50%, -50%)  scale(1.25) rotate(5deg);  opacity: 1; }
+    85%  { transform: translate(-50%, -50%)  scale(1.05) rotate(0deg);  opacity: 1; }
+    100% { transform: translate(-50%, -50%)  scale(1.5)  rotate(0deg);  opacity: 0; }
+}
+
+/* rain: 從上方某個 x 落到下方（多顆雨水）*/
+.boss-vfx.motion-rain {
+    animation: vfxRain 0.85s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes vfxRain {
+    0%   { transform: translate(-50%, 0)    scale(0.4) rotate(-15deg); opacity: 0; }
+    20%  { transform: translate(-50%, 30vh) scale(0.9) rotate(0deg);   opacity: 1; }
+    100% { transform: translate(-50%, 90vh) scale(1.1) rotate(15deg);  opacity: 0; }
+}
+
+/* 全螢幕彩色閃光（T3 終極招命中時加重打擊感）*/
+.arena-stage.color-flash-blue::before,
+.arena-stage.color-flash-purple::before,
+.arena-stage.color-flash-green::before,
+.arena-stage.color-flash-gold::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 21;
+    mix-blend-mode: screen;
+    animation: colorFlash 0.3s ease-out;
+}
+.arena-stage.color-flash-blue::before   { background: radial-gradient(circle at 50% 50%, rgba(60,130,255,0.55), transparent 70%); }
+.arena-stage.color-flash-purple::before { background: radial-gradient(circle at 50% 50%, rgba(180,100,255,0.55), transparent 70%); }
+.arena-stage.color-flash-green::before  { background: radial-gradient(circle at 50% 50%, rgba(80,255,120,0.5), transparent 70%); }
+.arena-stage.color-flash-gold::before   { background: radial-gradient(circle at 50% 50%, rgba(255,200,60,0.55), transparent 70%); }
+@keyframes colorFlash {
+    0%   { opacity: 0; }
+    30%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* VFX fallback：圖載失敗時改顯純色光暈（不要破圖）*/
+.boss-vfx.vfx-fallback {
+    width: 220px !important;
+    height: 220px !important;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #ffcc40 35%, #ff6020 75%, transparent 100%);
+    box-shadow: 0 0 60px rgba(255, 180, 30, 0.85);
+    filter: none;
+}
+.boss-vfx.vfx-fallback.subj-math    { background: radial-gradient(circle, #fff 0%, #88ccff 35%, #2080ff 75%, transparent 100%); box-shadow: 0 0 60px rgba(60,130,255,0.85); }
+.boss-vfx.vfx-fallback.subj-chinese { background: radial-gradient(circle, #fff 0%, #ffb070 35%, #ff5028 75%, transparent 100%); box-shadow: 0 0 60px rgba(255,90,40,0.85); }
+.boss-vfx.vfx-fallback.subj-english { background: radial-gradient(circle, #fff 0%, #cc8aff 35%, #8030ff 75%, transparent 100%); box-shadow: 0 0 60px rgba(150,60,255,0.85); }
+.boss-vfx.vfx-fallback.subj-science { background: radial-gradient(circle, #fff 0%, #88ff88 35%, #20c040 75%, transparent 100%); box-shadow: 0 0 60px rgba(60,220,80,0.85); }
+.boss-vfx.vfx-fallback.subj-social  { background: radial-gradient(circle, #fff 0%, #ffe080 35%, #ffa820 75%, transparent 100%); box-shadow: 0 0 60px rgba(255,180,40,0.85); }
+
 /* ===== 15 隻魔王絕招視覺（8 primitive 對應的 CSS）===== */
 
 /* 螺旋齊射：先繞 orbit 點再飛向 hero */
