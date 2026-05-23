@@ -1,0 +1,494 @@
+{
+  "math": {
+    "name": "數學魔王",
+    "boss_sprite": "boss/math/idle.png",
+    "questions": [
+      {
+        "q": "12 × 8 = ?",
+        "options": [
+          "88",
+          "96",
+          "86",
+          "100"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "25 + 37 = ?",
+        "options": [
+          "52",
+          "72",
+          "62",
+          "68"
+        ],
+        "ans": 2,
+        "difficulty": 1
+      },
+      {
+        "q": "81 ÷ 9 = ?",
+        "options": [
+          "7",
+          "8",
+          "9",
+          "11"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "100 - 47 = ?",
+        "options": [
+          "53",
+          "63",
+          "43",
+          "57"
+        ],
+        "ans": 0,
+        "difficulty": 1
+      },
+      {
+        "q": "7 × 9 = ?",
+        "options": [
+          "56",
+          "72",
+          "63",
+          "65"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "144 ÷ 12 = ?",
+        "options": [
+          "10",
+          "11",
+          "12",
+          "13"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "3/4 + 1/4 = ?",
+        "options": [
+          "1",
+          "1/2",
+          "2/4",
+          "3/8"
+        ],
+        "ans": 0,
+        "difficulty": 2
+      },
+      {
+        "q": "0.5 × 8 = ?",
+        "options": [
+          "3",
+          "4",
+          "5",
+          "40"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "正方形 4 邊都是 5 公分，周長多少？",
+        "options": [
+          "10",
+          "15",
+          "20",
+          "25"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "一打雞蛋有幾顆？",
+        "options": [
+          "10",
+          "12",
+          "20",
+          "24"
+        ],
+        "ans": 1,
+        "difficulty": 1
+      }
+    ]
+  },
+  "chinese": {
+    "name": "國文魔王",
+    "boss_sprite": "boss/chinese/idle.png",
+    "questions": [
+      {
+        "q": "「日新月異」的意思是？",
+        "options": [
+          "每天都變化",
+          "日子過得快",
+          "月亮變新的",
+          "一成不變"
+        ],
+        "ans": 0,
+        "difficulty": 2
+      },
+      {
+        "q": "「畫蛇添足」比喻？",
+        "options": [
+          "畫得很好",
+          "多此一舉",
+          "蛇有腳",
+          "添加東西"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "「春暖花開」描寫哪個季節？",
+        "options": [
+          "春天",
+          "夏天",
+          "秋天",
+          "冬天"
+        ],
+        "ans": 0,
+        "difficulty": 1
+      },
+      {
+        "q": "下列何字是「象形字」？",
+        "options": [
+          "休",
+          "上",
+          "日",
+          "明"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "「歲月如梭」的「梭」指什麼？",
+        "options": [
+          "時間",
+          "織布工具",
+          "梳子",
+          "船"
+        ],
+        "ans": 1,
+        "difficulty": 3
+      },
+      {
+        "q": "「悲喜交集」的反義詞是？",
+        "options": [
+          "心如止水",
+          "悲歡離合",
+          "悲喜交加",
+          "百感交集"
+        ],
+        "ans": 0,
+        "difficulty": 3
+      },
+      {
+        "q": "下列何者是疊字詞？",
+        "options": [
+          "美麗",
+          "閃閃",
+          "高興",
+          "天空"
+        ],
+        "ans": 1,
+        "difficulty": 1
+      },
+      {
+        "q": "「望梅止渴」出自哪本書？",
+        "options": [
+          "論語",
+          "世說新語",
+          "三國演義",
+          "西遊記"
+        ],
+        "ans": 1,
+        "difficulty": 3
+      }
+    ]
+  },
+  "english": {
+    "name": "英文魔王",
+    "boss_sprite": "boss/english/idle.png",
+    "questions": [
+      {
+        "q": "What is 'apple' in Chinese?",
+        "options": [
+          "蘋果",
+          "香蕉",
+          "葡萄",
+          "梨子"
+        ],
+        "ans": 0,
+        "difficulty": 1
+      },
+      {
+        "q": "Choose the past tense of 'go':",
+        "options": [
+          "goed",
+          "went",
+          "gone",
+          "going"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "「我喜歡讀書」的英文是？",
+        "options": [
+          "I like read",
+          "I like reading",
+          "I am read",
+          "I am reading"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "What color is the sky? (晴天)",
+        "options": [
+          "red",
+          "blue",
+          "green",
+          "yellow"
+        ],
+        "ans": 1,
+        "difficulty": 1
+      },
+      {
+        "q": "Choose correct plural of 'child':",
+        "options": [
+          "childs",
+          "childes",
+          "children",
+          "childer"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "「How old are you?」意思是？",
+        "options": [
+          "你幾歲？",
+          "你叫什麼名字？",
+          "你住哪裡？",
+          "你喜歡什麼？"
+        ],
+        "ans": 0,
+        "difficulty": 1
+      },
+      {
+        "q": "What's the opposite of 'big'?",
+        "options": [
+          "large",
+          "tall",
+          "small",
+          "fat"
+        ],
+        "ans": 2,
+        "difficulty": 1
+      },
+      {
+        "q": "「下午」的英文是？",
+        "options": [
+          "morning",
+          "afternoon",
+          "evening",
+          "night"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      }
+    ]
+  },
+  "science": {
+    "name": "自然魔王",
+    "boss_sprite": "boss/science/idle.png",
+    "questions": [
+      {
+        "q": "下列何者不是植物？",
+        "options": [
+          "仙人掌",
+          "蘑菇",
+          "蘭花",
+          "玫瑰"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "地球繞太陽一圈大約幾天？",
+        "options": [
+          "30 天",
+          "100 天",
+          "365 天",
+          "1000 天"
+        ],
+        "ans": 2,
+        "difficulty": 1
+      },
+      {
+        "q": "水的化學式是？",
+        "options": [
+          "H2O",
+          "CO2",
+          "O2",
+          "NaCl"
+        ],
+        "ans": 0,
+        "difficulty": 2
+      },
+      {
+        "q": "下列何者是「導體」？",
+        "options": [
+          "木頭",
+          "塑膠",
+          "鐵",
+          "玻璃"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "彩虹有幾種顏色？",
+        "options": [
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "ans": 2,
+        "difficulty": 1
+      },
+      {
+        "q": "蝴蝶的幼蟲叫什麼？",
+        "options": [
+          "毛毛蟲",
+          "蛹",
+          "蛾",
+          "蝌蚪"
+        ],
+        "ans": 0,
+        "difficulty": 1
+      },
+      {
+        "q": "下列何者是哺乳類？",
+        "options": [
+          "鯊魚",
+          "鯨魚",
+          "海豚",
+          "都不是"
+        ],
+        "ans": 3,
+        "difficulty": 3
+      },
+      {
+        "q": "光的速度大約是？",
+        "options": [
+          "3 × 10^8 m/s",
+          "3 × 10^5 m/s",
+          "1 × 10^8 m/s",
+          "3 × 10^6 m/s"
+        ],
+        "ans": 0,
+        "difficulty": 3
+      }
+    ]
+  },
+  "social": {
+    "name": "社會魔王",
+    "boss_sprite": "boss/social/idle.png",
+    "questions": [
+      {
+        "q": "台灣最高的山是？",
+        "options": [
+          "阿里山",
+          "玉山",
+          "雪山",
+          "合歡山"
+        ],
+        "ans": 1,
+        "difficulty": 1
+      },
+      {
+        "q": "中華民國的國父是？",
+        "options": [
+          "蔣中正",
+          "孫中山",
+          "毛澤東",
+          "蔣經國"
+        ],
+        "ans": 1,
+        "difficulty": 1
+      },
+      {
+        "q": "下列何者不是台灣的縣市？",
+        "options": [
+          "台北市",
+          "高雄市",
+          "香港",
+          "新北市"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "「鄭成功」是哪個朝代的人？",
+        "options": [
+          "明朝",
+          "清朝",
+          "宋朝",
+          "唐朝"
+        ],
+        "ans": 0,
+        "difficulty": 2
+      },
+      {
+        "q": "全世界人口最多的國家？",
+        "options": [
+          "美國",
+          "印度",
+          "中國",
+          "巴西"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      },
+      {
+        "q": "下列何者不是基本人權？",
+        "options": [
+          "生存權",
+          "受教育權",
+          "免費吃飯",
+          "言論自由"
+        ],
+        "ans": 2,
+        "difficulty": 2
+      },
+      {
+        "q": "台灣四面環海，國境之南是？",
+        "options": [
+          "鵝鑾鼻",
+          "富貴角",
+          "三貂角",
+          "曾母暗沙"
+        ],
+        "ans": 0,
+        "difficulty": 3
+      },
+      {
+        "q": "民主政治的核心精神是？",
+        "options": [
+          "獨裁",
+          "主權在民",
+          "君主專制",
+          "軍政府"
+        ],
+        "ans": 1,
+        "difficulty": 2
+      }
+    ]
+  }
+}

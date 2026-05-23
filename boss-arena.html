@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=11">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=12">
 </head>
 <body>
 
@@ -24,7 +24,35 @@
 
     <div class="iphone-screen">
 
-        <div id="screen-arena">
+        <!-- 開場設定面板 -->
+        <div class="setup-modal" id="screen-setup">
+            <div class="setup-title">⚔ 冒險者設定 ⚔</div>
+            <div class="setup-sub">真實 EduArena 資料 · 24 職業 · 5 科 · 數十題真題庫樣本</div>
+
+            <div class="setup-section">
+                <h3>👤 玩家名稱</h3>
+                <input class="setup-input" type="text" id="setup-name" value="派派" maxlength="10">
+            </div>
+
+            <div class="setup-section">
+                <h3>📚 選擇科目（決定魔王）</h3>
+                <div class="subject-grid" id="setup-subjects">
+                    <!-- 5 科 button JS render -->
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h3>🎓 選擇職業（24 個，影響武器 + HP/MP）</h3>
+                <div class="job-grid" id="setup-jobs">
+                    <!-- 24 職業 JS render -->
+                </div>
+                <div class="job-preview" id="job-preview">點選職業看詳細</div>
+            </div>
+
+            <button class="setup-start" id="setup-start">開始挑戰魔王 →</button>
+        </div>
+
+        <div id="screen-arena" style="display: none">
 
             <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
 
@@ -35,7 +63,7 @@
                         <img src="assets/images/arena/hero.png" alt="hero">
                     </div>
                     <div class="hero-info">
-                        <div class="hero-name">小派派</div>
+                        <div class="hero-name" id="hero-name-display">小派派</div>
                         <div class="hero-bars">
                             <div class="bar-row">
                                 <span class="bar-label">HP</span>
@@ -58,7 +86,7 @@
                 <div class="torch-glow right"></div>
 
                 <div class="boss-hud">
-                    <div class="boss-name">★ 數學魔王 ★</div>
+                    <div class="boss-name" id="boss-name-display">★ 數學魔王 ★</div>
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
                 </div>
 
@@ -80,10 +108,10 @@
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="3" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
 
-                <!-- 左下：科目固定資訊 -->
+                <!-- 左下：科目固定資訊（JS 依選擇填） -->
                 <div class="info-panel info-subject">
-                    <div class="panel-title">📘 數學</div>
-                    <div class="panel-sub">五年級 · G5</div>
+                    <div class="panel-title" id="info-subject-name">📘 數學</div>
+                    <div class="panel-sub" id="info-subject-sub">五年級 · G5</div>
                 </div>
 
                 <!-- 右下：戰況動態 -->
@@ -110,20 +138,63 @@
 </div>
 
 <script>
-// 假題庫（demo 用，數學 5 題）
-const QUESTIONS = [
-    { q: "12 × 8 = ?",   options: ["88", "96", "86", "100"], ans: 1 },
-    { q: "25 + 37 = ?",  options: ["52", "72", "62", "68"],  ans: 2 },
-    { q: "81 ÷ 9 = ?",   options: ["7",  "8",  "9",  "11"],  ans: 2 },
-    { q: "100 - 47 = ?", options: ["53", "63", "43", "57"],  ans: 0 },
-    { q: "7 × 9 = ?",    options: ["56", "72", "63", "65"],  ans: 2 },
-];
+// ===== 真實 EduArena 資料（從 JSON 載入） =====
+let SUBJECTS_DATA = null;   // 5 科 + 題庫
+let JOBS_DATA = [];         // 24 職業 list
+let QUESTIONS = [];         // 當前 session 用題庫
+
+const SUBJECT_META = {
+    math:    { emoji: "📐", label: "數學" },
+    chinese: { emoji: "📕", label: "國語" },
+    english: { emoji: "🔤", label: "英文" },
+    science: { emoji: "🔬", label: "自然" },
+    social:  { emoji: "🌏", label: "社會" },
+};
+
+// 職業 → 武器對應規則（24 職業基於 attr_key + 個別覆蓋）
+const JOB_WEAPON_OVERRIDE = {
+    "math_detective": "book",      // 數學偵探用放大鏡
+    "writer": "book",              // 文字大師用故事書
+    "translator": "book",          // 翻譯員用辭典
+    "inventor": "gauntlet",        // 發明家用工具箱
+    "explorer": "sword",           // 探險家用劍
+    "flight_attendant": "staff",   // 空服員 (魔法環遊)
+    "doctor": "book",              // 醫生用聽診器/書
+    "engineer": "gauntlet",        // 工程師用扳手
+    "athlete": "gauntlet",         // 運動員用拳套
+    "artist": "staff",             // 藝術家用畫筆 (魔法)
+    "musician": "staff",           // 音樂家用音波
+    "astronaut": "staff",          // 太空人用 (魔法感)
+    "chef": "gauntlet",            // 廚師用菜刀/拳套
+    "archaeologist": "sword",      // 考古學家
+    "biologist": "book",
+    "historian": "book",
+    "ai_engineer": "gauntlet",
+    "filmmaker": "staff",
+    "lawyer": "book",
+    "psychologist": "staff",
+    "designer": "staff",
+};
+function pickWeaponByJob(job) {
+    if (!job) return "sword";
+    if (JOB_WEAPON_OVERRIDE[job.key]) return JOB_WEAPON_OVERRIDE[job.key];
+    // fallback 依 attr_key
+    const map = { math: "book", chinese_int: "book", english_int: "staff", science_int: "gauntlet", social_int: "sword" };
+    return map[job.attr_key] || "sword";
+}
 
 /* P0 Grid Data Structure（單列預留 2D，未來可擴 grid[x][y]）
    現在 demo 只用 GRID.cols × GRID.rows = 5 × 1，hero 在 grid[heroCol][0]
    未來若要多角色站位，把 heroCol 換成 heroPos:{x,y} 即可 */
 const GRID = { cols: 5, rows: 1 };
 const IN_RANGE = 3;   // col 3 進入攻擊範圍可打魔王，col 4 是魔王
+
+/* 玩家設定（從 setup 面板填入） */
+const playerSetup = {
+    name: "派派",
+    subject: "math",
+    jobKey: null,   // 沒選 = 學生
+};
 
 const state = {
     heroHP: 100, heroMaxHP: 100,
@@ -440,7 +511,7 @@ const WEAPON_SRC = {
     staff:    "assets/images/arena/hero_iso_staff.png?v=1",
     gauntlet: "assets/images/arena/hero_iso_gauntlet.png?v=1",
 };
-state.weapon = "sword";  // 預設拿劍
+state.weapon = "sword";  // 預設
 
 function switchWeapon(key) {
     if (!WEAPON_SRC[key]) return;
@@ -453,20 +524,155 @@ function switchWeapon(key) {
 document.querySelectorAll(".weapon-btn").forEach(b => {
     b.onclick = () => switchWeapon(b.dataset.weapon);
 });
-switchWeapon(state.weapon);  // 初始套用
 
-// 開場
-updateBars();
-updateGridHighlight();
+// ===== Setup 流程 =====
+async function loadData() {
+    const [subjResp, jobsResp] = await Promise.all([
+        fetch("assets/data/subjects.json?v=1").then(r => r.json()),
+        fetch("assets/data/jobs.json?v=1").then(r => r.json()),
+    ]);
+    SUBJECTS_DATA = subjResp;
+    JOBS_DATA = jobsResp;
+}
 
-// A. 開場進場動畫（主角滑入）
-hero.classList.add("entering");
-setTimeout(() => hero.classList.remove("entering"), 1100);
+function renderSubjectPicker() {
+    const container = document.getElementById("setup-subjects");
+    container.innerHTML = "";
+    for (const key of ["math","chinese","english","science","social"]) {
+        const meta = SUBJECT_META[key];
+        const btn = document.createElement("button");
+        btn.className = "subject-btn";
+        btn.dataset.subject = key;
+        btn.innerHTML = `<span class="emoji">${meta.emoji}</span><span>${meta.label}</span>`;
+        btn.onclick = () => {
+            playerSetup.subject = key;
+            document.querySelectorAll(".subject-btn").forEach(b => b.classList.toggle("active", b.dataset.subject === key));
+        };
+        if (key === playerSetup.subject) btn.classList.add("active");
+        container.appendChild(btn);
+    }
+}
 
-// 第一題延後 1 秒讓進場動畫跑完才接題目（避免玩家在動畫期間點選項）
-state.busy = true;
-loadQuestion();
-setTimeout(() => { state.busy = false; }, 1100);
+function renderJobPicker() {
+    const container = document.getElementById("setup-jobs");
+    container.innerHTML = "";
+    // 預設「不選職業」= 學生
+    const noneBtn = document.createElement("button");
+    noneBtn.className = "job-btn active";
+    noneBtn.dataset.jobKey = "";
+    noneBtn.innerHTML = `<span style="font-size:30px">🎒</span><span>學生<br>(預設)</span><span class="job-tier">Tier 0</span>`;
+    noneBtn.onclick = () => selectJob(null);
+    container.appendChild(noneBtn);
+    JOBS_DATA.forEach(j => {
+        const btn = document.createElement("button");
+        btn.className = "job-btn";
+        btn.dataset.jobKey = j.key;
+        btn.innerHTML = `
+            <img src="assets/images/${j.sprite}" alt="${j.name}" onerror="this.style.display='none'">
+            <span>${j.name}</span>
+            <span class="job-tier">T${j.tier}</span>
+        `;
+        btn.onclick = () => selectJob(j);
+        container.appendChild(btn);
+    });
+}
+
+function selectJob(job) {
+    playerSetup.jobKey = job ? job.key : null;
+    document.querySelectorAll(".job-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.jobKey === (job ? job.key : ""));
+    });
+    const preview = document.getElementById("job-preview");
+    if (!job) {
+        preview.innerHTML = `<div class="job-name">🎒 學生（預設）</div>HP 100 / MP 50 / 武器：⚔️ 劍`;
+    } else {
+        const w = pickWeaponByJob(job);
+        const wEmoji = { sword: "⚔️", book: "📕", staff: "🪄", gauntlet: "🥊" }[w];
+        const buff = job.tier === 1 ? "HP +20 / MP +10" : job.tier === 2 ? "HP +40 / MP +20" : "HP +60 / MP +30";
+        preview.innerHTML = `<div class="job-name">${job.name}</div>${job.skill_desc || job.description}<br>武器：${wEmoji} ${w} · ${buff}`;
+    }
+}
+
+function applyJobBuff() {
+    const job = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
+    if (!job) {
+        state.heroMaxHP = 100; state.heroHP = 100;
+        state.heroMaxMP = 50;  state.heroMP = 50;
+        return;
+    }
+    const bonus = { 1: [20, 10], 2: [40, 20], 3: [60, 30], 4: [80, 40] }[job.tier] || [0, 0];
+    state.heroMaxHP = 100 + bonus[0]; state.heroHP = state.heroMaxHP;
+    state.heroMaxMP = 50 + bonus[1];  state.heroMP  = state.heroMaxMP;
+}
+
+function startArena() {
+    playerSetup.name = document.getElementById("setup-name").value.trim() || "派派";
+
+    // 套用題庫
+    const subj = SUBJECTS_DATA[playerSetup.subject];
+    QUESTIONS = subj.questions.slice();
+    // 隨機洗牌
+    for (let i = QUESTIONS.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [QUESTIONS[i], QUESTIONS[j]] = [QUESTIONS[j], QUESTIONS[i]];
+    }
+
+    // 套用 boss sprite
+    const bossPath = `assets/images/${subj.boss_sprite}?v=1`;
+    boss.src = bossPath;
+    document.getElementById("boss-name-display").textContent = `★ ${subj.name} ★`;
+
+    // 套用 UI 文字
+    document.getElementById("hero-name-display").textContent = playerSetup.name;
+    const meta = SUBJECT_META[playerSetup.subject];
+    document.getElementById("info-subject-name").textContent = meta.emoji + " " + meta.label;
+    document.getElementById("info-subject-sub").textContent = "五年級 · G5";
+
+    // 套用職業 buff + 武器
+    applyJobBuff();
+    const job = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
+    switchWeapon(pickWeaponByJob(job));
+
+    // localStorage 存
+    try {
+        localStorage.setItem("eduarena_demo_setup", JSON.stringify(playerSetup));
+    } catch (e) { /* ignore */ }
+
+    // 切到戰場
+    document.getElementById("screen-setup").style.display = "none";
+    document.getElementById("screen-arena").style.display = "flex";
+
+    // 開場進場動畫
+    updateBars();
+    updateGridHighlight();
+    hero.classList.add("entering");
+    setTimeout(() => hero.classList.remove("entering"), 1100);
+
+    state.busy = true;
+    loadQuestion();
+    setTimeout(() => { state.busy = false; }, 1100);
+}
+
+// 載 localStorage 恢復玩家設定（如果有）
+function restoreSetup() {
+    try {
+        const saved = JSON.parse(localStorage.getItem("eduarena_demo_setup") || "{}");
+        if (saved.name)    { playerSetup.name = saved.name; document.getElementById("setup-name").value = saved.name; }
+        if (saved.subject) { playerSetup.subject = saved.subject; }
+        if (saved.jobKey !== undefined) playerSetup.jobKey = saved.jobKey;
+    } catch (e) { /* ignore */ }
+}
+
+(async function init() {
+    await loadData();
+    restoreSetup();
+    renderSubjectPicker();
+    renderJobPicker();
+    // 套上恢復的職業
+    const savedJob = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
+    selectJob(savedJob);
+    document.getElementById("setup-start").onclick = startArena;
+})();
 </script>
 
 </body>
