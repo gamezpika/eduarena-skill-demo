@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=25">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=26">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -115,33 +115,33 @@
                     <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
-                <!-- 5×5 SVG 標準等距 1.86:1 比例（接近 FFT/瑪莉 2:1） -->
+                <!-- 5×5 SVG 標準等距 2:1（補償 stage 比例 1.2x 拉伸後實際視覺 2:1） -->
                 <svg class="grid-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                  <polygon class="grid-tile" data-x="0" data-y="0" points="24,92 34,89 37,79 27,82" />
-                  <polygon class="grid-tile" data-x="1" data-y="0" points="34,89 44,86 47,76 37,79" />
-                  <polygon class="grid-tile" data-x="2" data-y="0" points="44,86 54,83 57,73 47,76" />
-                  <polygon class="grid-tile" data-x="3" data-y="0" points="54,83 64,80 67,70 57,73" />
-                  <polygon class="grid-tile" data-x="4" data-y="0" points="64,80 74,77 77,67 67,70" />
-                  <polygon class="grid-tile" data-x="0" data-y="1" points="27,82 37,79 40,69 30,72" />
-                  <polygon class="grid-tile" data-x="1" data-y="1" points="37,79 47,76 50,66 40,69" />
-                  <polygon class="grid-tile" data-x="2" data-y="1" points="47,76 57,73 60,63 50,66" />
-                  <polygon class="grid-tile" data-x="3" data-y="1" points="57,73 67,70 70,60 60,63" />
-                  <polygon class="grid-tile" data-x="4" data-y="1" points="67,70 77,67 80,57 70,60" />
-                  <polygon class="grid-tile" data-x="0" data-y="2" points="30,72 40,69 43,59 33,62" />
-                  <polygon class="grid-tile" data-x="1" data-y="2" points="40,69 50,66 53,56 43,59" />
-                  <polygon class="grid-tile" data-x="2" data-y="2" points="50,66 60,63 63,53 53,56" />
-                  <polygon class="grid-tile" data-x="3" data-y="2" points="60,63 70,60 73,50 63,53" />
-                  <polygon class="grid-tile" data-x="4" data-y="2" points="70,60 80,57 83,47 73,50" />
-                  <polygon class="grid-tile" data-x="0" data-y="3" points="33,62 43,59 46,49 36,52" />
-                  <polygon class="grid-tile" data-x="1" data-y="3" points="43,59 53,56 56,46 46,49" />
-                  <polygon class="grid-tile" data-x="2" data-y="3" points="53,56 63,53 66,43 56,46" />
-                  <polygon class="grid-tile" data-x="3" data-y="3" points="63,53 73,50 76,40 66,43" />
-                  <polygon class="grid-tile" data-x="4" data-y="3" points="73,50 83,47 86,37 76,40" />
-                  <polygon class="grid-tile" data-x="0" data-y="4" points="36,52 46,49 49,39 39,42" />
-                  <polygon class="grid-tile" data-x="1" data-y="4" points="46,49 56,46 59,36 49,39" />
-                  <polygon class="grid-tile" data-x="2" data-y="4" points="56,46 66,43 69,33 59,36" />
-                  <polygon class="grid-tile" data-x="3" data-y="4" points="66,43 76,40 79,30 69,33" />
-                  <polygon class="grid-tile" data-x="4" data-y="4" points="76,40 86,37 89,27 79,30" />
+                  <polygon class="grid-tile" data-x="0" data-y="0" points="20,92 29,89 32,80 23,83" />
+                  <polygon class="grid-tile" data-x="1" data-y="0" points="29,89 38,86 41,77 32,80" />
+                  <polygon class="grid-tile" data-x="2" data-y="0" points="38,86 47,83 50,74 41,77" />
+                  <polygon class="grid-tile" data-x="3" data-y="0" points="47,83 56,80 59,71 50,74" />
+                  <polygon class="grid-tile" data-x="4" data-y="0" points="56,80 65,77 68,68 59,71" />
+                  <polygon class="grid-tile" data-x="0" data-y="1" points="23,83 32,80 35,71 26,74" />
+                  <polygon class="grid-tile" data-x="1" data-y="1" points="32,80 41,77 44,68 35,71" />
+                  <polygon class="grid-tile" data-x="2" data-y="1" points="41,77 50,74 53,65 44,68" />
+                  <polygon class="grid-tile" data-x="3" data-y="1" points="50,74 59,71 62,62 53,65" />
+                  <polygon class="grid-tile" data-x="4" data-y="1" points="59,71 68,68 71,59 62,62" />
+                  <polygon class="grid-tile" data-x="0" data-y="2" points="26,74 35,71 38,62 29,65" />
+                  <polygon class="grid-tile" data-x="1" data-y="2" points="35,71 44,68 47,59 38,62" />
+                  <polygon class="grid-tile" data-x="2" data-y="2" points="44,68 53,65 56,56 47,59" />
+                  <polygon class="grid-tile" data-x="3" data-y="2" points="53,65 62,62 65,53 56,56" />
+                  <polygon class="grid-tile" data-x="4" data-y="2" points="62,62 71,59 74,50 65,53" />
+                  <polygon class="grid-tile" data-x="0" data-y="3" points="29,65 38,62 41,53 32,56" />
+                  <polygon class="grid-tile" data-x="1" data-y="3" points="38,62 47,59 50,50 41,53" />
+                  <polygon class="grid-tile" data-x="2" data-y="3" points="47,59 56,56 59,47 50,50" />
+                  <polygon class="grid-tile" data-x="3" data-y="3" points="56,56 65,53 68,44 59,47" />
+                  <polygon class="grid-tile" data-x="4" data-y="3" points="65,53 74,50 77,41 68,44" />
+                  <polygon class="grid-tile" data-x="0" data-y="4" points="32,56 41,53 44,44 35,47" />
+                  <polygon class="grid-tile" data-x="1" data-y="4" points="41,53 50,50 53,41 44,44" />
+                  <polygon class="grid-tile" data-x="2" data-y="4" points="50,50 59,47 62,38 53,41" />
+                  <polygon class="grid-tile" data-x="3" data-y="4" points="59,47 68,44 71,35 62,38" />
+                  <polygon class="grid-tile" data-x="4" data-y="4" points="68,44 77,41 80,32 71,35" />
                 </svg>
 
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
