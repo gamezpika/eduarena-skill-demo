@@ -935,19 +935,18 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* B3 魔王投射物：能量球（依科目換顏色，不用 emoji）*/
 .boss-proj {
     position: absolute;
-    width: 28px;
-    height: 28px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     z-index: 200;
     pointer-events: none;
     transform-origin: center;
-    animation: bossProjFly 0.6s cubic-bezier(0.45, 0, 0.7, 1) forwards;
-    /* 預設紅色能量球（沒套科目時的 fallback）*/
+    animation: bossProjFly 0.7s cubic-bezier(0.45, 0, 0.7, 1) forwards;
     background: radial-gradient(circle, #ffffff 0%, #ffaa50 25%, #ff5020 55%, #802010 100%);
-    box-shadow: 0 0 18px rgba(255, 80, 30, 0.9), 0 0 32px rgba(255, 40, 20, 0.5);
+    box-shadow: 0 0 28px rgba(255, 80, 30, 0.95), 0 0 52px rgba(255, 40, 20, 0.6);
 }
-.boss-proj.tier-2 { width: 36px; height: 36px; box-shadow: 0 0 24px rgba(255, 60, 30, 1), 0 0 42px rgba(255, 30, 20, 0.6); }
-.boss-proj.tier-3 { width: 48px; height: 48px; box-shadow: 0 0 32px rgba(255, 50, 20, 1), 0 0 56px rgba(255, 100, 40, 0.7); }
+.boss-proj.tier-2 { width: 56px; height: 56px; box-shadow: 0 0 36px rgba(255, 60, 30, 1), 0 0 64px rgba(255, 30, 20, 0.65); }
+.boss-proj.tier-3 { width: 72px; height: 72px; box-shadow: 0 0 48px rgba(255, 50, 20, 1), 0 0 84px rgba(255, 100, 40, 0.75); }
 
 /* 5 科色：math 藍 / chinese 紅橘 / english 紫 / science 綠 / social 金 */
 .boss-proj.subj-math {
@@ -986,13 +985,13 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 
 /* big-blast：核融合爆破後的大球（沒有飛行、原地爆開）*/
 .boss-proj.big-blast {
-    width: 70px;
-    height: 70px;
-    animation: bossBigBlast 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+    width: 110px;
+    height: 110px;
+    animation: bossBigBlast 0.55s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
 }
 .boss-proj.big-blast.tier-3 {
-    width: 100px;
-    height: 100px;
+    width: 160px;
+    height: 160px;
 }
 @keyframes bossBigBlast {
     0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; filter: brightness(2); }
@@ -1015,21 +1014,21 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* 雷電鋸齒（SVG path stroke）*/
 .boss-lightning .lightning-path {
     fill: none;
-    stroke-width: 5;
+    stroke-width: 11;
     stroke-linecap: round;
     stroke-linejoin: round;
-    opacity: 0.85;
-    animation: lightningFlash 0.5s ease-out forwards;
-    filter: drop-shadow(0 0 8px currentColor);
+    opacity: 0.95;
+    animation: lightningFlash 0.55s ease-out forwards;
+    filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 24px currentColor);
 }
 .boss-lightning .lightning-core {
     fill: none;
     stroke: #ffffff;
-    stroke-width: 2;
+    stroke-width: 5;
     stroke-linecap: round;
     stroke-linejoin: round;
     opacity: 1;
-    animation: lightningFlash 0.5s ease-out forwards;
+    animation: lightningFlash 0.55s ease-out forwards;
 }
 @keyframes lightningFlash {
     0%   { opacity: 0; }
@@ -1046,8 +1045,8 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* boss-converge：12 個小光點向中心匯聚 */
 .boss-converge {
     position: absolute;
-    width: 14px;
-    height: 14px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     z-index: 199;
     pointer-events: none;
@@ -1070,14 +1069,14 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* boss-stamp：大圓盤/星形從天蓋下 */
 .boss-stamp {
     position: absolute;
-    width: 90px;
-    height: 90px;
+    width: 130px;
+    height: 130px;
     z-index: 205;
     pointer-events: none;
     transform: translate(-50%, -50%);
-    animation: bossStampDrop 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+    animation: bossStampDrop 0.75s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
 }
-.boss-stamp.tier-3 { width: 120px; height: 120px; }
+.boss-stamp.tier-3 { width: 180px; height: 180px; }
 .boss-stamp.shape-disc {
     border-radius: 50%;
 }
