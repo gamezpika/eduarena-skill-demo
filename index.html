@@ -3,103 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#16213e">
-    <meta name="description" content="EduArena 技術 Demo — 看 4 種地圖與遊戲的視覺技術展示。海洋 3D 透視、村莊 hotspot、名人翻牌、探索地圖。">
-
-    <!-- OG meta（FB / LINE 分享預覽） -->
+    <meta name="theme-color" content="#1a1f2e">
     <meta property="og:title" content="EduArena 技術 Demo">
-    <meta property="og:description" content="4 種地圖技術展示：3D 透視海洋、村莊大場景、名人九宮格翻牌、可探索世界">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://eduarena-skill-demo-production.up.railway.app/">
-    <meta property="og:image" content="https://eduarena-skill-demo-production.up.railway.app/assets/images/world_bg.jpg">
-    <meta property="og:image:width" content="720">
-    <meta property="og:image:height" content="1280">
-    <meta name="twitter:card" content="summary_large_image">
-
+    <meta property="og:description" content="海洋地圖 / 地圖編輯器 / Boss Arena 三個技術展示">
     <title>EduArena 技術 Demo</title>
-    <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/hub.css?v=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; min-height: 100vh; min-height: 100dvh;
+            background: linear-gradient(180deg, #0d1019 0%, #1a3050 100%);
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        .wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            gap: 32px;
+        }
+        header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fdc500, #ff7a1c, #ff5050);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        header .sub {
+            color: #8fa0bd;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .cards { display: flex; flex-direction: column; gap: 16px; }
+        .card {
+            display: block;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 22px 22px;
+            color: inherit;
+            text-decoration: none;
+            transition: transform 0.15s, background 0.15s, border-color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card:hover, .card:active {
+            background: rgba(253, 197, 0, 0.08);
+            border-color: rgba(253, 197, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        .card-head {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 10px;
+        }
+        .card-icon {
+            width: 56px; height: 56px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+        .card-title {
+            font-size: 18px; font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .card-url {
+            font-size: 11px;
+            color: #6f7d99;
+            font-family: ui-monospace, "SF Mono", monospace;
+        }
+        .card-body {
+            font-size: 13px;
+            color: #a8b3c8;
+            line-height: 1.65;
+        }
+        .card-tags {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-top: 12px;
+        }
+        .tag {
+            display: inline-block;
+            background: rgba(253, 197, 0, 0.12);
+            color: #fdc500;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: #5a6b88;
+            text-align: center;
+            line-height: 1.6;
+        }
+        @media (max-width: 480px) {
+            .wrap { padding: 28px 18px 48px; gap: 24px; }
+            header h1 { font-size: 26px; }
+            .card { padding: 18px; }
+            .card-icon { width: 48px; height: 48px; font-size: 26px; }
+            .card-title { font-size: 16px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="demo-banner">技術 DEMO</div>
+<div class="wrap">
 
-<div class="iphone-frame">
-    <div class="iphone-island" aria-hidden="true"></div>
-    <div class="iphone-home" aria-hidden="true"></div>
+    <header>
+        <h1>EduArena 技術 Demo</h1>
+        <div class="sub">3 個技術展示頁，點卡片進入</div>
+    </header>
 
-    <div class="iphone-screen">
-        <div id="screen-hub">
+    <div class="cards">
 
-            <!-- 頂部品牌 -->
-            <div class="hub-brand">
-                <div class="hub-logo">🎮</div>
-                <div class="hub-title">EduArena 技術 Demo</div>
-                <div class="hub-sub">看畫面感 · 純前端展示 · 4 種地圖技術</div>
-            </div>
-
-            <!-- 數據牆（純展示） -->
-            <div class="hub-stats">
-                <div class="hub-stat">
-                    <div class="hub-stat-num">60+</div>
-                    <div class="hub-stat-label">學員</div>
-                </div>
-                <div class="hub-stat">
-                    <div class="hub-stat-num">17K</div>
-                    <div class="hub-stat-label">題庫</div>
-                </div>
-                <div class="hub-stat">
-                    <div class="hub-stat-num">5科</div>
-                    <div class="hub-stat-label">6 年級</div>
-                </div>
-                <div class="hub-stat">
-                    <div class="hub-stat-num">9位</div>
-                    <div class="hub-stat-label">偉人</div>
+        <a class="card" href="/ocean.html">
+            <div class="card-head">
+                <div class="card-icon">🌊</div>
+                <div>
+                    <div class="card-title">海洋地圖</div>
+                    <div class="card-url">/ocean.html</div>
                 </div>
             </div>
-
-            <!-- 4 大卡片 -->
-            <div class="hub-cards">
-                <a class="hub-card" data-theme="ocean" href="ocean.html">
-                    <div class="hub-card-emoji">🌊</div>
-                    <div class="hub-card-title">海洋地圖</div>
-                    <div class="hub-card-desc">DOGTOR 風 3D 透視縮放、慣性視差、彈簧物理引擎</div>
-                    <span class="hub-card-tag">3D 透視</span>
-                </a>
-                <a class="hub-card" data-theme="village" href="village.html">
-                    <div class="hub-card-emoji">🏝</div>
-                    <div class="hub-card-title">村莊地圖</div>
-                    <div class="hub-card-desc">手繪 2.5D 大場景，10 個建築/科目島 hotspot</div>
-                    <span class="hub-card-tag">2.5D 場景</span>
-                </a>
-                <a class="hub-card" data-theme="figures" href="figures.html">
-                    <div class="hub-card-emoji">🏛</div>
-                    <div class="hub-card-title">名人九宮格</div>
-                    <div class="hub-card-desc">翻牌猜偉人記憶遊戲，5 階段狀態機，速度遞增</div>
-                    <span class="hub-card-tag">翻牌遊戲</span>
-                </a>
-                <a class="hub-card" data-theme="world" href="world.html">
-                    <div class="hub-card-emoji">🗺</div>
-                    <div class="hub-card-title">探索地圖</div>
-                    <div class="hub-card-desc">可上下左右拖曳大世界，9 sprite 散佈 + 動畫</div>
-                    <span class="hub-card-tag">可探索</span>
-                </a>
+            <div class="card-body">
+                3D 透視縮放海洋地圖 + 慣性視差三層 + 彈簧物理引擎 + iPhone 殼包裝。
             </div>
-
-            <!-- 加 LINE Bot CTA -->
-            <div class="hub-cta">
-                <a class="hub-cta-btn" href="https://line.me/R/ti/p/%40eduarena_demo" target="_blank" rel="noopener">
-                    <span class="hub-cta-emoji">💬</span>
-                    <span>加 LINE Bot 看 demo</span>
-                </a>
-                <div class="hub-cta-hint">加為好友 → 自動收到 demo 連結</div>
+            <div class="card-tags">
+                <span class="tag">3D 透視</span>
+                <span class="tag">彈簧物理</span>
+                <span class="tag">手機 LIFF</span>
             </div>
+        </a>
 
-            <div class="hub-footer">
-                © EduArena · 技術展示頁
+        <a class="card" href="/map-editor.html">
+            <div class="card-head">
+                <div class="card-icon">🛠</div>
+                <div>
+                    <div class="card-title">地圖編輯器</div>
+                    <div class="card-url">/map-editor.html</div>
+                </div>
             </div>
-        </div>
+            <div class="card-body">
+                isometric 地圖視覺編輯器：polygon 多邊形拖拉、path waypoint 點擊新增、JSON config 匯出 + localStorage 自動儲存。
+            </div>
+            <div class="card-tags">
+                <span class="tag">SVG 編輯</span>
+                <span class="tag">配置驅動</span>
+                <span class="tag">JSON export</span>
+            </div>
+        </a>
+
+        <a class="card" href="/boss-arena.html">
+            <div class="card-head">
+                <div class="card-icon">⚔️</div>
+                <div>
+                    <div class="card-title">Boss Arena</div>
+                    <div class="card-url">/boss-arena.html</div>
+                </div>
+            </div>
+            <div class="card-body">
+                Atelier Marie 風等距 2.5D 魔王戰 demo：5 格棋盤移動機制 + chibi 人物 + 連線戰鬥。
+            </div>
+            <div class="card-tags">
+                <span class="tag">2.5D 等距</span>
+                <span class="tag">棋盤移動</span>
+                <span class="tag">魔王戰</span>
+            </div>
+        </a>
+
     </div>
+
+    <footer>
+        EduArena Skill Demo · Railway · Caddy<br>
+        gamezpika/eduarena-skill-demo
+    </footer>
+
 </div>
 
 </body>
