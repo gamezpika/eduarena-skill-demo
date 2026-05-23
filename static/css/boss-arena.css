@@ -799,6 +799,96 @@
     50%      { box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.6), 0 3px 20px rgba(255, 120, 60, 1); }
 }
 
+/* ===== 新 VFX（combat-engine 註冊用） ===== */
+/* 治癒：綠色光圈 */
+.hit-flash.vfx-heal {
+    background: radial-gradient(circle, rgba(150, 255, 180, 1) 0%, rgba(60, 200, 80, 0.6) 35%, rgba(0, 120, 30, 0.2) 75%, transparent 100%);
+    width: 130px; height: 130px;
+    animation: flashBurst 0.6s ease-out forwards;
+}
+.heal-plus {
+    position: absolute;
+    font-size: 26px;
+    font-weight: 900;
+    color: #6fcf3f;
+    text-shadow: 2px 2px 0 #000, 0 0 14px rgba(120, 255, 130, 0.8);
+    pointer-events: none;
+    animation: dmgPop 1.0s forwards;
+    z-index: 12;
+}
+
+/* 火焰流星：橘紅大圓 + 火焰粒子 */
+.hit-flash.vfx-meteor {
+    background:
+        radial-gradient(circle, rgba(255, 255, 200, 1) 0%, rgba(255, 130, 30, 0.85) 30%, rgba(200, 30, 0, 0.5) 60%, transparent 100%);
+    width: 200px; height: 200px;
+    animation: flashBurst 0.9s ease-out forwards;
+}
+.particle-fire {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffeb3b 0%, #ff5722 50%, transparent 100%);
+    box-shadow: 0 0 14px #ff8800;
+    pointer-events: none;
+    animation: particleFly 1.0s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+    z-index: 25;
+}
+
+/* 大絕招：螢幕全閃白 */
+.stage-mega-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 1) 0%, rgba(255, 220, 100, 0.7) 30%, rgba(255, 100, 0, 0.4) 60%, transparent 100%);
+    pointer-events: none;
+    animation: megaFlash 0.7s ease-out forwards;
+    z-index: 22;
+    mix-blend-mode: screen;
+}
+@keyframes megaFlash {
+    0%   { opacity: 0; transform: scale(0.2); }
+    25%  { opacity: 1; transform: scale(1.8); }
+    100% { opacity: 0; transform: scale(2.2); }
+}
+
+/* ===== 示範技能按鈕列（戰場頂部） ===== */
+.skill-bar {
+    position: absolute;
+    top: 100px;
+    left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 9;
+}
+.skill-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 2px solid rgba(120, 90, 50, 0.85);
+    background: rgba(50, 30, 12, 0.85);
+    color: #ffe6a8;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    transition: transform 0.12s, border-color 0.2s;
+    padding: 0;
+    text-align: center;
+    line-height: 1;
+    font-family: inherit;
+    text-shadow: 1px 1px 1px #000;
+}
+.skill-btn .skill-emoji { font-size: 18px; }
+.skill-btn .skill-label { font-size: 9px; }
+.skill-btn:active { transform: scale(0.9); }
+.skill-btn:disabled { opacity: 0.5; cursor: default; }
+
 /* 移動 toast（在戰場中央上方飄出） */
 .arena-toast {
     position: absolute;

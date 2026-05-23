@@ -12,7 +12,8 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=13">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=14">
+    <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
 
@@ -103,6 +104,15 @@
                     <button class="weapon-btn" data-weapon="book"     title="魔法書">📕</button>
                     <button class="weapon-btn" data-weapon="staff"    title="法杖">🪄</button>
                     <button class="weapon-btn" data-weapon="gauntlet" title="拳套">🥊</button>
+                </div>
+
+                <!-- 示範技能列（CombatEngine 演示） -->
+                <div class="skill-bar" id="skill-bar">
+                    <button class="skill-btn" data-skill="quick_slash"  title="快速攻擊（×0.7 dmg）"><span class="skill-emoji">⚡</span><span class="skill-label">快擊</span></button>
+                    <button class="skill-btn" data-skill="triple_slash" title="連環斬 ×3 連打"><span class="skill-emoji">🌀</span><span class="skill-label">連斬</span></button>
+                    <button class="skill-btn" data-skill="meteor"       title="火焰流星 ×1.8 dmg"><span class="skill-emoji">☄️</span><span class="skill-label">流星</span></button>
+                    <button class="skill-btn" data-skill="heal"         title="治癒術 +30 HP"><span class="skill-emoji">💚</span><span class="skill-label">治癒</span></button>
+                    <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
                 <!-- 5 個隱形錨點（不顯示視覺，只當位置邏輯） -->
@@ -696,9 +706,136 @@ function startArena() {
     hero.classList.add("entering");
     setTimeout(() => hero.classList.remove("entering"), 1100);
 
+    // 初始化 CombatEngine + 註冊單位 + 綁示範技能按鈕
+    initCombatEngine();
+    registerCombatUnits();
+    bindSkillButtons();
+
     state.busy = true;
     loadQuestion();
     setTimeout(() => { state.busy = false; }, 1100);
+}
+
+// ===== CombatEngine 整合（神餓！）=====
+let engine = null;
+
+function initCombatEngine() {
+    engine = new CombatEngine(stage);
+
+    // 註冊 4 武器 → 4 個 skill（接現有 CSS keyframes + VFX class）
+    engine.registerSkill('sword_basic',    { dashAnim: 'attacking-sword',    impactVfx: 'vfx_sword',    dashMs: 320, impactMs: 500, damageMul: 1.0 });
+    engine.registerSkill('book_basic',     { dashAnim: 'attacking-book',     impactVfx: 'vfx_book',     dashMs: 320, impactMs: 600, damageMul: 1.0 });
+    engine.registerSkill('staff_basic',    { dashAnim: 'attacking-staff',    impactVfx: 'vfx_staff',    dashMs: 320, impactMs: 700, damageMul: 1.0 });
+    engine.registerSkill('gauntlet_basic', { dashAnim: 'attacking-gauntlet', impactVfx: 'vfx_gauntlet', dashMs: 320, impactMs: 500, damageMul: 1.0 });
+
+    // 註冊 5 個示範技能（展示擴展性）
+    engine.registerSkill('quick_slash', {
+        dashAnim: 'attacking-sword', impactVfx: 'vfx_sword',
+        dashMs: 180, impactMs: 300, damageMul: 0.7,
+    });
+    engine.registerSkill('triple_slash', {
+        dashAnim: 'attacking-sword', impactVfx: 'vfx_sword',
+        dashMs: 280, impactMs: 250, damageMul: 1.5,
+        repeats: 3, repeatInterval: 150,
+    });
+    engine.registerSkill('meteor', {
+        dashAnim: 'attacking-staff', impactVfx: 'vfx_meteor',
+        dashMs: 400, impactMs: 900, damageMul: 1.8,
+        screenShake: true, costMp: 15,
+    });
+    engine.registerSkill('heal', {
+        impactVfx: 'vfx_heal',
+        dashMs: 100, impactMs: 700, resetMs: 100,
+        damageMul: 0.6,             // 治療量 = atk × 0.6
+        heal: true, targetSelf: true, costMp: 20,
+        impactAnim: null,           // 不加 hit class
+    });
+    engine.registerSkill('mega_strike', {
+        dashAnim: 'attacking-gauntlet', impactVfx: 'vfx_mega',
+        dashMs: 350, impactMs: 1000, damageMul: 3.0,
+        screenShake: true, costMp: 30,
+    });
+
+    // VFX 庫
+    engine.registerVfx('vfx_sword',    { class: 'hit-flash weapon-sword',    duration: 700, particles: 6, particleClass: 'hit-particle' });
+    engine.registerVfx('vfx_book',     { class: 'hit-flash weapon-book',     duration: 700, particles: 8, particleClass: 'hit-particle' });
+    engine.registerVfx('vfx_staff',    { class: 'hit-flash weapon-staff',    duration: 700, particles: 6, particleClass: 'hit-particle' });
+    engine.registerVfx('vfx_gauntlet', { class: 'hit-flash weapon-gauntlet', duration: 700, particles: 6, particleClass: 'hit-particle' });
+    engine.registerVfx('vfx_meteor',   { class: 'hit-flash vfx-meteor',      duration: 900, particles: 14, particleClass: 'particle-fire' });
+    engine.registerVfx('vfx_heal',     { class: 'hit-flash vfx-heal',        duration: 600, particles: 4, particleClass: 'hit-particle' });
+    engine.registerVfx('vfx_mega',     { class: 'stage-mega-flash',          duration: 700, particles: 20, particleClass: 'particle-fire' });
+
+    // 事件鉤子：同步 UI（HP bar、傷害飄字、結局判定）
+    engine.on('hit_landed', ({ source, target, dmg }) => {
+        popDamage(target.el, '-' + dmg, target.id !== 'boss');
+        if (target.id === 'boss')      state.bossHP = target.hp;
+        else if (target.id === 'hero') state.heroHP = target.hp;
+        updateBars();
+    });
+    engine.on('heal_landed', ({ target, amount }) => {
+        // 綠色飄字
+        const rect = target.el.getBoundingClientRect();
+        const stageRect = stage.getBoundingClientRect();
+        const pop = document.createElement('div');
+        pop.className = 'heal-plus';
+        pop.textContent = '+' + amount;
+        pop.style.left = (rect.left - stageRect.left + rect.width / 2) + 'px';
+        pop.style.top  = (rect.top  - stageRect.top  + 10) + 'px';
+        stage.appendChild(pop);
+        setTimeout(() => pop.remove(), 1000);
+        if (target.id === 'hero') state.heroHP = target.hp;
+        updateBars();
+    });
+    engine.on('skill_blocked', ({ reason }) => {
+        showToast(reason === 'not_enough_mp' ? '⚠ MP 不夠！' : '⚠ 技能無法施放');
+    });
+    engine.on('unit_defeated', ({ unit }) => {
+        if (unit.id === 'boss') {
+            if (state.bossData && state.bossData.defeat_sprite) {
+                boss.src = `assets/images/${state.bossData.defeat_sprite}?v=1`;
+            }
+        }
+    });
+
+    return engine;
+}
+
+// 註冊 hero/boss units（在 startArena 時呼叫，因為 stats 隨職業/tier 變）
+function registerCombatUnits() {
+    if (!engine) initCombatEngine();
+    engine.registerUnit('hero', hero, {
+        hp: state.heroHP, maxHp: state.heroMaxHP,
+        mp: state.heroMP, maxMp: state.heroMaxMP,
+        atk: 50, def: 5,
+    });
+    engine.registerUnit('boss', boss, {
+        hp: state.bossHP, maxHp: state.bossMaxHP,
+        atk: 25, def: 10,
+    });
+}
+
+// 示範技能 button handler
+function bindSkillButtons() {
+    document.querySelectorAll('.skill-btn').forEach(b => {
+        b.onclick = async () => {
+            if (state.busy || state.finished) return;
+            state.busy = true;
+            document.querySelectorAll('.skill-btn').forEach(x => x.disabled = true);
+            const skill = b.dataset.skill;
+            const isHeal = skill === 'heal';
+            // engine 內 targetSelf 已處理，但我們明確傳
+            await engine.executeAction({
+                sourceId: 'hero',
+                targetId: isHeal ? 'hero' : 'boss',
+                skillKey: skill,
+            });
+            document.querySelectorAll('.skill-btn').forEach(x => x.disabled = false);
+            state.busy = false;
+            // 檢查勝負
+            if (state.bossHP <= 0) endGame('win');
+            if (state.heroHP <= 0) endGame('dead');
+        };
+    });
 }
 
 // 載 localStorage 恢復玩家設定（如果有）
