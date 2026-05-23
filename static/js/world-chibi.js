@@ -20,9 +20,9 @@ import * as THREE from 'three';
     if (!world) return;
 
     // ─── 場景座標系：0..1 (normalized) × dim ratio
-    // SCENE_W=100 對應 mask 寬，SCENE_H=200 對應 mask 高（保持 9:18 直向）
+    // iso 地圖 1:1 正方形 → SCENE_W = SCENE_H = 100（同比例避免縱向壓縮錯位）
     const SCENE_W = 100;
-    const SCENE_H = 200;
+    const SCENE_H = 100;
 
     const renderer = new THREE.WebGLRenderer({
         canvas, alpha: true, antialias: true, premultipliedAlpha: false
@@ -172,7 +172,7 @@ import * as THREE from 'three';
 
     // ─── 玩家位置（場景座標）
     let px = 0;
-    let py = -SCENE_H * 0.10;  // 偏上一點，避開頂部浮島中央初始 bbox
+    let py = -SCENE_H * 0.20;  // 偏上一點，避開頂部建築初始位置
     player.position.set(px, 0, py);
 
     // ─── Debug: polygon 邊框視覺化（紅色線條）讓派派看對齊狀況
