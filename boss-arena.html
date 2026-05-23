@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=10">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=11">
 </head>
 <body>
 
@@ -62,12 +62,10 @@
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
                 </div>
 
-                <!-- 武器切換列 -->
+                <!-- 武器切換列（派派 5/23 砍 fist + pencil 留 4） -->
                 <div class="weapon-bar" id="weapon-bar">
-                    <button class="weapon-btn" data-weapon="fist"     title="拳頭">👊</button>
                     <button class="weapon-btn" data-weapon="sword"    title="短劍">⚔️</button>
                     <button class="weapon-btn" data-weapon="book"     title="魔法書">📕</button>
-                    <button class="weapon-btn" data-weapon="pencil"   title="巨大鉛筆">✏️</button>
                     <button class="weapon-btn" data-weapon="staff"    title="法杖">🪄</button>
                     <button class="weapon-btn" data-weapon="gauntlet" title="拳套">🥊</button>
                 </div>
@@ -435,12 +433,10 @@ function endGame(outcome) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// 武器切換
+// 武器切換（派派 5/23 砍 fist + pencil 留 4：sword/book/staff/gauntlet）
 const WEAPON_SRC = {
-    fist:     "assets/images/arena/hero_iso.png?v=2",
     sword:    "assets/images/arena/hero_iso_sword.png?v=1",
     book:     "assets/images/arena/hero_iso_book.png?v=1",
-    pencil:   "assets/images/arena/hero_iso_pencil.png?v=1",
     staff:    "assets/images/arena/hero_iso_staff.png?v=1",
     gauntlet: "assets/images/arena/hero_iso_gauntlet.png?v=1",
 };
