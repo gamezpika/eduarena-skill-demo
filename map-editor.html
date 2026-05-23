@@ -475,7 +475,8 @@ function renderPolygons() {
         poly.setAttribute('stroke', isSelected ? '#fdc500' : 'rgba(255,255,255,0.6)');
         poly.setAttribute('stroke-width', isSelected ? '3' : '2');
         poly.style.cursor = mode === 'bbox' ? 'move' : 'pointer';
-        poly.style.pointerEvents = 'auto';
+        // path 模式 polygon 不擋 click（讓地圖 click 穿透加 waypoint）
+        poly.style.pointerEvents = mode === 'bbox' ? 'auto' : 'none';
         poly.dataset.id = b.id;
 
         // 點 polygon 體 → 選中 / 拖整塊
@@ -777,10 +778,12 @@ mapFrame.addEventListener('click', e => {
 tabBbox.addEventListener('click', () => {
     mode = 'bbox'; tabBbox.classList.add('active'); tabPath.classList.remove('active');
     pathHint.classList.remove('show');
+    renderPolygons();  // 重 render 套用新 pointer-events
 });
 tabPath.addEventListener('click', () => {
     mode = 'path'; tabPath.classList.add('active'); tabBbox.classList.remove('active');
     pathHint.classList.add('show');
+    renderPolygons();
 });
 
 // 匯出 JSON
