@@ -30,6 +30,12 @@
             width: 100%; height: 100%;
             pointer-events: none; z-index: 30;
         }
+        /* polygon SVG overlay — 跟 mapImg 同 DOM 層，100% 1:1 對齊 */
+        .wd-polygon-svg {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 25;
+        }
         .wd-joystick {
             position: absolute; bottom: 16px; left: 16px;
             width: 100px; height: 100px;
@@ -116,6 +122,8 @@
                     <!-- 任務指引箭頭：浮在任務告示板正上方 pulse -->
                     <div class="quest-arrow" style="top:40%;left:73%;" aria-hidden="true"></div>
 
+                    <!-- Polygon SVG overlay (跟 mapImg 同 DOM 層完美對齊) -->
+                    <svg class="wd-polygon-svg" id="wd-polygon-svg" preserveAspectRatio="none" viewBox="0 0 1 1"></svg>
                     <!-- Three.js chibi 學生 canvas (跟著 .wd-world transform) -->
                     <canvas class="wd-chibi-canvas" id="wd-chibi-canvas"></canvas>
                 </div>
@@ -154,7 +162,7 @@
 </div>
 
 <script src="static/js/world.js?v=13"></script>
-<script type="module" src="static/js/world-chibi.js?v=11"></script>
+<script type="module" src="static/js/world-chibi.js?v=12"></script>
 
 </body>
 </html>

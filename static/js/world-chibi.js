@@ -175,40 +175,21 @@ import * as THREE from 'three';
     let py = -SCENE_H * 0.20;  // 偏上一點，避開頂部建築初始位置
     player.position.set(px, 0, py);
 
-    // ─── Debug: polygon 視覺化（紅色填充 + 邊框）讓派派一眼看對齊
-    const debugLines = [];
+    // ─── Polygon SVG overlay (DOM 層，跟 mapImg 100% 對齊)
+    const polygonSvg = document.getElementById('wd-polygon-svg');
     function renderPolygonDebug() {
-        debugLines.forEach(l => scene.remove(l));
-        debugLines.length = 0;
+        if (!polygonSvg) return;
+        polygonSvg.innerHTML = '';
         if (!mapConfig || !DEBUG_POLYGON) return;
         mapConfig.buildings.forEach(b => {
             if (!b.polygon || b.polygon.length < 3) return;
-            // 紅色半透明填充（ShapeGeometry 躺平到 XZ 平面）
-            const shape = new THREE.Shape(b.polygon.map(p => {
-                const { x, z } = normToScene(p.x, p.y);
-                return new THREE.Vector2(x, z);
-            }));
-            const fillGeo = new THREE.ShapeGeometry(shape);
-            const fillMat = new THREE.MeshBasicMaterial({
-                color: 0xff2050, transparent: true, opacity: 0.4, side: THREE.DoubleSide
-            });
-            const fill = new THREE.Mesh(fillGeo, fillMat);
-            fill.rotation.x = -Math.PI / 2;
-            fill.position.y = 0.3;
-            scene.add(fill);
-            debugLines.push(fill);
-
-            // 邊框 LineLoop
-            const points = b.polygon.map(p => {
-                const { x, z } = normToScene(p.x, p.y);
-                return new THREE.Vector3(x, 0.4, z);
-            });
-            points.push(points[0].clone());
-            const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const lineMat = new THREE.LineBasicMaterial({ color: 0xff0040 });
-            const line = new THREE.Line(lineGeo, lineMat);
-            scene.add(line);
-            debugLines.push(line);
+            const pts = b.polygon.map(p => `${p.x},${p.y}`).join(' ');
+            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            poly.setAttribute('points', pts);
+            poly.setAttribute('fill', 'rgba(255,32,80,0.40)');
+            poly.setAttribute('stroke', '#ff0040');
+            poly.setAttribute('stroke-width', '0.004');
+            polygonSvg.appendChild(poly);
         });
     }
     let DEBUG_POLYGON = true;  // 預設開，派派看完可 console eduChibi.toggleDebug() 關
@@ -276,21 +257,27 @@ import * as THREE from 'three';
         return inside;
     }
 
-    // ─── 擋區判斷：點是否在任何 building polygon 內 = 不可走
+    // ─── 把 scene 座標投影到「畫面 normalized」(跟 mapImg / polygon SVG 同座標系)
+    // 用 Three.js camera.project() 把 3D 點轉成 NDC，再換算 [0..1]
+    const _projVec = new THREE.Vector3();
+    function sceneToScreenNorm(sceneX, sceneZ) {
+        _projVec.set(sceneX, 0, sceneZ);
+        _projVec.project(camera);  // → NDC [-1, 1]
+        return {
+            nx: (_projVec.x + 1) / 2,
+            ny: (-_projVec.y + 1) / 2,  // NDC Y 翻轉（top = +1 NDC = 0 screen）
+        };
+    }
+
+    // ─── 擋區判斷：用 chibi 在「畫面 normalized」對 polygon 判斷
     function isWalkable(sceneX, sceneZ) {
         if (!mapConfig) return true;
-        const { nx, ny } = sceneToNorm(sceneX, sceneZ);
-        // 場景邊界
+        const { nx, ny } = sceneToScreenNorm(sceneX, sceneZ);
+        // 畫面邊界
         if (nx < 0.02 || nx > 0.98 || ny < 0.02 || ny > 0.98) return false;
-        // 任一 building polygon 內 = 擋
         for (const b of mapConfig.buildings) {
-            const poly = b.polygon || (b.bounding_box ? [
-                {x: b.bounding_box.x_min, y: b.bounding_box.y_min},
-                {x: b.bounding_box.x_max, y: b.bounding_box.y_min},
-                {x: b.bounding_box.x_max, y: b.bounding_box.y_max},
-                {x: b.bounding_box.x_min, y: b.bounding_box.y_max},
-            ] : null);
-            if (!poly) continue;
+            const poly = b.polygon;
+            if (!poly || poly.length < 3) continue;
             if (pointInPolygon(nx, ny, poly)) return false;
         }
         return true;
