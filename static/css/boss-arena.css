@@ -125,7 +125,7 @@
     flex: 1;
     position: relative;
     min-height: 0;
-    background-image: url("../../assets/images/arena/arena_5x5.png?v=1");
+    background-image: url("../../assets/images/arena/dungeon_bg.png?v=2");
     background-size: cover;
     background-position: center;
     overflow: hidden;
@@ -168,17 +168,60 @@
     100% { opacity: 0; }
 }
 
-/* ===== 4×4 等距棋盤格（隱形錨點，視覺由 arena_4x4.png 圖片提供） =====
-   派派 5/23：方案 Codex 生 4×4 棋盤底圖，CSS 只放隱形 anchor 16 個
-   座標規則：col x ∈ [0,3] 由左到右；row y ∈ [0,3] 由下到上
-   每加 1 col → +8% X / -5% Y；每加 1 row → +5% X / -8% Y
-   基準 (0,0) = (28%, 70%) */
+/* ===== 5×5 等距棋盤獨立網格層（CSS overlay，疊在 tier bg 上）=====
+   派派 5/23：保留 tier bg，棋盤是 CSS 動態高亮層
+   每格 transform 菱形（rotate 45° + scaleY 0.5），平時隱形
+   只有 .hero-pos / .move-range / .attack-range / .boss-pos 才顯示 */
 .grid-cell {
     position: absolute;
-    width: 1px;
-    height: 1px;
+    width: 72px;
+    height: 72px;
+    transform: translate(-50%, -50%) rotate(45deg) scaleY(0.5);
+    transform-origin: 50% 50%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
+    border: 1px solid rgba(255, 240, 200, 0);   /* default 隱形 */
+    background: transparent;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+}
+
+/* 主角當前格：金色 */
+.grid-cell.hero-pos {
+    border: 2px solid rgba(255, 230, 100, 0.95);
+    background: radial-gradient(ellipse at center, rgba(255, 220, 100, 0.30) 0%, rgba(220, 150, 50, 0.18) 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 200, 0.5), 0 0 14px rgba(255, 220, 100, 0.6);
+}
+
+/* 移動範圍：淺藍 */
+.grid-cell.move-range {
+    border: 1px solid rgba(100, 180, 255, 0.7);
+    background: rgba(100, 180, 255, 0.10);
+    box-shadow: inset 0 0 0 1px rgba(180, 220, 255, 0.3);
+}
+
+/* 攻擊範圍：紅色 */
+.grid-cell.attack-range {
+    border: 1px solid rgba(255, 80, 80, 0.85);
+    background: rgba(255, 50, 50, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(255, 150, 150, 0.4), 0 0 10px rgba(255, 60, 60, 0.4);
+}
+
+/* attack-range + hero-pos = 主角站攻擊範圍 → 橘紅脈動 */
+.grid-cell.attack-range.hero-pos {
+    border: 2px solid rgba(255, 150, 60, 1);
+    background: radial-gradient(ellipse at center, rgba(255, 180, 60, 0.4) 0%, rgba(200, 60, 30, 0.3) 100%);
+    box-shadow: inset 0 0 0 2px rgba(255, 220, 130, 0.6), 0 0 18px rgba(255, 120, 60, 0.8);
+    animation: cellAttackPulse 1.4s ease-in-out infinite;
+}
+@keyframes cellAttackPulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(255, 220, 130, 0.6), 0 0 18px rgba(255, 120, 60, 0.8); }
+    50%      { box-shadow: inset 0 0 0 2px rgba(255, 230, 150, 0.9), 0 0 28px rgba(255, 140, 70, 1.0); }
+}
+
+/* 魔王格：紫色 */
+.grid-cell.boss-pos {
+    border: 1px solid rgba(180, 80, 220, 0.7);
+    background: rgba(150, 60, 180, 0.12);
 }
 
 /* 25 格 5×5 位置（對齊 arena_5x5.png 等距 lerp） */

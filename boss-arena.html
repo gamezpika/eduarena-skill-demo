@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=20">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=21">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -252,11 +252,34 @@ function updateBars() {
 }
 
 function updateGridHighlight() {
-    // 4×4：hero 用 data-x/data-y 觸發 CSS 位置 + z-index
     hero.dataset.x = state.heroPos.x;
     hero.dataset.y = state.heroPos.y;
 
-    // 右下戰況面板同步更新
+    // 5×5 grid 動態高亮（清所有 class → 重算）
+    document.querySelectorAll(".grid-cell").forEach(el => {
+        el.classList.remove("hero-pos", "move-range", "attack-range", "boss-pos");
+        const cx = parseInt(el.dataset.x, 10);
+        const cy = parseInt(el.dataset.y, 10);
+
+        // boss 格
+        if (cx === BOSS_POS.x && cy === BOSS_POS.y) {
+            el.classList.add("boss-pos");
+            return;
+        }
+
+        // 攻擊範圍 = boss 周圍 Chebyshev = 1
+        const distBoss = Math.max(Math.abs(cx - BOSS_POS.x), Math.abs(cy - BOSS_POS.y));
+        if (distBoss === 1) el.classList.add("attack-range");
+
+        // 移動範圍 = hero 周圍 Chebyshev = 1（之後可依技能調 range）
+        const distHero = Math.max(Math.abs(cx - state.heroPos.x), Math.abs(cy - state.heroPos.y));
+        if (distHero === 1) el.classList.add("move-range");
+
+        // hero 當前格
+        if (cx === state.heroPos.x && cy === state.heroPos.y) el.classList.add("hero-pos");
+    });
+
+    // 右下戰況面板
     const statusPanel = $("combat-status");
     const statusLine  = $("status-line");
     const statusDetail = $("status-detail");
@@ -707,8 +730,8 @@ function startArena() {
     boss.src = `assets/images/${tierData.sprite}?v=1`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
 
-    // 派派 5/23：戰場固定用 arena_4x4.png（棋盤），tier bg 不再覆蓋
-    // 如果未來要 tier bg 當底 + 4×4 棋盤當前景，需要重生 arena_4x4 為透明 PNG overlay
+    // 戰場用 tier 的 bg（15 張 boss 各自背景），5×5 棋盤是 CSS overlay 疊在上面
+    stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
