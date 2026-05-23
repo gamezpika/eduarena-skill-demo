@@ -180,6 +180,15 @@
     z-index: 2;
     overflow: visible;
 }
+/* DEBUG: 暫時的座標標籤（派派標完後移除） */
+.grid-label {
+    font: bold 2.2px sans-serif;
+    fill: rgba(255, 255, 255, 0.95);
+    paint-order: stroke;
+    stroke: rgba(0, 0, 0, 0.85);
+    stroke-width: 0.5px;
+    pointer-events: none;
+}
 .grid-tile {
     fill: transparent;
     stroke: rgba(120, 200, 255, 0.85);
