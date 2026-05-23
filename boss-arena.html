@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=38">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=39">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -713,34 +713,227 @@ async function getHitByBoss() {
     await moveBackward();
 }
 
-// B3 魔王投射物：能量球（依科目換顏色，不用 emoji），tier 越高越多 + 越大
+// ===== B3 魔王投射物：15 隻魔王各自的絕招（dispatcher → 8 primitive 組合）=====
 function spawnBossProjectile(tierLevel) {
     const subjKey = playerSetup.subject;
+    const pos = computeAttackPositions();
+    const key = `${subjKey}-t${tierLevel}`;
+    const handler = BOSS_ATTACKS[key] || ((p, s, t) => pStraightShot(p, s, t, 1));
+    handler(pos, subjKey, tierLevel);
+}
 
+function computeAttackPositions() {
     const bossRect = boss.getBoundingClientRect();
     const heroRect = hero.getBoundingClientRect();
     const stageRect = stage.getBoundingClientRect();
-    const bx = bossRect.left - stageRect.left + bossRect.width / 2;
-    const by = bossRect.top  - stageRect.top  + bossRect.height * 0.5;
-    const hx = heroRect.left - stageRect.left + heroRect.width / 2;
-    const hy = heroRect.top  - stageRect.top  + heroRect.height * 0.4;
+    return {
+        bx: bossRect.left - stageRect.left + bossRect.width / 2,
+        by: bossRect.top  - stageRect.top  + bossRect.height * 0.5,
+        hx: heroRect.left - stageRect.left + heroRect.width / 2,
+        hy: heroRect.top  - stageRect.top  + heroRect.height * 0.4,
+        stageW: stageRect.width,
+        stageH: stageRect.height,
+    };
+}
 
-    // tier 1=1 顆, tier 2=2 顆, tier 3=3 顆
-    const count = tierLevel;
+// ----- 8 primitive 攻擊動畫 -----
+
+// 1. 直線球（1+ 顆，可微 jitter）
+function pStraightShot(pos, subj, tier, count = 1, jitterSpread = 12) {
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const proj = document.createElement("div");
-            proj.className = `boss-proj subj-${subjKey} tier-${tierLevel}`;
-            proj.style.left = bx + "px";
-            proj.style.top  = by + "px";
-            const jitter = i * 15 - (count - 1) * 7.5;
-            proj.style.setProperty("--tx", (hx - bx + jitter) + "px");
-            proj.style.setProperty("--ty", (hy - by) + "px");
+            proj.className = `boss-proj subj-${subj} tier-${tier}`;
+            proj.style.left = pos.bx + "px";
+            proj.style.top  = pos.by + "px";
+            const jitter = (i - (count - 1) / 2) * jitterSpread;
+            proj.style.setProperty("--tx", (pos.hx - pos.bx + jitter) + "px");
+            proj.style.setProperty("--ty", (pos.hy - pos.by) + "px");
             stage.appendChild(proj);
             setTimeout(() => proj.remove(), 700);
-        }, i * 80);
+        }, i * 60);
     }
 }
+
+// 2. 扇形散射
+function pFanSpray(pos, subj, tier, count, spreadDeg = 40) {
+    const dx = pos.hx - pos.bx;
+    const dy = pos.hy - pos.by;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const baseAngle = Math.atan2(dy, dx);
+    const half = (spreadDeg * Math.PI / 180) / 2;
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const proj = document.createElement("div");
+            proj.className = `boss-proj subj-${subj} tier-${tier}`;
+            proj.style.left = pos.bx + "px";
+            proj.style.top  = pos.by + "px";
+            const ratio = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;  // -1 ~ 1
+            const angle = baseAngle + half * ratio;
+            proj.style.setProperty("--tx", Math.cos(angle) * dist + "px");
+            proj.style.setProperty("--ty", Math.sin(angle) * dist + "px");
+            stage.appendChild(proj);
+            setTimeout(() => proj.remove(), 750);
+        }, i * 50);
+    }
+}
+
+// 3. 螺旋齊射（先繞 orbit 點再飛向 hero）
+function pSpiralVolley(pos, subj, tier, count) {
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const proj = document.createElement("div");
+            proj.className = `boss-proj subj-${subj} tier-${tier} spiral`;
+            proj.style.left = pos.bx + "px";
+            proj.style.top  = pos.by + "px";
+            const angle = (i / count) * Math.PI * 2;
+            const orbitR = 70 + (i % 3) * 12;
+            proj.style.setProperty("--orbit-x", Math.cos(angle) * orbitR + "px");
+            proj.style.setProperty("--orbit-y", Math.sin(angle) * orbitR + "px");
+            proj.style.setProperty("--tx", (pos.hx - pos.bx) + "px");
+            proj.style.setProperty("--ty", (pos.hy - pos.by) + "px");
+            stage.appendChild(proj);
+            setTimeout(() => proj.remove(), 900);
+        }, i * 45);
+    }
+}
+
+// 4. 從天而降（從 hero 上方掉下來）
+function pRainFromAbove(pos, subj, tier, count) {
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const proj = document.createElement("div");
+            proj.className = `boss-proj subj-${subj} tier-${tier}`;
+            const startX = pos.hx + (Math.random() - 0.5) * 200;
+            const startY = -50;
+            proj.style.left = startX + "px";
+            proj.style.top  = startY + "px";
+            proj.style.setProperty("--tx", (pos.hx - startX) + "px");
+            proj.style.setProperty("--ty", (pos.hy - startY) + "px");
+            stage.appendChild(proj);
+            setTimeout(() => proj.remove(), 700);
+        }, i * 70);
+    }
+}
+
+// 5. 雷電鋸齒直線（SVG path，boss → hero）
+function pLightningLine(pos, subj, tier) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("class", `boss-lightning subj-${subj} tier-${tier}`);
+    svg.style.position = "absolute";
+    svg.style.left = "0";
+    svg.style.top  = "0";
+    svg.style.width  = pos.stageW + "px";
+    svg.style.height = pos.stageH + "px";
+    svg.style.pointerEvents = "none";
+    svg.style.zIndex = "200";
+
+    const dx = pos.hx - pos.bx;
+    const dy = pos.hy - pos.by;
+    const segs = 7;
+    let d = `M ${pos.bx} ${pos.by}`;
+    for (let i = 1; i < segs; i++) {
+        const t = i / segs;
+        const px = pos.bx + dx * t + (Math.random() - 0.5) * 35;
+        const py = pos.by + dy * t + (Math.random() - 0.5) * 35;
+        d += ` L ${px} ${py}`;
+    }
+    d += ` L ${pos.hx} ${pos.hy}`;
+
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "lightning-path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+
+    // 第二條較細的內部閃光
+    const path2 = document.createElementNS(svgNS, "path");
+    path2.setAttribute("class", "lightning-core");
+    path2.setAttribute("d", d);
+    svg.appendChild(path2);
+
+    stage.appendChild(svg);
+    setTimeout(() => svg.remove(), 500);
+}
+
+// 6. 匯聚爆炸（12 小光點向中心匯聚 → 爆出大球）
+function pConvergenceBlast(pos, subj, tier, count = 12) {
+    const cx = pos.hx;
+    const cy = pos.hy - 20;
+    for (let i = 0; i < count; i++) {
+        const orb = document.createElement("div");
+        orb.className = `boss-converge subj-${subj}`;
+        const angle = (i / count) * Math.PI * 2;
+        const r = 110 + (i % 3) * 10;
+        const startX = cx + Math.cos(angle) * r;
+        const startY = cy + Math.sin(angle) * r * 0.7;
+        orb.style.left = startX + "px";
+        orb.style.top  = startY + "px";
+        orb.style.setProperty("--tx", (cx - startX) + "px");
+        orb.style.setProperty("--ty", (cy - startY) + "px");
+        stage.appendChild(orb);
+        setTimeout(() => orb.remove(), 320);
+    }
+    // 匯聚完爆炸大球（500ms 後命中時剛好爆開）
+    setTimeout(() => {
+        const big = document.createElement("div");
+        big.className = `boss-proj subj-${subj} tier-${tier} big-blast`;
+        big.style.left = cx + "px";
+        big.style.top  = cy + "px";
+        big.style.setProperty("--tx", "0px");
+        big.style.setProperty("--ty", "0px");
+        stage.appendChild(big);
+        setTimeout(() => big.remove(), 500);
+    }, 300);
+}
+
+// 7. 環繞主角後爆炸
+function pOrbitBlast(pos, subj, tier, count) {
+    for (let i = 0; i < count; i++) {
+        const orb = document.createElement("div");
+        orb.className = `boss-proj subj-${subj} tier-${tier} orbit`;
+        orb.style.left = pos.hx + "px";
+        orb.style.top  = pos.hy + "px";
+        orb.style.animationDelay = (i / count * 0.15) + "s";
+        orb.style.setProperty("--orbit-start", (i / count * 360) + "deg");
+        stage.appendChild(orb);
+        setTimeout(() => orb.remove(), 950);
+    }
+}
+
+// 8. 大印章從天蓋下（圓盤或星形落到 hero 上）
+function pStampFromSky(pos, subj, tier, shape = "shape-disc") {
+    const stamp = document.createElement("div");
+    stamp.className = `boss-stamp subj-${subj} tier-${tier} ${shape}`;
+    stamp.style.left = pos.hx + "px";
+    stamp.style.top  = pos.hy + "px";
+    stage.appendChild(stamp);
+    setTimeout(() => stamp.remove(), 750);
+}
+
+// ----- 15 隻魔王絕招 dispatcher -----
+const BOSS_ATTACKS = {
+    // 📐 數學：公式彈幕 / 方程式追擊 / 圓周率風暴
+    "math-t1":    (p, s, t) => pStraightShot(p, s, t, 1),
+    "math-t2":    (p, s, t) => pFanSpray(p, s, t, 3, 28),
+    "math-t3":    (p, s, t) => { pSpiralVolley(p, s, t, 9); setTimeout(() => pStraightShot(p, s, 3, 1, 0), 480); },
+    // 📕 國語：成語投擲 / 典故狂流 / 萬卷書海
+    "chinese-t1": (p, s, t) => pStraightShot(p, s, t, 1),
+    "chinese-t2": (p, s, t) => pRainFromAbove(p, s, t, 5),
+    "chinese-t3": (p, s, t) => { pRainFromAbove(p, s, t, 7); setTimeout(() => pFanSpray(p, s, 3, 5, 60), 280); },
+    // 🔤 英文：字母飛彈 / 單字漩渦 / 文法審判
+    "english-t1": (p, s, t) => pStraightShot(p, s, t, 1),
+    "english-t2": (p, s, t) => pSpiralVolley(p, s, t, 5),
+    "english-t3": (p, s, t) => { pStampFromSky(p, s, t, "shape-star"); setTimeout(() => pStraightShot(p, s, 3, 3, 20), 180); },
+    // 🔬 自然：酸液腐蝕 / 閃電鏈 / 核融合爆破
+    "science-t1": (p, s, t) => pStraightShot(p, s, t, 1),
+    "science-t2": (p, s, t) => pLightningLine(p, s, t),
+    "science-t3": (p, s, t) => pConvergenceBlast(p, s, t, 12),
+    // 🌏 社會：歷史長矛 / 地理風暴 / 文明審判
+    "social-t1":  (p, s, t) => pStraightShot(p, s, t, 1),
+    "social-t2":  (p, s, t) => pOrbitBlast(p, s, t, 3),
+    "social-t3":  (p, s, t) => pStampFromSky(p, s, t, "shape-disc"),
+};
 
 
 function showToast(text) {

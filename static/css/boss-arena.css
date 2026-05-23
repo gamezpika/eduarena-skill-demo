@@ -970,6 +970,131 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     background: radial-gradient(circle, #ffffff 0%, #ffe080 25%, #ffa820 55%, #805010 100%);
     box-shadow: 0 0 18px rgba(255, 180, 40, 0.95), 0 0 32px rgba(230, 140, 30, 0.55);
 }
+
+/* ===== 15 隻魔王絕招視覺（8 primitive 對應的 CSS）===== */
+
+/* 螺旋齊射：先繞 orbit 點再飛向 hero */
+.boss-proj.spiral {
+    animation: bossSpiral 0.85s cubic-bezier(0.35, 0, 0.65, 1) forwards;
+}
+@keyframes bossSpiral {
+    0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    18%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    55%  { transform: translate(calc(-50% + var(--orbit-x)), calc(-50% + var(--orbit-y))) scale(1.05); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.4); opacity: 1; }
+}
+
+/* big-blast：核融合爆破後的大球（沒有飛行、原地爆開）*/
+.boss-proj.big-blast {
+    width: 70px;
+    height: 70px;
+    animation: bossBigBlast 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+}
+.boss-proj.big-blast.tier-3 {
+    width: 100px;
+    height: 100px;
+}
+@keyframes bossBigBlast {
+    0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; filter: brightness(2); }
+    25%  { transform: translate(-50%, -50%) scale(1.6); opacity: 1; filter: brightness(1.5); }
+    100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; filter: brightness(1); }
+}
+
+/* orbit：環繞 hero 0.85s 後爆開 */
+.boss-proj.orbit {
+    animation: bossOrbitBlast 0.85s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+    transform-origin: -60px 0;
+}
+@keyframes bossOrbitBlast {
+    0%   { transform: translate(-50%, -50%) rotate(var(--orbit-start, 0deg)) translateX(80px) scale(0.4); opacity: 0; }
+    15%  { transform: translate(-50%, -50%) rotate(calc(var(--orbit-start, 0deg) + 90deg)) translateX(80px) scale(1); opacity: 1; }
+    75%  { transform: translate(-50%, -50%) rotate(calc(var(--orbit-start, 0deg) + 540deg)) translateX(70px) scale(1.15); opacity: 1; }
+    100% { transform: translate(-50%, -50%) rotate(calc(var(--orbit-start, 0deg) + 720deg)) translateX(15px) scale(1.6); opacity: 0.4; }
+}
+
+/* 雷電鋸齒（SVG path stroke）*/
+.boss-lightning .lightning-path {
+    fill: none;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.85;
+    animation: lightningFlash 0.5s ease-out forwards;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+.boss-lightning .lightning-core {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 1;
+    animation: lightningFlash 0.5s ease-out forwards;
+}
+@keyframes lightningFlash {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    50%  { opacity: 0.9; }
+    100% { opacity: 0; }
+}
+.boss-lightning.subj-science .lightning-path { stroke: #40ff80; color: #40ff80; }
+.boss-lightning.subj-math    .lightning-path { stroke: #4090ff; color: #4090ff; }
+.boss-lightning.subj-chinese .lightning-path { stroke: #ff5028; color: #ff5028; }
+.boss-lightning.subj-english .lightning-path { stroke: #a050ff; color: #a050ff; }
+.boss-lightning.subj-social  .lightning-path { stroke: #ffaa20; color: #ffaa20; }
+
+/* boss-converge：12 個小光點向中心匯聚 */
+.boss-converge {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    z-index: 199;
+    pointer-events: none;
+    background: radial-gradient(circle, #ffffff 0%, #ffaa50 40%, #ff5020 80%, transparent 100%);
+    box-shadow: 0 0 10px rgba(255, 100, 40, 0.9);
+    transform: translate(-50%, -50%);
+    animation: bossConverge 0.32s ease-in forwards;
+}
+.boss-converge.subj-math    { background: radial-gradient(circle, #fff 0%, #88ccff 40%, #2080ff 80%, transparent 100%); box-shadow: 0 0 10px rgba(60, 130, 255, 0.9); }
+.boss-converge.subj-chinese { background: radial-gradient(circle, #fff 0%, #ffb070 40%, #ff5028 80%, transparent 100%); box-shadow: 0 0 10px rgba(255, 90, 40, 0.9); }
+.boss-converge.subj-english { background: radial-gradient(circle, #fff 0%, #cc8aff 40%, #8030ff 80%, transparent 100%); box-shadow: 0 0 10px rgba(150, 60, 255, 0.9); }
+.boss-converge.subj-science { background: radial-gradient(circle, #fff 0%, #88ff88 40%, #20c040 80%, transparent 100%); box-shadow: 0 0 10px rgba(60, 220, 80, 0.9); }
+.boss-converge.subj-social  { background: radial-gradient(circle, #fff 0%, #ffe080 40%, #ffa820 80%, transparent 100%); box-shadow: 0 0 10px rgba(255, 180, 40, 0.9); }
+@keyframes bossConverge {
+    0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+    20%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.5); opacity: 0; }
+}
+
+/* boss-stamp：大圓盤/星形從天蓋下 */
+.boss-stamp {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    z-index: 205;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    animation: bossStampDrop 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+}
+.boss-stamp.tier-3 { width: 120px; height: 120px; }
+.boss-stamp.shape-disc {
+    border-radius: 50%;
+}
+.boss-stamp.shape-star {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.boss-stamp.subj-math    { background: radial-gradient(circle, #fff 0%, #88ccff 30%, #2080ff 65%, #103080 100%); box-shadow: 0 0 28px rgba(60, 130, 255, 0.95); }
+.boss-stamp.subj-chinese { background: radial-gradient(circle, #fff 0%, #ffb070 30%, #ff5028 65%, #802018 100%); box-shadow: 0 0 28px rgba(255, 90, 40, 0.95); }
+.boss-stamp.subj-english { background: radial-gradient(circle, #fff 0%, #cc8aff 30%, #8030ff 65%, #401080 100%); box-shadow: 0 0 28px rgba(150, 60, 255, 0.95); }
+.boss-stamp.subj-science { background: radial-gradient(circle, #fff 0%, #88ff88 30%, #20c040 65%, #105030 100%); box-shadow: 0 0 28px rgba(60, 220, 80, 0.95); }
+.boss-stamp.subj-social  { background: radial-gradient(circle, #fff 0%, #ffe080 30%, #ffa820 65%, #805010 100%); box-shadow: 0 0 28px rgba(255, 180, 40, 0.95); }
+@keyframes bossStampDrop {
+    0%   { transform: translate(-50%, -380%) scale(0.4) rotate(-15deg); opacity: 0; }
+    55%  { transform: translate(-50%, -50%) scale(1.25) rotate(8deg); opacity: 1; }
+    80%  { transform: translate(-50%, -50%) scale(1.0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5) rotate(0deg); opacity: 0; }
+}
 @keyframes bossProjFly {
     0%   { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 0; }
     20%  { transform: translate(-50%, -50%) scale(1) rotate(120deg); opacity: 1; }
