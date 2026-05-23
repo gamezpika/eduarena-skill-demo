@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=45">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=46">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -75,7 +75,7 @@
 
             <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
 
-            <!-- 上方主角 HUD（木框） -->
+            <!-- 上方主角 HUD（木框）— 派派 5/24 把科目+距離合進來，戰場不再被壓 -->
             <div class="arena-hud">
                 <div class="hero-card">
                     <div class="hero-portrait">
@@ -94,20 +94,12 @@
                                 <span class="bar-value" id="hero-mp-num">50 / 50</span>
                                 <div class="bar-track"><div class="bar-fill mp" id="hero-mp-fill" style="width: 100%"></div></div>
                             </div>
+                            <div class="hero-meta">
+                                <span class="meta-pill" id="info-subject-name">📘 數學·五年級·T1</span>
+                                <span class="meta-pill meta-status" id="combat-status">📍 距離 2 格</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 狀態欄下方：科目 + 戰況距離（派派 5/24 從戰場左下右下移過來，讓題目區可往上推）-->
-            <div class="arena-info-strip">
-                <div class="info-panel info-subject">
-                    <div class="panel-title" id="info-subject-name">📘 數學</div>
-                    <div class="panel-sub" id="info-subject-sub">五年級 · G5</div>
-                </div>
-                <div class="info-panel info-status" id="combat-status">
-                    <div class="status-line" id="status-line">📍 接近中</div>
-                    <div class="status-detail" id="status-detail">距離魔王 3 格</div>
                 </div>
             </div>
 
@@ -351,20 +343,16 @@ function updateGridHighlight() {
         if (cx === state.heroPos.x && cy === state.heroPos.y) el.classList.add("hero-pos");
     });
 
-    // 右下戰況面板
+    // 戰況 pill（合進主角卡的單行版）
     const statusPanel = $("combat-status");
-    const statusLine  = $("status-line");
-    const statusDetail = $("status-detail");
     const dist = chebyshev(state.heroPos, BOSS_POS);
 
     if (inAttackRange(state.heroPos)) {
         statusPanel.classList.add("in-range");
-        statusLine.innerHTML = "⚔ 攻擊範圍！";
-        statusDetail.innerHTML = "下一題答對 = 攻擊";
+        statusPanel.textContent = "⚔ 攻擊範圍！";
     } else {
         statusPanel.classList.remove("in-range");
-        statusLine.innerHTML = "📍 接近中";
-        statusDetail.innerHTML = `距離魔王 ${dist} 格`;
+        statusPanel.textContent = `📍 距離 ${dist} 格`;
     }
 }
 
@@ -1239,8 +1227,7 @@ async function startArena() {
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
-    document.getElementById("info-subject-name").textContent = subj.emoji + " " + subj.label;
-    document.getElementById("info-subject-sub").textContent = `五年級 · ${tierData.label}`;
+    document.getElementById("info-subject-name").textContent = `${subj.emoji} ${subj.label}·五年級·${tierData.label}`;
 
     // 套用職業 buff + 主角造型 sprite + 對應武器動畫
     applyJobBuff();

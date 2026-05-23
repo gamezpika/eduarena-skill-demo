@@ -689,7 +689,7 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     font-size: 18px;
     line-height: 1.4;
     font-weight: 700;
-    min-height: 140px;       /* 派派 5/24：題目區再吃高一點，多遮背景空出長題目空間 */
+    min-height: 110px;       /* 派派 5/24：吃 2-3 行長題目空間，但不過度壓戰場 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -798,78 +798,44 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 }
 .overlay-btn:active { transform: scale(0.96); }
 
-/* ===== 狀態欄下方資訊條（派派 5/24 從戰場底部移上來）===== */
-.arena-info-strip {
-    flex-shrink: 0;
+/* ===== 主角卡內的單行資訊（派派 5/24 合進來，戰場不被壓）===== */
+.hero-meta {
     display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 0 14px 8px;
-    z-index: 3;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
 }
-.info-panel {
-    position: static;       /* 改 static 跟 flex 排版（原本是 arena-stage 內 absolute）*/
-    flex: 1;
-    background:
-        linear-gradient(135deg, rgba(80, 50, 22, 0.92) 0%, rgba(50, 30, 12, 0.94) 100%);
-    border: 2px solid rgba(120, 90, 50, 0.85);
-    border-radius: 10px;
-    padding: 6px 12px;
-    color: #ffe6a8;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-    font-size: 13px;
-    line-height: 1.4;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 220, 160, 0.3),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.4),
-        0 3px 8px rgba(0, 0, 0, 0.6);
-}
-
-/* 科目（左半）*/
-.info-subject {
-    min-width: 100px;
-}
-.info-subject .panel-title {
-    font-weight: 700;
-    font-size: 14px;
+.meta-pill {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 10px;
+    background: rgba(60, 36, 14, 0.85);
+    border: 1px solid rgba(120, 90, 50, 0.7);
+    border-radius: 999px;
     color: #ffd980;
-    margin-bottom: 2px;
-    letter-spacing: 0.5px;
-}
-.info-subject .panel-sub {
-    font-size: 11px;
-    color: rgba(255, 230, 180, 0.85);
-}
-
-/* 戰況（右半）*/
-.info-status {
-    min-width: 110px;
-    text-align: right;
-    transition: border-color 0.4s, background 0.4s;
-}
-.info-status .status-line {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    font-size: 12px;
     font-weight: 700;
-    font-size: 13px;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 }
-.info-status .status-detail {
-    font-size: 11px;
-    color: rgba(255, 230, 180, 0.85);
+.meta-pill.meta-status {
+    transition: border-color 0.4s, background 0.4s, color 0.4s;
 }
-/* 進入攻擊範圍時面板變紅 + 脈動 */
-.info-status.in-range {
+.meta-pill.meta-status.in-range {
+    color: #fff;
     border-color: rgba(255, 100, 60, 1);
-    background:
-        linear-gradient(135deg, rgba(160, 50, 22, 0.92) 0%, rgba(110, 28, 10, 0.94) 100%);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 200, 160, 0.4),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.4),
-        0 3px 12px rgba(255, 80, 40, 0.7);
+    background: linear-gradient(135deg, rgba(160, 50, 22, 0.92) 0%, rgba(110, 28, 10, 0.94) 100%);
+    box-shadow: 0 0 12px rgba(255, 80, 40, 0.7);
     animation: statusPulse 1.4s ease-in-out infinite;
 }
-.info-status.in-range .status-line { color: #fff; }
 @keyframes statusPulse {
-    0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.4), 0 3px 12px rgba(255, 80, 40, 0.7); }
-    50%      { box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.6), 0 3px 20px rgba(255, 120, 60, 1); }
+    0%, 100% { box-shadow: 0 0 12px rgba(255, 80, 40, 0.7); }
+    50%      { box-shadow: 0 0 20px rgba(255, 120, 60, 1); }
 }
 
 /* ===== 新 VFX（combat-engine 註冊用） ===== */
