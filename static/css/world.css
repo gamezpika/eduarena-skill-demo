@@ -164,7 +164,7 @@
     position: relative;
     width: 100%;
     /* JS 設 width × MAP_RATIO（地圖 9:16 比例）+ background-size 100% 100% 不變形 */
-    background: url("../../assets/images/world_map_v4.png?v=1") center / 100% 100% no-repeat;
+    background: url("../../assets/images/world_map_iso.png?v=1") center / 100% 100% no-repeat;
     will-change: transform;
 }
 

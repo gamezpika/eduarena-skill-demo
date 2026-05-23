@@ -13,7 +13,39 @@
     <meta name="description" content="EduArena 探索地圖技術 Demo — 大背景可上下滑動的探索感地圖。">
     <title>EduArena 探索地圖 Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/world.css?v=25">
+    <link rel="stylesheet" href="static/css/world.css?v=26">
+
+    <!-- Three.js (給 chibi 小學生 canvas) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        .wd-chibi-canvas {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 30;
+        }
+        .wd-joystick {
+            position: absolute; bottom: 16px; left: 16px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.18);
+            border: 2px solid rgba(255,255,255,0.45);
+            border-radius: 50%; z-index: 50; touch-action: none;
+        }
+        .wd-joystick-knob {
+            position: absolute; top: 50%; left: 50%;
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; transition: background 0.1s;
+        }
+        .wd-joystick.active .wd-joystick-knob { background: rgba(255,200,100,1); }
+    </style>
 </head>
 <body>
 
@@ -84,11 +116,18 @@
                     <!-- 任務指引箭頭：浮在任務告示板正上方 pulse -->
                     <div class="quest-arrow" style="top:40%;left:73%;" aria-hidden="true"></div>
 
+                    <!-- Three.js chibi 學生 canvas (跟著 .wd-world transform) -->
+                    <canvas class="wd-chibi-canvas" id="wd-chibi-canvas"></canvas>
                 </div>
                 <!-- 晝夜變化 overlay（60 秒一循環：晨→日→晚→夜） -->
                 <div class="wd-daynight" aria-hidden="true"></div>
 
-                <div class="wd-hint">↕ ↔ 拖曳地圖；點建築 / 島嶼進入</div>
+                <div class="wd-hint">↕ ↔ 拖曳地圖；點建築 / 島嶼進入；⬆⬇←→ 走 chibi</div>
+            </div>
+
+            <!-- 觸控搖桿（獨立於 viewport 拖曳） -->
+            <div class="wd-joystick" id="wd-joystick">
+                <div class="wd-joystick-knob" id="wd-joystick-knob"></div>
             </div>
 
             <!-- Demo Modal（沿用 demo.css） -->
@@ -114,7 +153,8 @@
     </div>
 </div>
 
-<script src="static/js/world.js?v=12"></script>
+<script src="static/js/world.js?v=13"></script>
+<script type="module" src="static/js/world-chibi.js?v=8"></script>
 
 </body>
 </html>

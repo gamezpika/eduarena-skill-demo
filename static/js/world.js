@@ -11,10 +11,10 @@
     const world = document.getElementById("wd-world");
     if (!vp || !world) return;
 
-    // ─── world 維持地圖原 9:16 比例（width × 1672/941 ≈ 1.776）
+    // ─── world isometric map 1024×1024 = 1:1 比例
     // 寬 = viewport × 1.5（左右拖曳空間更大，地圖細節也更大）
-    // 高 = 寬 × 地圖 ratio（不變形）
-    const MAP_RATIO = 1672 / 941;
+    // 高 = 寬 × MAP_RATIO（1.0 = 正方形）
+    const MAP_RATIO = 1.0;
     function fitWorldSize() {
         const w = vp.clientWidth;
         const vpH = vp.clientHeight;
