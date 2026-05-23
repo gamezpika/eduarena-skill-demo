@@ -125,7 +125,7 @@
     flex: 1;
     position: relative;
     min-height: 0;
-    background-image: url("../../assets/images/arena/dungeon_bg.png?v=2");
+    background-image: url("../../assets/images/arena/arena_4x4.png?v=1");
     background-size: cover;
     background-position: center;
     overflow: hidden;
@@ -168,44 +168,70 @@
     100% { opacity: 0; }
 }
 
-/* ===== 等距棋盤格（隱形錨點，視覺已砍） =====
-   派派 5/23 指示：移動格不用顯示
-   保留 .grid-cell div 作位置邏輯錨點，但無 background/border。
-   未來如要恢復視覺反饋，加 class 即可。 */
+/* ===== 4×4 等距棋盤格（隱形錨點，視覺由 arena_4x4.png 圖片提供） =====
+   派派 5/23：方案 Codex 生 4×4 棋盤底圖，CSS 只放隱形 anchor 16 個
+   座標規則：col x ∈ [0,3] 由左到右；row y ∈ [0,3] 由下到上
+   每加 1 col → +8% X / -5% Y；每加 1 row → +5% X / -8% Y
+   基準 (0,0) = (28%, 70%) */
 .grid-cell {
     position: absolute;
-    width: 1px;  /* 不佔空間 */
+    width: 1px;
     height: 1px;
     pointer-events: none;
     z-index: 1;
 }
 
-/* 5 格位置（拉開 col 3 → col 4 距離避免擋住主角）
-   col 0~3 主角可走 / col 4 魔王固定 */
-.grid-cell[data-col="0"] { left: 24%; bottom: 18%; }
-.grid-cell[data-col="1"] { left: 34%; bottom: 22%; }
-.grid-cell[data-col="2"] { left: 44%; bottom: 26%; }
-.grid-cell[data-col="3"] { left: 54%; bottom: 30%; }
-.grid-cell[data-col="4"] { left: 78%; bottom: 35%; }
+/* 16 格位置（手動 lerp 等距 pos）*/
+/* row 0 (最近) */
+.grid-cell[data-x="0"][data-y="0"] { left: 28%; bottom: 25%; }
+.grid-cell[data-x="1"][data-y="0"] { left: 36%; bottom: 22%; }
+.grid-cell[data-x="2"][data-y="0"] { left: 44%; bottom: 19%; }
+.grid-cell[data-x="3"][data-y="0"] { left: 52%; bottom: 16%; }
+/* row 1 */
+.grid-cell[data-x="0"][data-y="1"] { left: 33%; bottom: 32%; }
+.grid-cell[data-x="1"][data-y="1"] { left: 41%; bottom: 29%; }
+.grid-cell[data-x="2"][data-y="1"] { left: 49%; bottom: 26%; }
+.grid-cell[data-x="3"][data-y="1"] { left: 57%; bottom: 23%; }
+/* row 2 */
+.grid-cell[data-x="0"][data-y="2"] { left: 38%; bottom: 39%; }
+.grid-cell[data-x="1"][data-y="2"] { left: 46%; bottom: 36%; }
+.grid-cell[data-x="2"][data-y="2"] { left: 54%; bottom: 33%; }
+.grid-cell[data-x="3"][data-y="2"] { left: 62%; bottom: 30%; }
+/* row 3 (最遠) */
+.grid-cell[data-x="0"][data-y="3"] { left: 43%; bottom: 46%; }
+.grid-cell[data-x="1"][data-y="3"] { left: 51%; bottom: 43%; }
+.grid-cell[data-x="2"][data-y="3"] { left: 59%; bottom: 40%; }
+.grid-cell[data-x="3"][data-y="3"] { left: 67%; bottom: 37%; }
 
-/* 主角站位 — sprite 縮小避免擋魔王 */
+/* 主角站位 — 用 data-x/data-y 對位 */
 .fighter-hero {
     position: absolute;
-    width: 75px;
+    width: 80px;
     height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
     animation: heroIdle 2.4s ease-in-out infinite;
-    /* z-index 由 JS 算 Y-sort（P3）：z = (4 - col) + 10 → 近格在前 */
     transition: left 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
                 bottom 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
-/* P3 Y-sort：z-index 依 col 計算（近格=畫面下方=高 z；遠格=畫面上方=低 z） */
-.fighter-hero[data-col="0"] { left: 24%; bottom: 18%; z-index: 14; }
-.fighter-hero[data-col="1"] { left: 34%; bottom: 22%; z-index: 13; }
-.fighter-hero[data-col="2"] { left: 44%; bottom: 26%; z-index: 12; }
-.fighter-hero[data-col="3"] { left: 54%; bottom: 30%; z-index: 11; }
+/* Y-sort：z-index = (3-y) + (3-x) + 10，近格 (y/x 小) z 大 */
+.fighter-hero[data-x="0"][data-y="0"] { left: 28%; bottom: 25%; z-index: 18; }
+.fighter-hero[data-x="1"][data-y="0"] { left: 36%; bottom: 22%; z-index: 17; }
+.fighter-hero[data-x="2"][data-y="0"] { left: 44%; bottom: 19%; z-index: 16; }
+.fighter-hero[data-x="3"][data-y="0"] { left: 52%; bottom: 16%; z-index: 15; }
+.fighter-hero[data-x="0"][data-y="1"] { left: 33%; bottom: 32%; z-index: 17; }
+.fighter-hero[data-x="1"][data-y="1"] { left: 41%; bottom: 29%; z-index: 16; }
+.fighter-hero[data-x="2"][data-y="1"] { left: 49%; bottom: 26%; z-index: 15; }
+.fighter-hero[data-x="3"][data-y="1"] { left: 57%; bottom: 23%; z-index: 14; }
+.fighter-hero[data-x="0"][data-y="2"] { left: 38%; bottom: 39%; z-index: 16; }
+.fighter-hero[data-x="1"][data-y="2"] { left: 46%; bottom: 36%; z-index: 15; }
+.fighter-hero[data-x="2"][data-y="2"] { left: 54%; bottom: 33%; z-index: 14; }
+.fighter-hero[data-x="3"][data-y="2"] { left: 62%; bottom: 30%; z-index: 13; }
+.fighter-hero[data-x="0"][data-y="3"] { left: 43%; bottom: 46%; z-index: 15; }
+.fighter-hero[data-x="1"][data-y="3"] { left: 51%; bottom: 43%; z-index: 14; }
+.fighter-hero[data-x="2"][data-y="3"] { left: 59%; bottom: 40%; z-index: 13; }
+.fighter-hero[data-x="3"][data-y="3"] { left: 67%; bottom: 37%; z-index: 12; }
 .fighter-hero.hit { animation: heroHit 0.5s; }
 .fighter-hero.entering { animation: heroEnter 1.1s cubic-bezier(0.34, 1.3, 0.5, 1) both; }
 .fighter-hero.attacking { animation: heroAttackDash 0.65s cubic-bezier(0.55, 0.05, 0.35, 1.4); }
@@ -299,19 +325,18 @@
     100% { transform: translateX(-50%) translateY(-12px) scale(1.1); filter: drop-shadow(0 0 22px #ffd54d) brightness(1.25); }
 }
 
-/* 魔王站位（col 4 = left 78%, bottom 35% — 踩到實際地板 + 拉開不擋主角）*/
+/* 魔王站位（4×4 右上角 = (3,3) = left 67%, bottom 37%）*/
 .fighter-boss {
     position: absolute;
-    left: 78%;
-    bottom: 35%;
-    width: 95px;
+    left: 67%;
+    bottom: 37%;
+    width: 100px;
     height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
     animation: bossIdle 3s ease-in-out infinite;
-    /* z-index 固定低層（P3 Y-sort）：boss z=10，主角任意 col z = (4-col)+10 都 >= 11 */
-    z-index: 10;
+    z-index: 12;   /* (3,3) Y-sort = 12，主角靠近的格子會在前 */
 }
 .fighter-boss.hit { animation: bossHit 0.5s; }
 .fighter-boss.defeated {

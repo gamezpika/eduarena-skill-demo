@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=17">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=18">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -115,14 +115,25 @@
                     <button class="skill-btn" data-skill="mega_strike"  title="必殺技 ×3 dmg + 全螢幕"><span class="skill-emoji">💥</span><span class="skill-label">必殺</span></button>
                 </div>
 
-                <!-- 5 個隱形錨點（不顯示視覺，只當位置邏輯） -->
-                <div class="grid-cell" data-col="0"></div>
-                <div class="grid-cell" data-col="1"></div>
-                <div class="grid-cell" data-col="2"></div>
-                <div class="grid-cell" data-col="3"></div>
-                <div class="grid-cell" data-col="4"></div>
+                <!-- 4×4 隱形錨點，視覺由 arena_4x4.png 提供 -->
+                <div class="grid-cell" data-x="0" data-y="0"></div>
+                <div class="grid-cell" data-x="1" data-y="0"></div>
+                <div class="grid-cell" data-x="2" data-y="0"></div>
+                <div class="grid-cell" data-x="3" data-y="0"></div>
+                <div class="grid-cell" data-x="0" data-y="1"></div>
+                <div class="grid-cell" data-x="1" data-y="1"></div>
+                <div class="grid-cell" data-x="2" data-y="1"></div>
+                <div class="grid-cell" data-x="3" data-y="1"></div>
+                <div class="grid-cell" data-x="0" data-y="2"></div>
+                <div class="grid-cell" data-x="1" data-y="2"></div>
+                <div class="grid-cell" data-x="2" data-y="2"></div>
+                <div class="grid-cell" data-x="3" data-y="2"></div>
+                <div class="grid-cell" data-x="0" data-y="3"></div>
+                <div class="grid-cell" data-x="1" data-y="3"></div>
+                <div class="grid-cell" data-x="2" data-y="3"></div>
+                <div class="grid-cell" data-x="3" data-y="3"></div>
 
-                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="3" alt="hero">
+                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="3" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
 
                 <!-- 左下：科目固定資訊（JS 依選擇填） -->
@@ -200,11 +211,23 @@ function pickWeaponByJob(job) {
     return map[job.attr_key] || "sword";
 }
 
-/* P0 Grid Data Structure（單列預留 2D，未來可擴 grid[x][y]）
-   現在 demo 只用 GRID.cols × GRID.rows = 5 × 1，hero 在 grid[heroCol][0]
-   未來若要多角色站位，把 heroCol 換成 heroPos:{x,y} 即可 */
-const GRID = { cols: 5, rows: 1 };
-const IN_RANGE = 3;   // col 3 進入攻擊範圍可打魔王，col 4 是魔王
+/* P0 Grid Data Structure 升級成 4×4（派派 5/23）
+   主角在 (x, y) 2D 座標，魔王固定 (3, 3) 右上角
+   攻擊範圍 = Chebyshev 距離 ≤ 1（魔王相鄰格） */
+const GRID = { cols: 4, rows: 4 };
+const BOSS_POS = { x: 3, y: 3 };
+// 嘍囉位置預留（demo 暫不啟用，未來可放敵方單位）
+const ENEMY_SLOTS_RESERVED = [
+    { x: 3, y: 2 },  // 魔王正下方
+    { x: 1, y: 3 },  // 魔王左 2 格
+    { x: 2, y: 2 },  // 魔王左下對角
+];
+function chebyshev(a, b) {
+    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+function inAttackRange(pos) {
+    return chebyshev(pos, BOSS_POS) <= 1 && !(pos.x === BOSS_POS.x && pos.y === BOSS_POS.y);
+}
 
 /* 玩家設定（從 setup 面板填入） */
 const playerSetup = {
@@ -218,8 +241,8 @@ const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
     bossHP: 250, bossMaxHP: 250,
-    heroCol: 3,            // 主角起始在攻擊範圍（離魔王 1 格）— 派派 5/23 指示
-    combo: 0,              // D. 連擊計數
+    heroPos: { x: 2, y: 3 },   // 起始離魔王 1 步（魔王 (3,3) 左 1 格）
+    combo: 0,
     qIdx: 0,
     busy: false,
     finished: false,
@@ -239,25 +262,24 @@ function updateBars() {
 }
 
 function updateGridHighlight() {
-    // 派派 5/23 指示：移動格不用顯示
-    // 只更新 hero 的 data-col 觸發 CSS 位置 + z-index 變更（P3 Y-sort 由 CSS 自動套）
-    hero.dataset.col = state.heroCol;
+    // 4×4：hero 用 data-x/data-y 觸發 CSS 位置 + z-index
+    hero.dataset.x = state.heroPos.x;
+    hero.dataset.y = state.heroPos.y;
 
     // 右下戰況面板同步更新
     const statusPanel = $("combat-status");
     const statusLine  = $("status-line");
     const statusDetail = $("status-detail");
-    const distance = IN_RANGE - state.heroCol;  // 距離魔王還剩幾格
+    const dist = chebyshev(state.heroPos, BOSS_POS);
 
-    if (state.heroCol >= IN_RANGE) {
-        // 進入攻擊範圍
+    if (inAttackRange(state.heroPos)) {
         statusPanel.classList.add("in-range");
         statusLine.innerHTML = "⚔ 攻擊範圍！";
         statusDetail.innerHTML = "下一題答對 = 攻擊";
     } else {
         statusPanel.classList.remove("in-range");
         statusLine.innerHTML = "📍 接近中";
-        statusDetail.innerHTML = `距離魔王 ${distance} 格`;
+        statusDetail.innerHTML = `距離魔王 ${dist} 格`;
     }
 }
 
@@ -295,7 +317,7 @@ async function handleAnswer(idx, btn) {
         btn.classList.add("correct");
         state.combo++;
         showComboIfDue();
-        if (state.heroCol < IN_RANGE) {
+        if (!inAttackRange(state.heroPos)) {
             await moveForward();
         } else {
             await attackBoss();
@@ -303,13 +325,13 @@ async function handleAnswer(idx, btn) {
     } else {
         btn.classList.add("wrong");
         document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
-        state.combo = 0;  // 答錯重置連擊
+        state.combo = 0;
         await getHitByBoss();
     }
 
     if (state.bossHP <= 0)             return endGame("win");
     if (state.heroHP <= 0)             return endGame("dead");
-    if (state.heroCol < 0)             return endGame("retreat");
+    if (state.heroPos.x < 0 || state.heroPos.y < 0) return endGame("retreat");
 
     await sleep(700);
     state.qIdx++;
@@ -374,15 +396,32 @@ function spawnHitFX(targetEl, weaponKey) {
 }
 
 async function moveForward() {
-    state.heroCol = Math.min(IN_RANGE, state.heroCol + 1);
-    showToast("⬆ 前進！" + (state.heroCol === IN_RANGE ? " 進入攻擊範圍！" : ""));
+    // 4×4：朝魔王方向走 1 格（誰偏差大優先走那軸）
+    const dx = BOSS_POS.x - state.heroPos.x;
+    const dy = BOSS_POS.y - state.heroPos.y;
+    if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) {
+        state.heroPos.x += Math.sign(dx);
+    } else if (dy !== 0) {
+        state.heroPos.y += Math.sign(dy);
+    }
+    showToast("⬆ 前進！" + (inAttackRange(state.heroPos) ? " 進入攻擊範圍！" : ""));
     updateGridHighlight();
-    await sleep(550);  // 等 CSS transition
+    await sleep(550);
 }
 
 async function moveBackward() {
-    state.heroCol -= 1;  // 可能變 -1（觸發 retreat fail）
-    if (state.heroCol >= 0) {
+    // 4×4：往反 boss 方向走 1 格（誰差距小優先退那軸）
+    const dx = BOSS_POS.x - state.heroPos.x;
+    const dy = BOSS_POS.y - state.heroPos.y;
+    if (Math.abs(dx) <= Math.abs(dy) && dx !== 0) {
+        state.heroPos.x -= Math.sign(dx);
+    } else if (dy !== 0) {
+        state.heroPos.y -= Math.sign(dy);
+    } else {
+        // 不在魔王同列同行（dx=dy=0 不可能因為魔王在 (3,3)），保險用 -x
+        state.heroPos.x -= 1;
+    }
+    if (state.heroPos.x >= 0 && state.heroPos.y >= 0) {
         showToast("⬇ 被打退...");
         updateGridHighlight();
     }
