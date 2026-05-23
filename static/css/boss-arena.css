@@ -685,6 +685,44 @@
     100% { opacity: 0; transform: translate(-50%, -10px); }
 }
 
+/* ===== 武器切換列（戰場頂部正中央，小武器圖示按鈕 5 個） ===== */
+.weapon-bar {
+    position: absolute;
+    top: 60px;       /* boss-hud 紅血條下方 */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 220, 160, 0.4);
+    border-radius: 999px;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 6;
+}
+.weapon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(50, 30, 12, 0.85);
+    border: 2px solid rgba(120, 90, 50, 0.85);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 28px;
+    text-align: center;
+    color: #ffe6a8;
+    transition: transform 0.15s, border-color 0.2s, background 0.2s;
+    padding: 0;
+    font-family: inherit;
+}
+.weapon-btn:active { transform: scale(0.92); }
+.weapon-btn.active {
+    background: linear-gradient(180deg, #d6a64a 0%, #8a6332 100%);
+    border-color: #ffe6a8;
+    box-shadow: 0 0 12px rgba(255, 220, 100, 0.7);
+}
+
 /* 返回首頁鈕（左上） */
 .arena-back {
     position: absolute;

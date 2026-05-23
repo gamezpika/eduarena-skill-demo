@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=8">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=9">
 </head>
 <body>
 
@@ -60,6 +60,16 @@
                 <div class="boss-hud">
                     <div class="boss-name">★ 數學魔王 ★</div>
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
+                </div>
+
+                <!-- 武器切換列 -->
+                <div class="weapon-bar" id="weapon-bar">
+                    <button class="weapon-btn" data-weapon="fist"     title="拳頭">👊</button>
+                    <button class="weapon-btn" data-weapon="sword"    title="短劍">⚔️</button>
+                    <button class="weapon-btn" data-weapon="book"     title="魔法書">📕</button>
+                    <button class="weapon-btn" data-weapon="pencil"   title="巨大鉛筆">✏️</button>
+                    <button class="weapon-btn" data-weapon="staff"    title="法杖">🪄</button>
+                    <button class="weapon-btn" data-weapon="gauntlet" title="拳套">🥊</button>
                 </div>
 
                 <!-- 5 個隱形錨點（不顯示視覺，只當位置邏輯） -->
@@ -384,6 +394,30 @@ function endGame(outcome) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// 武器切換
+const WEAPON_SRC = {
+    fist:     "assets/images/arena/hero_iso.png?v=2",
+    sword:    "assets/images/arena/hero_iso_sword.png?v=1",
+    book:     "assets/images/arena/hero_iso_book.png?v=1",
+    pencil:   "assets/images/arena/hero_iso_pencil.png?v=1",
+    staff:    "assets/images/arena/hero_iso_staff.png?v=1",
+    gauntlet: "assets/images/arena/hero_iso_gauntlet.png?v=1",
+};
+state.weapon = "sword";  // 預設拿劍
+
+function switchWeapon(key) {
+    if (!WEAPON_SRC[key]) return;
+    state.weapon = key;
+    hero.src = WEAPON_SRC[key];
+    document.querySelectorAll(".weapon-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.weapon === key);
+    });
+}
+document.querySelectorAll(".weapon-btn").forEach(b => {
+    b.onclick = () => switchWeapon(b.dataset.weapon);
+});
+switchWeapon(state.weapon);  // 初始套用
 
 // 開場
 updateBars();
