@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=6">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=7">
 </head>
 <body>
 
@@ -69,7 +69,7 @@
                 <div class="grid-cell" data-col="3"></div>
                 <div class="grid-cell" data-col="4"></div>
 
-                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
+                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="3" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
 
                 <!-- 左下：科目固定資訊 -->
@@ -121,10 +121,12 @@ const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
     bossHP: 250, bossMaxHP: 250,
-    heroCol: 0,            // 主角當前棋盤格 (0~3)
+    heroCol: 3,            // 主角起始在攻擊範圍（離魔王 1 格）— 派派 5/23 指示
+    combo: 0,              // D. 連擊計數
     qIdx: 0,
     busy: false,
     finished: false,
+    enraged: false,        // 魔王怒氣模式 (HP<50%)
 };
 
 const $ = (id) => document.getElementById(id);
@@ -195,6 +197,8 @@ async function handleAnswer(idx, btn) {
 
     if (idx === q.ans) {
         btn.classList.add("correct");
+        state.combo++;
+        showComboIfDue();
         if (state.heroCol < IN_RANGE) {
             await moveForward();
         } else {
@@ -203,6 +207,7 @@ async function handleAnswer(idx, btn) {
     } else {
         btn.classList.add("wrong");
         document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
+        state.combo = 0;  // 答錯重置連擊
         await getHitByBoss();
     }
 
@@ -214,6 +219,62 @@ async function handleAnswer(idx, btn) {
     state.qIdx++;
     state.busy = false;
     loadQuestion();
+}
+
+// D. Combo 大字提示
+function showComboIfDue() {
+    let text, tier;
+    if (state.combo === 3)       { text = "COMBO ×3!"; tier = "tier-1"; }
+    else if (state.combo === 5)  { text = "COMBO ×5!!"; tier = "tier-2"; }
+    else if (state.combo === 10) { text = "COMBO ×10!!!"; tier = "tier-3"; }
+    else if (state.combo > 10 && state.combo % 5 === 0) { text = `COMBO ×${state.combo}!!!`; tier = "tier-3"; }
+    else return;
+    const pop = document.createElement("div");
+    pop.className = "combo-pop " + tier;
+    pop.textContent = text;
+    stage.appendChild(pop);
+    setTimeout(() => pop.remove(), 1200);
+}
+
+// D. 連擊傷害倍率
+function getComboMultiplier() {
+    if (state.combo >= 10) return 3.0;
+    if (state.combo >= 5)  return 2.0;
+    if (state.combo >= 3)  return 1.5;
+    return 1.0;
+}
+
+// C. 命中閃光 + 6 粒子（在 target sprite 中心放）
+function spawnHitFX(targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const cx = rect.left - stageRect.left + rect.width / 2;
+    const cy = rect.top  - stageRect.top  + rect.height / 2;
+
+    // 中央閃光
+    const flash = document.createElement("div");
+    flash.className = "hit-flash";
+    flash.style.left = cx + "px";
+    flash.style.top  = cy + "px";
+    stage.appendChild(flash);
+    setTimeout(() => flash.remove(), 500);
+
+    // 6 粒子四散
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
+        const dist = 50 + Math.random() * 30;
+        const midDist = dist * 0.5;
+        const p = document.createElement("div");
+        p.className = "hit-particle";
+        p.style.left = cx + "px";
+        p.style.top  = cy + "px";
+        p.style.setProperty("--px", Math.cos(angle) * dist + "px");
+        p.style.setProperty("--py", Math.sin(angle) * dist + "px");
+        p.style.setProperty("--px-mid", Math.cos(angle) * midDist + "px");
+        p.style.setProperty("--py-mid", Math.sin(angle) * midDist + "px");
+        stage.appendChild(p);
+        setTimeout(() => p.remove(), 850);
+    }
 }
 
 async function moveForward() {
@@ -233,18 +294,46 @@ async function moveBackward() {
 }
 
 async function attackBoss() {
-    const dmg = 40 + Math.floor(Math.random() * 30);  // 40-69
+    const mult = getComboMultiplier();
+    const baseDmg = 40 + Math.floor(Math.random() * 30);  // 40-69
+    const dmg = Math.floor(baseDmg * mult);
     state.bossHP = Math.max(0, state.bossHP - dmg);
-    // 等距風格只有 1 張 boss_iso（不切 hurt 圖避免風格不一致），靠 hit class 閃白動畫表達受擊
+
+    // B. 主角攻擊衝刺動畫
+    hero.classList.add("attacking");
+    setTimeout(() => hero.classList.remove("attacking"), 650);
+
+    // 衝刺中段（接觸時）觸發特效
+    await sleep(280);
     boss.classList.add("hit");
     popDamage(boss, "-" + dmg, false);
+    spawnHitFX(boss);                          // C. 粒子 + 閃光
+    stage.classList.add("impact");             // F. 鏡頭衝擊
+    setTimeout(() => stage.classList.remove("impact"), 500);
+    if (navigator.vibrate) navigator.vibrate(40);
     updateBars();
-    await sleep(500);
+    checkEnrage();
+
+    await sleep(400);
     boss.classList.remove("hit");
 }
 
+// E. 魔王怒氣模式（HP<50%）
+function checkEnrage() {
+    if (!state.enraged && state.bossHP > 0 && state.bossHP / state.bossMaxHP < 0.5) {
+        state.enraged = true;
+        boss.classList.add("enraged");
+        const pop = document.createElement("div");
+        pop.className = "combo-pop tier-3";
+        pop.textContent = "魔王怒氣！";
+        stage.appendChild(pop);
+        setTimeout(() => pop.remove(), 1200);
+    }
+}
+
 async function getHitByBoss() {
-    const dmg = 18 + Math.floor(Math.random() * 12);  // 18-29
+    const enrageBonus = state.enraged ? 1.4 : 1.0;  // E. 怒氣模式傷害 +40%
+    const dmg = Math.floor((18 + Math.floor(Math.random() * 12)) * enrageBonus);
     state.heroHP = Math.max(0, state.heroHP - dmg);
     hero.classList.add("hit");
     stage.classList.add("shake", "player-hit");
@@ -269,17 +358,38 @@ function showToast(text) {
 function endGame(outcome) {
     state.finished = true;
     let emoji, title, titleClass, sub;
+    let overlayDelay = 600;
+
     if (outcome === "win") {
-        // 等距 sprite 沒有 defeated 變體，靠 defeated class 的 fade-fall 動畫
+        // H. 勝利 cinematic
         boss.classList.add("defeated");
+        stage.classList.add("slow-mo");
+        // 光柱從魔王位置打下來
+        const pillar = document.createElement("div");
+        pillar.className = "victory-pillar";
+        stage.appendChild(pillar);
+        // 主角擺勝利姿勢
+        hero.classList.remove("attacking");
+        hero.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
-        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
+        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題 · 最高 Combo ×${state.combo}`;
+        overlayDelay = 2200;  // 等 cinematic 跑完
     } else if (outcome === "retreat") {
+        // H. 失敗 cinematic
+        const vig = document.createElement("div");
+        vig.className = "lose-vignette";
+        stage.appendChild(vig);
         emoji = "🏳"; title = "撤退失敗..."; titleClass = "lose";
         sub = "被打出戰場！魔王還剩 HP " + state.bossHP;
+        overlayDelay = 1200;
     } else {
+        // H. 失敗 cinematic
+        const vig = document.createElement("div");
+        vig.className = "lose-vignette";
+        stage.appendChild(vig);
         emoji = "💀"; title = "失敗..."; titleClass = "lose";
         sub = "魔王還剩 HP " + state.bossHP;
+        overlayDelay = 1200;
     }
     setTimeout(() => {
         const overlay = document.createElement("div");
@@ -290,7 +400,7 @@ function endGame(outcome) {
              <div class="overlay-sub">${sub}</div>
              <button class="overlay-btn" onclick="location.reload()">再戰一次</button>`;
         stage.appendChild(overlay);
-    }, outcome === "win" ? 1300 : 600);
+    }, overlayDelay);
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -298,7 +408,15 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // 開場
 updateBars();
 updateGridHighlight();
+
+// A. 開場進場動畫（主角滑入）
+hero.classList.add("entering");
+setTimeout(() => hero.classList.remove("entering"), 1100);
+
+// 第一題延後 1 秒讓進場動畫跑完才接題目（避免玩家在動畫期間點選項）
+state.busy = true;
 loadQuestion();
+setTimeout(() => { state.busy = false; }, 1100);
 </script>
 
 </body>
