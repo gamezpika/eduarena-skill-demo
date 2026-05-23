@@ -86,6 +86,15 @@
         }
         .mode-tabs button.active { color: #fdc500; border-bottom-color: #fdc500; background: #232938; }
 
+        .upload-row {
+            display: flex; gap: 6px; padding: 8px 12px;
+            background: #1a1f2e; border-bottom: 1px solid #0d1019;
+        }
+        .upload-row button {
+            flex: 1; padding: 7px 4px; border: none; border-radius: 4px;
+            font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+
         .building-list {
             overflow-y: auto;
             border-bottom: 1px solid #0d1019;
@@ -191,9 +200,16 @@
 <aside class="panel">
     <div class="panel-header">
         🗺 地圖配置編輯器
-        <div style="font-size: 10px; color: #aaa; margin-top: 4px;">
+        <div style="font-size: 10px; color: #aaa; margin-top: 4px;" id="mapSrc">
             world_map_v4.png × world_map_config.json
         </div>
+    </div>
+
+    <div class="upload-row">
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+        <button class="btn-secondary" id="btnLoadLocal">📂 上傳本地圖</button>
+        <button class="btn-secondary" id="btnLoadUrl">🔗 從 URL</button>
+        <button class="btn-secondary" id="btnNewBuilding">➕ 新 building</button>
     </div>
 
     <div class="mode-tabs">
@@ -248,6 +264,27 @@ const buildingDetail = document.getElementById('buildingDetail');
 const tabBbox = document.getElementById('tab-bbox');
 const tabPath = document.getElementById('tab-path');
 const pathHint = document.getElementById('pathHint');
+
+// ─── 預設 mask color palette（新建 building 自動分色）
+const COLOR_PALETTE = [
+    '#FF3B30','#0A84FF','#34C759','#FFD60A','#5AC8FA','#FF9500',
+    '#BF5AF2','#30D158','#FFCC00','#6F2DA8','#E5E5EA','#8B5A2B',
+    '#FF2D55','#5E5CE6','#64D2FF','#FFD60A','#A2845E','#32ADE6',
+    '#AF52DE','#FF6482','#00C7BE','#FFAB47',
+];
+function pickNewColor() {
+    if (!mapConfig) return COLOR_PALETTE[0];
+    const used = new Set(mapConfig.buildings.map(b => b.mask_color.toUpperCase()));
+    return COLOR_PALETTE.find(c => !used.has(c.toUpperCase())) || COLOR_PALETTE[0];
+}
+
+function blankConfig(w, h) {
+    return {
+        dimensions: { width: w, height: h },
+        buildings: [],
+        connections: [],
+    };
+}
 
 // 載入 config
 fetch('assets/world_map_config.json?v=' + Date.now())
@@ -559,9 +596,104 @@ document.getElementById('btnReset').addEventListener('click', () => {
 
 // 圖片載入完才能算尺寸
 mapImg.addEventListener('load', () => {
-    if (mapConfig) renderAll();
+    if (mapConfig) {
+        // 若 mapConfig 是空白 config 還沒設 dimensions，用實際圖片尺寸
+        if (!mapConfig.dimensions || mapConfig.dimensions.width === 0) {
+            mapConfig.dimensions = {
+                width: mapImg.naturalWidth,
+                height: mapImg.naturalHeight,
+            };
+        }
+        renderAll();
+    }
 });
 window.addEventListener('resize', () => { if (mapConfig) renderAll(); });
+
+// ─── 上傳本地圖
+document.getElementById('btnLoadLocal').addEventListener('click', () => {
+    document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        loadNewImage(ev.target.result, file.name);
+    };
+    reader.readAsDataURL(file);
+});
+
+// ─── 從 URL 載入
+document.getElementById('btnLoadUrl').addEventListener('click', () => {
+    const url = prompt('輸入圖片 URL（建議用 demo 站既有路徑，如 assets/images/xxx.png）：',
+                       'assets/images/world_map_v4.png');
+    if (!url) return;
+    loadNewImage(url, url.split('/').pop());
+});
+
+function loadNewImage(src, displayName) {
+    const reset = confirm(
+        `要切到新圖：${displayName}\n\n` +
+        '按「確定」= 重置 config（building 清空、從頭加）\n' +
+        '按「取消」= 保留現有 building（座標相對位置不變，請確認新圖比例對齊）'
+    );
+    mapImg.src = src;
+    document.getElementById('mapSrc').textContent = displayName + ' × world_map_config.json';
+    if (reset) {
+        mapImg.onload = () => {
+            mapConfig = blankConfig(mapImg.naturalWidth, mapImg.naturalHeight);
+            selectedBuildingId = null;
+            renderAll();
+        };
+    } else {
+        mapImg.onload = () => {
+            if (mapConfig) mapConfig.dimensions = {
+                width: mapImg.naturalWidth, height: mapImg.naturalHeight,
+            };
+            renderAll();
+        };
+    }
+}
+
+// ─── 新增 building
+document.getElementById('btnNewBuilding').addEventListener('click', () => {
+    if (!mapConfig) {
+        alert('請先載入圖片');
+        return;
+    }
+    const idx = mapConfig.buildings.length + 1;
+    const id = prompt(`新 building ID（純英文小寫底線，例如 town_hall）：`, `b${String(idx).padStart(3, '0')}`);
+    if (!id) return;
+    const name = prompt('顯示名稱（中文）：', '新建築');
+    if (!name) return;
+    const newB = {
+        id, name,
+        category: 'unknown',
+        center: { x: 0.5, y: 0.5 },
+        bounding_box: { x_min: 0.42, y_min: 0.42, x_max: 0.58, y_max: 0.58 },
+        mask_color: pickNewColor(),
+        render_order: 500,
+        interaction_type: 'open_modal',
+        path: [],
+    };
+    mapConfig.buildings.push(newB);
+    selectedBuildingId = id;
+    renderAll();
+});
+
+// 編輯 ID/名稱：點 building 列表項目雙擊改名（簡單 prompt 互動）
+buildingList.addEventListener('dblclick', e => {
+    const row = e.target.closest('.building-row');
+    if (!row) return;
+    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
+    if (!b) return;
+    const newName = prompt('新顯示名稱：', b.name);
+    if (newName) b.name = newName;
+    const newId = prompt('新 ID（英文小寫底線）：', b.id);
+    if (newId && newId !== b.id) b.id = newId;
+    selectedBuildingId = b.id;
+    renderAll();
+});
 </script>
 
 </body>
