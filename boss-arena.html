@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=22">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=23">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -144,7 +144,7 @@
                   <polygon class="grid-tile" data-x="4" data-y="4" points="74,78 82,81 87,88 79,85" />
                 </svg>
 
-                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="4" alt="hero">
+                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
 
                 <!-- 左下：科目固定資訊（JS 依選擇填） -->
@@ -253,7 +253,7 @@ const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
     bossHP: 250, bossMaxHP: 250,
-    heroPos: { x: 2, y: 4 },   // 起始離魔王 2 步（魔王 (4,4) 左 2 格）
+    heroPos: { x: 2, y: 2 },   // 起始中央格 (派派 5/23：對齊參考圖玩家站中央)
     combo: 0,
     qIdx: 0,
     busy: false,

@@ -182,9 +182,10 @@
 }
 .grid-tile {
     fill: transparent;
-    stroke: rgba(120, 200, 255, 0.32);
-    stroke-width: 0.18;
+    stroke: rgba(120, 200, 255, 0.85);
+    stroke-width: 0.4;
     vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 3px rgba(100, 180, 255, 0.7));
     transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s;
 }
 /* 主角當前格：金色 */
@@ -216,11 +217,11 @@
     0%, 100% { fill-opacity: 0.6; }
     50%      { fill-opacity: 1.0; }
 }
-/* 魔王格：紫色 */
+/* 魔王格：紅色（對齊參考圖 Boss 紅格） */
 .grid-tile.boss-pos {
-    fill: rgba(150, 60, 180, 0.2);
-    stroke: rgba(180, 80, 220, 0.8);
-    stroke-width: 0.22;
+    fill: rgba(255, 60, 60, 0.30);
+    stroke: rgba(255, 80, 80, 1);
+    stroke-width: 0.42;
 }
 
 /* grid-cell DIV 已改用 SVG，這 25 條規則保留為註解備查（座標公式）：
