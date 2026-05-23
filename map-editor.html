@@ -214,7 +214,27 @@
 
 <div class="map-area" id="mapArea">
     <div class="map-frame" id="mapFrame">
-        <img id="map-img" src="assets/images/world_map_v4.png" alt="map">
+        <img id="map-img" src="" alt="map" style="display:none">
+        <div id="empty-placeholder" style="
+            width: 480px; height: 480px;
+            background: #1a1f2e;
+            border: 2px dashed #444;
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: #888; font-size: 14px; gap: 16px;
+        ">
+            <div style="font-size: 60px;">🗺</div>
+            <div style="text-align:center; line-height:1.6;">
+                <b style="color:#fdc500;font-size:16px;">空白編輯器</b><br>
+                右側點「📂 上傳本地圖」或「🔗 從 URL」開始
+            </div>
+            <button class="btn-secondary" id="btnLoadServer" style="
+                padding:8px 16px; background:#444; color:#fff;
+                border:none; border-radius:6px; cursor:pointer;
+                font-weight:700; font-size:12px;
+            ">📥 載入 server 既有 config + 底圖</button>
+        </div>
         <svg class="path-svg" id="pathSvg"></svg>
     </div>
 </div>
@@ -374,34 +394,52 @@ function autoSave() {
     }, 300);  // debounce 300ms
 }
 
-// 載入 config — 優先讀 localStorage 暫存
+// 載入 config — 只在有 localStorage 暫存時 prompt 載入，否則保持空白
 function loadInitialConfig() {
     const cached = localStorage.getItem(LS_KEY);
-    if (cached) {
-        try {
-            const data = JSON.parse(cached);
-            const age = (Date.now() - data.ts) / 1000 / 60;  // 分鐘
-            const ageStr = age < 1 ? '剛剛' : age < 60 ? `${Math.floor(age)} 分鐘前` : `${Math.floor(age/60)} 小時前`;
-            if (confirm(`偵測到瀏覽器有 ${ageStr} 的編輯暫存\n\n` +
-                        '按「確定」載入暫存版本（繼續上次編輯）\n' +
-                        '按「取消」載入 server config（最新已部署版本）')) {
-                mapConfig = data.config;
-                mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
-                renderAll();
-                document.getElementById('autosaveStatus').textContent =
-                    `💾 已載入暫存（${ageStr}存的）`;
-                return;
-            }
-        } catch (e) { console.warn('load cache fail:', e); }
-    }
-    fetch('assets/world_map_config.json?v=' + Date.now())
-        .then(r => r.json())
-        .then(json => {
-            mapConfig = json.map_config;
+    if (!cached) return;  // 沒暫存 → 留空白等使用者選
+    try {
+        const data = JSON.parse(cached);
+        const age = (Date.now() - data.ts) / 1000 / 60;  // 分鐘
+        const ageStr = age < 1 ? '剛剛' : age < 60 ? `${Math.floor(age)} 分鐘前` : `${Math.floor(age/60)} 小時前`;
+        if (confirm(`偵測到瀏覽器有 ${ageStr} 的編輯暫存\n\n` +
+                    '按「確定」載入暫存版本（繼續上次編輯）\n' +
+                    '按「取消」保持空白（手動選底圖載入）')) {
+            // 載入暫存（但底圖派派還是要選 — 因為 base64 太大不存 localStorage）
+            mapConfig = data.config;
             mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
             renderAll();
-        });
+            document.getElementById('autosaveStatus').textContent =
+                `💾 已載入暫存（${ageStr}存的），請手動載底圖`;
+        }
+    } catch (e) { console.warn('load cache fail:', e); }
 }
+
+// 「載入 server 既有 config + 底圖」按鈕（讓派派想用既有版本時手動觸發）
+function attachLoadServerBtn() {
+    const btn = document.getElementById('btnLoadServer');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const placeholder = document.getElementById('empty-placeholder');
+        const img = document.getElementById('map-img');
+        // 載 iso 底圖 + 既有 config
+        fetch('assets/world_map_config.json?v=' + Date.now())
+            .then(r => r.json())
+            .then(json => {
+                mapConfig = json.map_config;
+                mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+                img.src = 'assets/images/world_map_iso.png?v=' + Date.now();
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+                img.onload = () => {
+                    document.getElementById('mapSrc').textContent =
+                        'world_map_iso.png × world_map_config.json';
+                    renderAll();
+                };
+            });
+    });
+}
+attachLoadServerBtn();
 loadInitialConfig();
 
 function renderAll() {
@@ -867,6 +905,10 @@ document.getElementById('btnLoadUrl').addEventListener('click', () => {
 });
 
 function loadNewImage(src, displayName) {
+    // 隱藏空白 placeholder + 顯示 img
+    const placeholder = document.getElementById('empty-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+    mapImg.style.display = 'block';
     const choice = prompt(
         `要切到新圖：${displayName}\n\n` +
         '輸入數字選擇 building 處理：\n' +
