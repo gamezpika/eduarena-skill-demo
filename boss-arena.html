@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=2">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=3">
 </head>
 <body>
 
@@ -62,15 +62,15 @@
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
                 </div>
 
-                <!-- 5 列等距棋盤格（col 0 起始 → col 3 攻擊範圍 → col 4 魔王） -->
+                <!-- 5 個菱形等距棋盤格（col 0 起始 → col 3 攻擊範圍 → col 4 魔王格） -->
                 <div class="grid-cell" data-col="0"></div>
                 <div class="grid-cell" data-col="1"></div>
                 <div class="grid-cell" data-col="2"></div>
                 <div class="grid-cell" data-col="3"></div>
-                <div class="grid-cell" data-col="4"></div>
+                <div class="grid-cell boss-cell" data-col="4"></div>
 
-                <img src="assets/images/arena/hero_iso.png?v=1" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
-                <img src="assets/images/arena/boss_iso.png?v=1" class="fighter-boss" id="fighter-boss" alt="boss">
+                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
+                <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
             </div>
 
             <!-- 題目卡 -->
@@ -126,9 +126,13 @@ function updateBars() {
 
 function updateGridHighlight() {
     document.querySelectorAll(".grid-cell").forEach(el => {
-        el.classList.remove("active", "attack-range");
+        el.classList.remove("active", "attack-range", "walked");
         const c = parseInt(el.dataset.col, 10);
-        if (c === IN_RANGE) el.classList.add("attack-range");  // col 3 永遠標紅
+        // col 4 永遠是 boss-cell（HTML 已加，這裡不動）
+        if (c === IN_RANGE) el.classList.add("attack-range");
+        // 已走過的格（col 0 起算到當前格之前都標 walked）
+        if (c >= 0 && c < state.heroCol) el.classList.add("walked");
+        // 當前格
         if (c === state.heroCol) el.classList.add("active");
     });
     hero.dataset.col = state.heroCol;
