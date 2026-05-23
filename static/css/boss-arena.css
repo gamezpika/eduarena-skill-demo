@@ -675,21 +675,21 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 /* ===== 題目區 ===== */
 .arena-question {
     flex-shrink: 0;
-    margin: 10px 14px 0;
-    padding: 18px 18px;
+    margin: 8px 14px 0;
+    padding: 12px 14px;
     background:
         linear-gradient(135deg, rgba(255, 250, 230, 0.95) 0%, rgba(245, 230, 200, 0.92) 100%);
     border: 2px solid #6b4a22;
-    border-radius: 14px;
+    border-radius: 12px;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.7),
         0 4px 10px rgba(0, 0, 0, 0.5);
     color: #3d2810;
     text-align: center;
-    font-size: 23px;
+    font-size: 18px;
     line-height: 1.4;
     font-weight: 700;
-    min-height: 68px;
+    min-height: 80px;        /* 題目可吃 2-3 行不擠 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -698,20 +698,21 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 
 .arena-options {
     flex-shrink: 0;
-    padding: 12px 14px 18px;
+    padding: 10px 14px 16px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr;    /* 派派 5/24：改成 ABCD 條列直排 */
+    gap: 8px;
     z-index: 2;
 }
 .opt-btn {
-    padding: 16px 8px;
+    padding: 12px 14px;
     background:
         linear-gradient(180deg, #c79a5a 0%, #a37840 50%, #8a6332 100%);
     border: 2px solid #3d2810;
     border-radius: 10px;
     color: #fff;
-    font-size: 18px;
+    font-size: 15px;
+    text-align: left;        /* 條列風：字靠左 */
     font-weight: 700;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     box-shadow:
