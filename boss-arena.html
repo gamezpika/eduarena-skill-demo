@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=18">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=19">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -717,8 +717,8 @@ function startArena() {
     boss.src = `assets/images/${tierData.sprite}?v=1`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
 
-    // 戰場背景換成 tier 的 bg
-    stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
+    // 派派 5/23：戰場固定用 arena_4x4.png（棋盤），tier bg 不再覆蓋
+    // 如果未來要 tier bg 當底 + 4×4 棋盤當前景，需要重生 arena_4x4 為透明 PNG overlay
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
