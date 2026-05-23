@@ -175,10 +175,32 @@ import * as THREE from 'three';
     let py = -SCENE_H * 0.10;  // 偏上一點，避開頂部浮島中央初始 bbox
     player.position.set(px, 0, py);
 
+    // ─── Debug: polygon 邊框視覺化（紅色線條）讓派派看對齊狀況
+    const debugLines = [];
+    function renderPolygonDebug() {
+        debugLines.forEach(l => scene.remove(l));
+        debugLines.length = 0;
+        if (!mapConfig || !DEBUG_POLYGON) return;
+        mapConfig.buildings.forEach(b => {
+            if (!b.polygon || b.polygon.length < 3) return;
+            const points = b.polygon.map(p => {
+                const { x, z } = normToScene(p.x, p.y);
+                return new THREE.Vector3(x, 0.5, z);
+            });
+            points.push(points[0].clone());  // 閉合
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            const mat = new THREE.LineBasicMaterial({ color: 0xff0040 });
+            const loop = new THREE.Line(geo, mat);
+            scene.add(loop);
+            debugLines.push(loop);
+        });
+    }
+    let DEBUG_POLYGON = true;  // 預設開，派派看完可 console eduChibi.toggleDebug() 關
+
     // ─── 載入 world_map_config.json
     let mapConfig = null;
     let buildingsByKey = {};  // key (e.g. 'chinese') → building obj
-    fetch('assets/world_map_config.json?v=1')
+    fetch('assets/world_map_config.json?v=' + Date.now())
         .then(r => r.json())
         .then(json => {
             mapConfig = json.map_config;
@@ -188,7 +210,8 @@ import * as THREE from 'three';
                 const shortKey = b.id.replace(/_island$|_tower$|_castle$|_center$|_arena$|_board$/, '');
                 buildingsByKey[shortKey] = b;
             });
-            console.log('[chibi] map config loaded:', mapConfig.buildings.length, 'buildings');
+            renderPolygonDebug();
+            console.log('[chibi] map config loaded:', mapConfig.buildings.length, 'buildings (polygon 紅框已顯示)');
 
             // 接 hotspot click → chibi 自動走過去
             document.querySelectorAll('.wd-sprite[data-tap]').forEach(btn => {
@@ -458,6 +481,11 @@ import * as THREE from 'three';
             if (b) startAutoMove(b);
             else console.warn('unknown building:', key);
         },
+        toggleDebug() {
+            DEBUG_POLYGON = !DEBUG_POLYGON;
+            renderPolygonDebug();
+            console.log('[chibi] polygon debug:', DEBUG_POLYGON);
+        },
     };
-    console.log('[chibi] init. debug: eduChibi.pos / eduChibi.config / eduChibi.goto("shop")');
+    console.log('[chibi] init. debug: eduChibi.pos / .config / .goto("shop") / .toggleDebug()');
 })();
