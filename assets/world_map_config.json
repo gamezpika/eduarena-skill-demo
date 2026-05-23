@@ -1,0 +1,137 @@
+{
+  "map_config": {
+    "dimensions": {"width": 1024, "height": 1820},
+    "buildings": [
+      {
+        "id": "chinese_island",
+        "name": "國語島",
+        "category": "education_chinese",
+        "center": {"x": 0.16, "y": 0.10},
+        "bounding_box": {"x_min": 0.02, "y_min": 0.02, "x_max": 0.30, "y_max": 0.20},
+        "mask_color": "#FF3B30",
+        "render_order": 100,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "boss_tower",
+        "name": "魔王塔",
+        "category": "combat_pve",
+        "center": {"x": 0.50, "y": 0.08},
+        "bounding_box": {"x_min": 0.36, "y_min": 0.01, "x_max": 0.62, "y_max": 0.16},
+        "mask_color": "#6F2DA8",
+        "render_order": 80,
+        "interaction_type": "trigger_event"
+      },
+      {
+        "id": "english_castle",
+        "name": "英文島",
+        "category": "education_english",
+        "center": {"x": 0.83, "y": 0.10},
+        "bounding_box": {"x_min": 0.66, "y_min": 0.02, "x_max": 0.98, "y_max": 0.20},
+        "mask_color": "#0A84FF",
+        "render_order": 100,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "shop",
+        "name": "商店",
+        "category": "commerce",
+        "center": {"x": 0.18, "y": 0.32},
+        "bounding_box": {"x_min": 0.04, "y_min": 0.24, "x_max": 0.32, "y_max": 0.40},
+        "mask_color": "#FF9500",
+        "render_order": 320,
+        "interaction_type": "open_modal"
+      },
+      {
+        "id": "exam_center",
+        "name": "考試中心",
+        "category": "examination",
+        "center": {"x": 0.50, "y": 0.30},
+        "bounding_box": {"x_min": 0.34, "y_min": 0.22, "x_max": 0.68, "y_max": 0.38},
+        "mask_color": "#E5E5EA",
+        "render_order": 300,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "museum",
+        "name": "偉人館",
+        "category": "culture",
+        "center": {"x": 0.83, "y": 0.32},
+        "bounding_box": {"x_min": 0.70, "y_min": 0.24, "x_max": 0.98, "y_max": 0.40},
+        "mask_color": "#5AC8FA",
+        "render_order": 320,
+        "interaction_type": "open_modal"
+      },
+      {
+        "id": "pvp_arena",
+        "name": "PK 競技場",
+        "category": "combat_pvp",
+        "center": {"x": 0.17, "y": 0.46},
+        "bounding_box": {"x_min": 0.04, "y_min": 0.40, "x_max": 0.34, "y_max": 0.55},
+        "mask_color": "#BF5AF2",
+        "render_order": 460,
+        "interaction_type": "trigger_event"
+      },
+      {
+        "id": "farm",
+        "name": "農田",
+        "category": "agriculture",
+        "center": {"x": 0.50, "y": 0.48},
+        "bounding_box": {"x_min": 0.36, "y_min": 0.42, "x_max": 0.66, "y_max": 0.55},
+        "mask_color": "#FFCC00",
+        "render_order": 480,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "quest_board",
+        "name": "任務告示板",
+        "category": "quest_board",
+        "center": {"x": 0.83, "y": 0.49},
+        "bounding_box": {"x_min": 0.70, "y_min": 0.42, "x_max": 0.98, "y_max": 0.56},
+        "mask_color": "#8B5A2B",
+        "render_order": 490,
+        "interaction_type": "open_modal"
+      },
+      {
+        "id": "math_island",
+        "name": "數學島",
+        "category": "education_math",
+        "center": {"x": 0.18, "y": 0.78},
+        "bounding_box": {"x_min": 0.04, "y_min": 0.68, "x_max": 0.32, "y_max": 0.90},
+        "mask_color": "#FFD60A",
+        "render_order": 780,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "social_island",
+        "name": "社會島",
+        "category": "education_social",
+        "center": {"x": 0.50, "y": 0.82},
+        "bounding_box": {"x_min": 0.30, "y_min": 0.72, "x_max": 0.70, "y_max": 0.92},
+        "mask_color": "#30D158",
+        "render_order": 820,
+        "interaction_type": "navigation"
+      },
+      {
+        "id": "science_island",
+        "name": "自然島",
+        "category": "education_science",
+        "center": {"x": 0.83, "y": 0.79},
+        "bounding_box": {"x_min": 0.66, "y_min": 0.68, "x_max": 0.98, "y_max": 0.90},
+        "mask_color": "#34C759",
+        "render_order": 790,
+        "interaction_type": "navigation"
+      }
+    ],
+    "connections": [
+      {"from": "chinese_island", "to": "boss_tower", "type": "bridge"},
+      {"from": "boss_tower", "to": "english_castle", "type": "bridge"},
+      {"from": "chinese_island", "to": "shop", "type": "bridge"},
+      {"from": "boss_tower", "to": "exam_center", "type": "bridge"},
+      {"from": "english_castle", "to": "museum", "type": "bridge"},
+      {"from": "pvp_arena", "to": "math_island", "type": "bridge"},
+      {"from": "farm", "to": "social_island", "type": "bridge"},
+      {"from": "quest_board", "to": "science_island", "type": "bridge"}
+    ]
+  }
+}
