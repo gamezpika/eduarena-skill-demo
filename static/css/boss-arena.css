@@ -914,8 +914,11 @@
     100% { opacity: 0; transform: translate(-50%, -10px); }
 }
 
+/* 武器列：派派 5/23 砍掉（職業=武器） */
+.weapon-bar { display: none !important; }
+
 /* ===== 武器切換列（戰場頂部正中央，小武器圖示按鈕 5 個） ===== */
-.weapon-bar {
+.weapon-bar-OLD {
     position: absolute;
     top: 60px;       /* boss-hud 紅血條下方 */
     left: 50%;

@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=14">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=15">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -533,26 +533,26 @@ function endGame(outcome) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// 武器切換（派派 5/23 砍 fist + pencil 留 4：sword/book/staff/gauntlet）
-const WEAPON_SRC = {
-    sword:    "assets/images/arena/hero_iso_sword.png?v=1",
-    book:     "assets/images/arena/hero_iso_book.png?v=1",
-    staff:    "assets/images/arena/hero_iso_staff.png?v=1",
-    gauntlet: "assets/images/arena/hero_iso_gauntlet.png?v=1",
-};
-state.weapon = "sword";  // 預設
+// 派派 5/23：武器列拿掉，職業 = 主角造型 + 對應武器
+// state.weapon 仍存在（決定動畫/特效），但由職業自動推算
+state.weapon = "sword";
 
-function switchWeapon(key) {
-    if (!WEAPON_SRC[key]) return;
-    state.weapon = key;
-    hero.src = WEAPON_SRC[key];
-    document.querySelectorAll(".weapon-btn").forEach(b => {
-        b.classList.toggle("active", b.dataset.weapon === key);
-    });
+function setHeroSpriteFromJob(job) {
+    // 預設沒選職業 → 用 hero_iso_sword 當基底
+    let src = "assets/images/arena/hero_iso_sword.png?v=1";
+    if (job && job.key) {
+        const jobSpritePath = `assets/images/arena/hero_job_${job.key}.png?v=1`;
+        src = jobSpritePath;
+    }
+    hero.src = src;
+    // 武器類別仍由職業推算（決定攻擊動畫 keyframes）
+    state.weapon = pickWeaponByJob(job);
 }
-document.querySelectorAll(".weapon-btn").forEach(b => {
-    b.onclick = () => switchWeapon(b.dataset.weapon);
-});
+
+// 保留 switchWeapon 給示範技能/未來用
+function switchWeapon(key) {
+    state.weapon = key;
+}
 
 // ===== Setup 流程 =====
 async function loadData() {
@@ -686,10 +686,10 @@ function startArena() {
     document.getElementById("info-subject-name").textContent = subj.emoji + " " + subj.label;
     document.getElementById("info-subject-sub").textContent = `五年級 · ${tierData.label}`;
 
-    // 套用職業 buff + 武器
+    // 套用職業 buff + 主角造型 sprite + 對應武器動畫
     applyJobBuff();
     const job = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
-    switchWeapon(pickWeaponByJob(job));
+    setHeroSpriteFromJob(job);
 
     // localStorage 存
     try {
