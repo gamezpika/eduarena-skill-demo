@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=3">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=4">
 </head>
 <body>
 
@@ -62,12 +62,12 @@
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
                 </div>
 
-                <!-- 5 個菱形等距棋盤格（col 0 起始 → col 3 攻擊範圍 → col 4 魔王格） -->
+                <!-- 5 個隱形錨點（不顯示視覺，只當位置邏輯） -->
                 <div class="grid-cell" data-col="0"></div>
                 <div class="grid-cell" data-col="1"></div>
                 <div class="grid-cell" data-col="2"></div>
                 <div class="grid-cell" data-col="3"></div>
-                <div class="grid-cell boss-cell" data-col="4"></div>
+                <div class="grid-cell" data-col="4"></div>
 
                 <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-col="0" alt="hero">
                 <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
@@ -99,8 +99,12 @@ const QUESTIONS = [
     { q: "7 × 9 = ?",    options: ["56", "72", "63", "65"],  ans: 2 },
 ];
 
-// IN_RANGE = 3 = 攻擊範圍。col 0 起始，col 3 進入攻擊範圍可打魔王，col 4 是魔王
-const IN_RANGE = 3;
+/* P0 Grid Data Structure（單列預留 2D，未來可擴 grid[x][y]）
+   現在 demo 只用 GRID.cols × GRID.rows = 5 × 1，hero 在 grid[heroCol][0]
+   未來若要多角色站位，把 heroCol 換成 heroPos:{x,y} 即可 */
+const GRID = { cols: 5, rows: 1 };
+const IN_RANGE = 3;   // col 3 進入攻擊範圍可打魔王，col 4 是魔王
+
 const state = {
     heroHP: 100, heroMaxHP: 100,
     heroMP: 50,  heroMaxMP: 50,
@@ -125,16 +129,8 @@ function updateBars() {
 }
 
 function updateGridHighlight() {
-    document.querySelectorAll(".grid-cell").forEach(el => {
-        el.classList.remove("active", "attack-range", "walked");
-        const c = parseInt(el.dataset.col, 10);
-        // col 4 永遠是 boss-cell（HTML 已加，這裡不動）
-        if (c === IN_RANGE) el.classList.add("attack-range");
-        // 已走過的格（col 0 起算到當前格之前都標 walked）
-        if (c >= 0 && c < state.heroCol) el.classList.add("walked");
-        // 當前格
-        if (c === state.heroCol) el.classList.add("active");
-    });
+    // 派派 5/23 指示：移動格不用顯示
+    // 只更新 hero 的 data-col 觸發 CSS 位置 + z-index 變更（P3 Y-sort 由 CSS 自動套）
     hero.dataset.col = state.heroCol;
 }
 
