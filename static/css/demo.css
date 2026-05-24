@@ -26,7 +26,8 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-    height: 100%;
+    height: 100%;          /* fallback for old browsers */
+    height: 100dvh;        /* 派派 5/24：扣掉 iOS Safari URL 列+nav bar，選項 D 才不被擋 */
     overflow: hidden;
     font-family: "Noto Sans TC", "PingFang TC", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
     font-size: 16px;

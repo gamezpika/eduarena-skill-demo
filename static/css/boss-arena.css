@@ -159,7 +159,8 @@
 .arena-stage {
     flex: 1;
     position: relative;
-    min-height: 45vh;       /* 派派 5/24：保護戰場至少佔 45% viewport */
+    min-height: 45vh;       /* fallback */
+    min-height: 45dvh;      /* 派派 5/24：用 dvh 才會扣掉 iOS chrome */
     background-image: url("../../assets/images/arena/dungeon_bg.png?v=2");
     background-size: cover;
     background-position: center;
