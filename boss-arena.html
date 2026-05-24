@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=53">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=54">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -431,6 +431,45 @@ function getComboMultiplier() {
 }
 
 // C. 命中閃光 + 6 粒子（在 target sprite 中心放）
+// ===== 24 職業專屬 VFX（派派 5/24，Codex 生圖）=====
+// 每個 job 對應 1 個 motion；少數職業有特殊 motion 強化主題
+const JOB_VFX_MOTION = {
+    translator: "vortex",
+    programmer: "vortex",
+    ai_engineer: "vortex",
+    space_captain: "beam",
+    president: "drop",
+    poet: "drop",
+    reporter: "drop",
+    michelin_chef: "drop",
+    chef: "sweep",
+    athlete: "sweep",
+    // 其他 14 個職業預設都用 expand（中央放射爆破）
+};
+
+function spawnHeroVfx(jobKey) {
+    if (!jobKey) return;
+    const motion = JOB_VFX_MOTION[jobKey] || "expand";
+    const url = `assets/images/hero_vfx/${jobKey}.webp?v=1`;
+
+    // 在魔王身上爆 (boss 中心)
+    const bossRect = boss.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const cx = bossRect.left - stageRect.left + bossRect.width / 2;
+    const cy = bossRect.top  - stageRect.top  + bossRect.height * 0.45;
+
+    const img = document.createElement("img");
+    img.className = `boss-vfx motion-${motion} hero-vfx`;
+    img.onerror = () => { img.remove(); };  // 圖沒生好直接消失（spawnBigImpact CSS 還在）
+    img.src = url;
+    img.style.left = cx + "px";
+    img.style.top  = cy + "px";
+    img.style.width = "320px";
+    img.style.height = "320px";
+    stage.appendChild(img);
+    setTimeout(() => img.remove(), 900);
+}
+
 // P4 武器專屬大畫面（4 武器各一套華麗 VFX）
 function spawnBigImpact(weaponKey) {
     const rect = boss.getBoundingClientRect();
@@ -585,7 +624,8 @@ async function attackBoss() {
     }
     popDamage(boss, "-" + dmg, false);
     spawnHitFX(boss, state.weapon);
-    spawnBigImpact(state.weapon);  // P4 武器專屬大畫面
+    spawnBigImpact(state.weapon);  // P4 武器專屬大畫面（CSS）
+    spawnHeroVfx(playerSetup.jobKey);  // 派派 5/24：24 職業專屬 VFX (Codex)
     stage.classList.add("impact", "zoom-impact");  // P3 命中 zoom-in + slow-mo
     setTimeout(() => stage.classList.remove("impact", "zoom-impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
@@ -1211,6 +1251,10 @@ async function startArena() {
         `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=1`,
         `boss/v2/${playerSetup.subject}/${tierKey}/vfx.webp?v=3`,
     ].filter(Boolean);
+    // 派派 5/24：預載目前職業的 hero VFX 圖（避免第一次攻擊載入延遲）
+    if (playerSetup.jobKey) {
+        framesToPreload.push(`hero_vfx/${playerSetup.jobKey}.webp?v=1`);
+    }
 
     // setup 畫面顯示「準備戰場中…」spinner，等所有圖載完才切戰場
     showSetupSpinner();

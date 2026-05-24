@@ -1021,6 +1021,11 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     transform: translate(-50%, -50%);
     filter: drop-shadow(0 0 18px rgba(255, 220, 100, 0.4));
 }
+/* 主角 VFX 用同樣 motion 但偏冷色光暈 */
+.boss-vfx.hero-vfx {
+    z-index: 201;
+    filter: drop-shadow(0 0 18px rgba(120, 220, 255, 0.6)) drop-shadow(0 0 36px rgba(80, 180, 255, 0.4));
+}
 
 /* burst: 在 hero 處出現 + 微微飄動 + 淡出（連發小招用）*/
 .boss-vfx.motion-burst {
