@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=49">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=50">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -97,9 +97,9 @@
                 <span id="combat-status" style="display:none"></span>
             </div>
 
-            <!-- 魔王 HP 薄條（派派 5/24 從 arena-stage 內部上移到獨立 row，不再擋戰鬥畫面） -->
-            <div class="boss-hud-strip">
-                <div class="boss-name" id="boss-name-display">★ 數學魔王 ★</div>
+            <!-- 魔王 HP 條派派 5/24 整個拿掉，但 ID 保留 hidden 給 JS 寫不 crash -->
+            <div class="boss-hud-strip" style="display: none">
+                <div class="boss-name" id="boss-name-display"></div>
                 <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
             </div>
 
