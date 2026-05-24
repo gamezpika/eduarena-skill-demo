@@ -193,8 +193,8 @@
                   <polygon class="grid-tile" data-x="4" data-y="4" points="75.2,68.0 83.6,71.5 92.0,68.0 83.6,64.5" />
                 </svg>
 
-                <img src="assets/images/arena/hero_iso.png?v=2" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
-                <img src="assets/images/arena/boss_iso.png?v=2" class="fighter-boss" id="fighter-boss" alt="boss">
+                <img src="assets/images/arena/hero_iso.png?v=3" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
+                <img src="assets/images/arena/boss_iso.png?v=3" class="fighter-boss" id="fighter-boss" alt="boss">
             </div>
 
             <!-- 題目卡 -->
@@ -620,7 +620,7 @@ async function attackBoss() {
     boss.classList.add("hit");
     // 切到 tier 的 hit sprite
     if (state.bossData && state.bossData.hit_sprite) {
-        boss.src = `assets/images/${state.bossData.hit_sprite}?v=2`;
+        boss.src = `assets/images/${state.bossData.hit_sprite}?v=3`;
     }
     popDamage(boss, "-" + dmg, false);
     spawnHitFX(boss, state.weapon);
@@ -635,7 +635,7 @@ async function attackBoss() {
     boss.classList.remove("hit");
     // 還原成 idle
     if (state.bossHP > 0 && state.bossData) {
-        boss.src = `assets/images/${state.bossData.sprite}?v=2`;
+        boss.src = `assets/images/${state.bossData.sprite}?v=3`;
     }
 }
 
@@ -684,10 +684,10 @@ function deriveBossFramePath(attackSprite, phase) {
 // 嘗試切換 boss sprite；圖不存在會在 img.onerror 回退
 function swapBossSprite(spritePath, fallback) {
     if (!spritePath) return;
-    boss.src = `assets/images/${spritePath}?v=2`;
+    boss.src = `assets/images/${spritePath}?v=3`;
     boss.onerror = () => {
         boss.onerror = null;
-        if (fallback) boss.src = `assets/images/${fallback}?v=2`;
+        if (fallback) boss.src = `assets/images/${fallback}?v=3`;
     };
 }
 
@@ -707,7 +707,7 @@ async function getHitByBoss() {
 
     // B1 切到 attack sprite (peak attack pose) — 維持 0.45s 讓肉眼看得到
     if (attackSp) {
-        boss.src = `assets/images/${attackSp}?v=2`;
+        boss.src = `assets/images/${attackSp}?v=3`;
     }
 
     await sleep(50);
@@ -745,7 +745,7 @@ async function getHitByBoss() {
 
     // B4 切回 idle sprite
     if (state.bossHP > 0 && state.bossData) {
-        boss.src = `assets/images/${state.bossData.sprite}?v=2`;
+        boss.src = `assets/images/${state.bossData.sprite}?v=3`;
     }
 
     // 答錯後退 1 格
@@ -1031,7 +1031,7 @@ function endGame(outcome) {
         boss.classList.add("defeated");
         // 切到 tier 的 death sprite
         if (state.bossData && state.bossData.defeat_sprite) {
-            boss.src = `assets/images/${state.bossData.defeat_sprite}?v=2`;
+            boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
         }
         stage.classList.add("slow-mo");
         hero.classList.remove("attacking");
@@ -1237,18 +1237,18 @@ async function startArena() {
     state.bossData = tierData;
     state.bossMaxHP = tierData.hp;
     state.bossHP = tierData.hp;
-    boss.src = `assets/images/${tierData.sprite}?v=2`;
+    boss.src = `assets/images/${tierData.sprite}?v=3`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
 
     // 預載連續動作幀 + 楓之谷 VFX 圖 — await 等載入完成（派派 5/24：戰鬥內絕對流暢）
     const tierKey = playerSetup.tier;  // "t1"/"t2"/"t3"
     const framesToPreload = [
-        `${tierData.sprite}?v=2`,
-        `${tierData.hit_sprite}?v=2`,
-        `${tierData.attack_sprite}?v=2`,
-        `${tierData.defeat_sprite}?v=2`,
-        `${deriveBossFramePath(tierData.attack_sprite, "charge")}?v=2`,
-        `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=2`,
+        `${tierData.sprite}?v=3`,
+        `${tierData.hit_sprite}?v=3`,
+        `${tierData.attack_sprite}?v=3`,
+        `${tierData.defeat_sprite}?v=3`,
+        `${deriveBossFramePath(tierData.attack_sprite, "charge")}?v=3`,
+        `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=3`,
         `boss/v2/${playerSetup.subject}/${tierKey}/vfx.webp?v=3`,
     ].filter(Boolean);
     // 派派 5/24：預載目前職業的 hero VFX 圖（避免第一次攻擊載入延遲）
@@ -1374,7 +1374,7 @@ function initCombatEngine() {
     engine.on('unit_defeated', ({ unit }) => {
         if (unit.id === 'boss') {
             if (state.bossData && state.bossData.defeat_sprite) {
-                boss.src = `assets/images/${state.bossData.defeat_sprite}?v=2`;
+                boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
             }
         }
     });
