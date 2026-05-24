@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=54">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=55">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -1263,6 +1263,13 @@ async function startArena() {
 
     // 戰場用 tier 的 bg（15 張 boss 各自背景），5×5 棋盤是 CSS overlay 疊在上面
     stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
+    // 派派 5/24：主角狀態列 (arena-hud) 也套同 bg + 深色 overlay，視覺上下連續
+    const hud = document.querySelector(".arena-hud");
+    if (hud) {
+        hud.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.35)), url("assets/images/${tierData.bg}?v=1")`;
+        hud.style.backgroundSize = "cover";
+        hud.style.backgroundPosition = "center top";
+    }
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
