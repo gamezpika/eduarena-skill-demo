@@ -13,6 +13,53 @@
     <title>PVP 對戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
     <link rel="stylesheet" href="static/css/boss-arena.css?v=54">
+    <style>
+        /* PVP 計分條 — 取代 HP 條 */
+        .pvp-score-strip {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #c79a5a 0%, #a37840 30%, #8a6332 60%, #6b4a22 100%);
+            border-bottom: 3px solid #3d2810;
+            box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.4), 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+        .pvp-score-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+            padding: 4px 16px;
+            background: rgba(20, 10, 4, 0.75);
+            border: 2px solid #3d2810;
+            border-radius: 12px;
+        }
+        .pvp-score-side.me  { box-shadow: 0 0 14px rgba(100, 200, 255, 0.7); border-color: #4a90e2; }
+        .pvp-score-side.opp { box-shadow: 0 0 14px rgba(255, 80, 80, 0.7); border-color: #d64040; }
+        .pvp-score-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 230, 180, 0.85);
+            letter-spacing: 1px;
+        }
+        .pvp-score-num {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            color: #ffd54d;
+            text-shadow: 0 0 8px rgba(255, 200, 60, 0.8), 1px 2px 3px #000;
+        }
+        .pvp-score-vs {
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 8px #000, 0 0 12px rgba(255, 60, 60, 0.7);
+            letter-spacing: 2px;
+        }
+    </style>
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -73,23 +120,20 @@
 
             <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
 
-            <!-- 上方主角 HUD（slim 版 — 派派 5/24 只留圓圈頭像 + HP）-->
-            <div class="arena-hud arena-hud-slim">
-                <div class="hero-card">
-                    <div class="hero-portrait">
-                        <img src="assets/images/arena/hero.png" alt="hero">
-                    </div>
-                    <div class="hero-info">
-                        <div class="hero-bars">
-                            <div class="bar-row">
-                                <span class="bar-label">HP</span>
-                                <span class="bar-value" id="hero-hp-num">100 / 100</span>
-                                <div class="bar-track"><div class="bar-fill hp" id="hero-hp-fill" style="width: 100%"></div></div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- PVP 計分條（派派 5/24：砍 HP 改競速計分）-->
+            <div class="pvp-score-strip">
+                <div class="pvp-score-side me">
+                    <div class="pvp-score-label">你</div>
+                    <div class="pvp-score-num" id="pvp-score-me">0</div>
                 </div>
-                <!-- hero-name / MP / pills 派派 5/24 拿掉，hidden 但 JS 可寫 -->
+                <div class="pvp-score-vs">VS</div>
+                <div class="pvp-score-side opp">
+                    <div class="pvp-score-label">對手</div>
+                    <div class="pvp-score-num" id="pvp-score-opp">0</div>
+                </div>
+                <!-- 隱藏舊 HP/MP 元素給 JS 寫不 crash -->
+                <span id="hero-hp-num" style="display:none"></span>
+                <span id="hero-hp-fill" style="display:none"></span>
                 <span id="hero-name-display" style="display:none"></span>
                 <span id="hero-mp-num" style="display:none"></span>
                 <span id="hero-mp-fill" style="display:none"></span>
@@ -102,7 +146,8 @@
                 <div class="torch-glow left"></div>
                 <div class="torch-glow right"></div>
 
-                <!-- 魔王 HP 條（派派 5/24 恢復：absolute 疊在上方空白區，不佔 layout）-->
+                <!-- PVP 模式不顯示 HP 條（派派 5/24 改競速）-->
+                <style>.boss-hud-overlay { display: none !important; }</style>
                 <div class="boss-hud-overlay">
                     <div class="boss-name" id="boss-name-display"></div>
                     <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
@@ -382,6 +427,36 @@ async function handleAnswer(idx, btn) {
     const q = QUESTIONS[state.qIdx % QUESTIONS.length];
     document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
 
+    if (PVP_MODE) {
+        // ===== PVP 答題競速：誰先答對誰得 1 分 + 出招 =====
+        cancelAITimer();  // 我答了 → 取消對手定時答
+        if (idx === q.ans) {
+            btn.classList.add("correct");
+            state.combo++;
+            showComboIfDue();
+            state.myScore = (state.myScore || 0) + 1;
+            updateScoreUI();
+            await pvpAttackOpponent();
+        } else {
+            btn.classList.add("wrong");
+            document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
+            state.combo = 0;
+            // 我答錯 → 對手有機會接著答對（模擬：50% 對手把握住）
+            if (Math.random() < 0.5) {
+                await pvpOpponentAnswer(true);
+            }
+        }
+        if ((state.myScore || 0) >= 10)  return endGame("win");
+        if ((state.oppScore || 0) >= 10) return endGame("dead");
+        // 下一題（重置 busy 在底下）
+        state.qIdx++;
+        loadQuestion();
+        scheduleAIAnswer();
+        state.busy = false;
+        return;
+    }
+
+    // ===== PvE 原邏輯 =====
     if (idx === q.ans) {
         btn.classList.add("correct");
         state.combo++;
@@ -406,6 +481,88 @@ async function handleAnswer(idx, btn) {
     state.qIdx++;
     state.busy = false;
     loadQuestion();
+}
+
+// ===== PVP 競速 helpers =====
+let __aiTimer = null;
+function cancelAITimer() {
+    if (__aiTimer) { clearTimeout(__aiTimer); __aiTimer = null; }
+}
+function scheduleAIAnswer() {
+    cancelAITimer();
+    if (state.finished) return;
+    // AI 隨機 5-12 秒後「答題」
+    const delay = 5000 + Math.random() * 7000;
+    __aiTimer = setTimeout(() => {
+        if (state.finished || state.busy) return;
+        // tier 1: 70% / tier 2: 60% / tier 3: 50% 對手答對率
+        const tier = parseInt((playerSetup.tier || "t1").replace("t", ""), 10) || 1;
+        const correctRate = 0.8 - tier * 0.1;  // 0.7 / 0.6 / 0.5
+        const aiCorrect = Math.random() < correctRate;
+        if (state.busy) return;  // 我正在答 → AI 等
+        state.busy = true;
+        document.querySelectorAll(".opt-btn").forEach(b => b.disabled = true);
+        pvpOpponentAnswer(aiCorrect).then(() => {
+            if (state.finished) return;
+            if ((state.myScore || 0) >= 10)  return endGame("win");
+            if ((state.oppScore || 0) >= 10) return endGame("dead");
+            state.qIdx++;
+            loadQuestion();
+            scheduleAIAnswer();
+            state.busy = false;
+        });
+    }, delay);
+}
+
+async function pvpAttackOpponent() {
+    // 我方衝刺 + spawnHeroVfx + 對手 .hit
+    const attackClass = `attacking-${state.weapon}`;
+    hero.classList.add(attackClass);
+    setTimeout(() => hero.classList.remove(attackClass), 700);
+    spawnWeaponTrail();
+    await sleep(320);
+    boss.classList.add("hit");
+    spawnHitFX(boss, state.weapon);
+    spawnBigImpact(state.weapon);
+    spawnHeroVfx(playerSetup.jobKey);
+    stage.classList.add("impact", "zoom-impact");
+    setTimeout(() => stage.classList.remove("impact", "zoom-impact"), 500);
+    if (navigator.vibrate) navigator.vibrate(40);
+    await sleep(400);
+    boss.classList.remove("hit");
+}
+
+async function pvpOpponentAnswer(isCorrect) {
+    if (!isCorrect) return;  // AI 答錯 = 沒事
+    state.oppScore = (state.oppScore || 0) + 1;
+    updateScoreUI();
+    showOpponentAnswerToast();
+    // 對手出招動畫（不扣血、只視覺）
+    boss.classList.add("charging");
+    await sleep(300);
+    boss.classList.remove("charging");
+    spawnOpponentVfx(state.opponentJobKey);
+    hero.classList.add("hit");
+    stage.classList.add("shake", "player-hit");
+    if (navigator.vibrate) navigator.vibrate(30);
+    await sleep(450);
+    hero.classList.remove("hit");
+    stage.classList.remove("shake", "player-hit");
+}
+
+function showOpponentAnswerToast() {
+    const t = document.createElement("div");
+    t.className = "arena-toast";
+    t.textContent = "對手答對！";
+    stage.appendChild(t);
+    setTimeout(() => t.remove(), 1200);
+}
+
+function updateScoreUI() {
+    const my = $("pvp-score-me");
+    const opp = $("pvp-score-opp");
+    if (my) my.textContent = state.myScore || 0;
+    if (opp) opp.textContent = state.oppScore || 0;
 }
 
 // D. Combo 大字提示
@@ -1355,8 +1512,16 @@ async function startArena() {
     bindSkillButtons();
 
     state.busy = true;
+    if (PVP_MODE) {
+        state.myScore = 0;
+        state.oppScore = 0;
+        updateScoreUI();
+    }
     loadQuestion();
-    setTimeout(() => { state.busy = false; }, 1100);
+    setTimeout(() => {
+        state.busy = false;
+        if (PVP_MODE) scheduleAIAnswer();  // 第一題開始算對手時間
+    }, 1100);
 }
 
 // ===== CombatEngine 整合（神餓！）=====
