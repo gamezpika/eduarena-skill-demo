@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=52">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=53">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -97,16 +97,16 @@
                 <span id="combat-status" style="display:none"></span>
             </div>
 
-            <!-- 魔王 HP 條派派 5/24 整個拿掉，但 ID 保留 hidden 給 JS 寫不 crash -->
-            <div class="boss-hud-strip" style="display: none">
-                <div class="boss-name" id="boss-name-display"></div>
-                <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
-            </div>
-
             <!-- 戰場 -->
             <div class="arena-stage" id="arena-stage">
                 <div class="torch-glow left"></div>
                 <div class="torch-glow right"></div>
+
+                <!-- 魔王 HP 條（派派 5/24 恢復：absolute 疊在上方空白區，不佔 layout）-->
+                <div class="boss-hud-overlay">
+                    <div class="boss-name" id="boss-name-display"></div>
+                    <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
+                </div>
 
                 <!-- 武器切換列（派派 5/23 砍 fist + pencil 留 4） -->
                 <div class="weapon-bar" id="weapon-bar">

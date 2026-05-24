@@ -35,17 +35,19 @@
     font-size: 12px;
 }
 
-/* 魔王 HP 薄條（派派 5/24 拿掉黑底紅框，純血量+名字）*/
-.boss-hud-strip {
-    flex-shrink: 0;
-    margin: 4px 14px 6px;
-    padding: 0;
+/* 魔王 HP 條（派派 5/24 恢復：absolute overlay 在 arena-stage 上方空白區，不佔 layout）*/
+.boss-hud-overlay {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 78%;
+    max-width: 320px;
     background: transparent;
-    border: none;
-    box-shadow: none;
-    z-index: 2;
+    z-index: 4;
+    pointer-events: none;
 }
-.boss-hud-strip .boss-name {
+.boss-hud-overlay .boss-name {
     text-align: center;
     font-size: 13px;
     font-weight: 700;
