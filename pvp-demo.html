@@ -1466,8 +1466,8 @@ async function startArena() {
         const oppJob = opponentPool[Math.floor(Math.random() * opponentPool.length)];
         state.opponentJobKey = oppJob.key;
         state.opponentName = oppJob.name;
-        // 派派 5/24：主角站 (1,3) — 對手 (2,4) 正左邊（同一橫排），對打
-        state.heroPos = { x: 1, y: 3 };
+        // 派派 5/24：主角 (2,0) 下尖 + 對手 (2,4) 上尖，Y 軸對角 4 格對打
+        state.heroPos = { x: 2, y: 0 };
         // 派派 5/24：對手 sprite 翻面朝主角（Canvas 預翻轉，避免 CSS bossIdle animation 衝突）
         loadFlippedImage(`assets/images/arena/hero_job_${oppJob.key}.png?v=3`)
             .then(dataUrl => { boss.src = dataUrl; });
