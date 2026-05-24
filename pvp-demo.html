@@ -1299,7 +1299,7 @@ function setHeroSpriteFromJob(job) {
     if (job && job.key) {
         // 派派 5/24：女角加 _f suffix
         const suffix = playerSetup.gender === "f" ? "_f" : "";
-        src = `assets/images/arena/hero_job_${job.key}${suffix}.png?v=3`;
+        src = `assets/images/arena/hero_job_${job.key}${suffix}.png?v=4`;
     }
     hero.src = src;
     // 武器類別仍由職業推算（決定攻擊動畫 keyframes）
@@ -1494,7 +1494,7 @@ async function startArena() {
         state.heroPos = { x: 2, y: 0 };
         // 派派 5/24：對手 sprite 翻面朝主角（Canvas 預翻轉，避免 CSS bossIdle animation 衝突）
         const oppSuffix = oppGender === "f" ? "_f" : "";
-        loadFlippedImage(`assets/images/arena/hero_job_${oppJob.key}${oppSuffix}.png?v=3`)
+        loadFlippedImage(`assets/images/arena/hero_job_${oppJob.key}${oppSuffix}.png?v=4`)
             .then(dataUrl => { boss.src = dataUrl; });
         document.getElementById("boss-name-display").textContent = `★ 對手：${oppJob.name} ★`;
     } else {
@@ -1508,7 +1508,7 @@ async function startArena() {
         `boss/v2/${playerSetup.subject}/${tierKey}/vfx.webp?v=3`,
     ];
     if (PVP_MODE && state.opponentJobKey) {
-        framesToPreload.push(`arena/hero_job_${state.opponentJobKey}.png?v=3`);
+        framesToPreload.push(`arena/hero_job_${state.opponentJobKey}.png?v=4`);
         framesToPreload.push(`hero_vfx/${state.opponentJobKey}.webp?v=1`);
     } else {
         framesToPreload.push(
@@ -1532,6 +1532,14 @@ async function startArena() {
 
     // 戰場用 tier 的 bg（15 張 boss 各自背景），5×5 棋盤是 CSS overlay 疊在上面
     stage.style.backgroundImage = `url("assets/images/${tierData.bg}?v=1")`;
+    // 派派 5/24：score strip 也套相同 bg + 半透明深色 overlay 確保 score 字清楚
+    const scoreStrip = document.querySelector(".pvp-score-strip");
+    if (PVP_MODE && scoreStrip) {
+        scoreStrip.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.35)), url("assets/images/${tierData.bg}?v=1")`;
+        scoreStrip.style.backgroundSize = "cover";
+        scoreStrip.style.backgroundPosition = "center top";
+        scoreStrip.style.borderBottom = "none";
+    }
 
     // 套用 UI 文字
     document.getElementById("hero-name-display").textContent = playerSetup.name;
