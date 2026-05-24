@@ -1253,7 +1253,7 @@ function endGame(outcome) {
         hero.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
         sub = PVP_MODE
-            ? `擊敗對手 ${state.opponentName || ''}！HP ${state.heroHP} · ${state.qIdx + 1} 題`
+            ? `擊敗對手 ${state.opponentName || ''}！比分 ${state.myScore || 0} : ${state.oppScore || 0}`
             : `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
         overlayDelay = 2200;
     } else if (outcome === "retreat") {
@@ -1262,7 +1262,7 @@ function endGame(outcome) {
         stage.appendChild(vig);
         emoji = "🏳"; title = "撤退失敗..."; titleClass = "lose";
         sub = PVP_MODE
-            ? `被打出戰場！對手還剩 HP ${state.bossHP}`
+            ? `比分 ${state.myScore || 0} : ${state.oppScore || 0}`
             : `被打出戰場！魔王還剩 HP ${state.bossHP}`;
         overlayDelay = 1200;
     } else {
@@ -1271,7 +1271,7 @@ function endGame(outcome) {
         stage.appendChild(vig);
         emoji = "💀"; title = "失敗..."; titleClass = "lose";
         sub = PVP_MODE
-            ? `對手還剩 HP ${state.bossHP}`
+            ? `比分 ${state.myScore || 0} : ${state.oppScore || 0}`
             : `魔王還剩 HP ${state.bossHP}`;
         overlayDelay = 1200;
     }
