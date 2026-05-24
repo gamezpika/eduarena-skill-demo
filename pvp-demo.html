@@ -1244,8 +1244,8 @@ function endGame(outcome) {
     if (outcome === "win") {
         // H. 勝利 cinematic（拿掉光柱、拿掉 combo 顯示）
         boss.classList.add("defeated");
-        // 切到 tier 的 death sprite
-        if (state.bossData && state.bossData.defeat_sprite) {
+        // 切到 tier 的 death sprite — PVP 不切，保留對手 job sprite（用 defeated class 旋轉淡出）
+        if (!PVP_MODE && state.bossData && state.bossData.defeat_sprite) {
             boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
         }
         stage.classList.add("slow-mo");
@@ -1650,7 +1650,8 @@ function initCombatEngine() {
     });
     engine.on('unit_defeated', ({ unit }) => {
         if (unit.id === 'boss') {
-            if (state.bossData && state.bossData.defeat_sprite) {
+            // PVP 不切（保留對手 sprite）
+            if (!PVP_MODE && state.bossData && state.bossData.defeat_sprite) {
                 boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
             }
         }
