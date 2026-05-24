@@ -103,6 +103,23 @@
             </div>
 
             <div class="setup-section">
+                <h3>👤 我方性別</h3>
+                <div class="theme-picker" id="setup-gender">
+                    <button class="theme-btn gender-btn active" data-gender="m">👦 男孩</button>
+                    <button class="theme-btn gender-btn" data-gender="f">👧 女孩</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <h3>🤖 對手性別</h3>
+                <div class="theme-picker" id="setup-opp-gender">
+                    <button class="theme-btn opp-gender-btn active" data-opp-gender="random">🎲 隨機</button>
+                    <button class="theme-btn opp-gender-btn" data-opp-gender="m">👦 男</button>
+                    <button class="theme-btn opp-gender-btn" data-opp-gender="f">👧 女</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
                 <h3>🧱 戰場棋盤主題</h3>
                 <div class="theme-picker" id="setup-theme">
                     <button class="theme-btn" data-theme="sandstone">🏜 砂岩</button>
@@ -330,6 +347,8 @@ const playerSetup = {
     subject: "math",
     tier: "t3",       // 預設挑戰終極
     jobKey: null,
+    gender: "m",      // 派派 5/24 PVP 加性別 "m"|"f"
+    oppGender: "random",  // "random"|"m"|"f"
 };
 
 const state = {
@@ -1278,8 +1297,9 @@ function setHeroSpriteFromJob(job) {
     // 預設沒選職業 → 用 hero_iso_sword 當基底
     let src = "assets/images/arena/hero_iso_sword.png?v=1";
     if (job && job.key) {
-        const jobSpritePath = `assets/images/arena/hero_job_${job.key}.png?v=3`;
-        src = jobSpritePath;
+        // 派派 5/24：女角加 _f suffix
+        const suffix = playerSetup.gender === "f" ? "_f" : "";
+        src = `assets/images/arena/hero_job_${job.key}${suffix}.png?v=3`;
     }
     hero.src = src;
     // 武器類別仍由職業推算（決定攻擊動畫 keyframes）
@@ -1466,10 +1486,15 @@ async function startArena() {
         const oppJob = opponentPool[Math.floor(Math.random() * opponentPool.length)];
         state.opponentJobKey = oppJob.key;
         state.opponentName = oppJob.name;
+        // 對手性別：random 就 50/50；指定就照指定
+        let oppGender = playerSetup.oppGender;
+        if (oppGender === "random") oppGender = Math.random() < 0.5 ? "m" : "f";
+        state.opponentGender = oppGender;
         // 派派 5/24：主角 (2,0) 下尖 + 對手 (2,4) 上尖，Y 軸對角 4 格對打
         state.heroPos = { x: 2, y: 0 };
         // 派派 5/24：對手 sprite 翻面朝主角（Canvas 預翻轉，避免 CSS bossIdle animation 衝突）
-        loadFlippedImage(`assets/images/arena/hero_job_${oppJob.key}.png?v=3`)
+        const oppSuffix = oppGender === "f" ? "_f" : "";
+        loadFlippedImage(`assets/images/arena/hero_job_${oppJob.key}${oppSuffix}.png?v=3`)
             .then(dataUrl => { boss.src = dataUrl; });
         document.getElementById("boss-name-display").textContent = `★ 對手：${oppJob.name} ★`;
     } else {
@@ -1708,6 +1733,23 @@ function applyTheme(theme) {
     // 主題按鈕綁定
     document.querySelectorAll("#setup-theme .theme-btn").forEach(b => {
         b.onclick = () => applyTheme(b.dataset.theme);
+    });
+    // 派派 5/24：我方性別按鈕
+    document.querySelectorAll("#setup-gender .gender-btn").forEach(b => {
+        b.onclick = () => {
+            playerSetup.gender = b.dataset.gender;
+            document.querySelectorAll("#setup-gender .gender-btn").forEach(x => x.classList.toggle("active", x === b));
+            // 即時更新預覽圖
+            const job = JOBS_DATA.find(j => j.key === playerSetup.jobKey);
+            if (job) setHeroSpriteFromJob(job);
+        };
+    });
+    // 派派 5/24：對手性別按鈕
+    document.querySelectorAll("#setup-opp-gender .opp-gender-btn").forEach(b => {
+        b.onclick = () => {
+            playerSetup.oppGender = b.dataset.oppGender;
+            document.querySelectorAll("#setup-opp-gender .opp-gender-btn").forEach(x => x.classList.toggle("active", x === b));
+        };
     });
 })();
 </script>
