@@ -35,25 +35,22 @@
     font-size: 12px;
 }
 
-/* 魔王 HP 薄條（從 arena-stage 拉出，獨立 row 不擋戰場）*/
+/* 魔王 HP 薄條（派派 5/24 拿掉黑底紅框，純血量+名字）*/
 .boss-hud-strip {
     flex-shrink: 0;
     margin: 4px 14px 6px;
-    padding: 5px 10px;
-    background: linear-gradient(135deg, rgba(80, 30, 30, 0.85) 0%, rgba(50, 12, 12, 0.92) 100%);
-    border: 2px solid #4a1a08;
-    border-radius: 10px;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 200, 200, 0.2),
-        0 2px 6px rgba(0, 0, 0, 0.5);
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     z-index: 2;
 }
 .boss-hud-strip .boss-name {
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: #ff8a4c;
-    text-shadow: 0 0 8px rgba(255, 100, 0, 0.7), 1px 1px 2px #000;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.95), 1px 1px 3px #000, 0 0 10px rgba(255, 100, 0, 0.6);
     margin-bottom: 4px;
     letter-spacing: 2px;
 }
