@@ -12,12 +12,10 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=3">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=47">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=48">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
-
-<div class="demo-banner">技術 DEMO</div>
 
 <div class="iphone-frame">
     <div class="iphone-island" aria-hidden="true"></div>
@@ -75,43 +73,40 @@
 
             <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
 
-            <!-- 上方主角 HUD（木框）— 派派 5/24 把科目+距離合進來，戰場不再被壓 -->
-            <div class="arena-hud">
+            <!-- 上方主角 HUD（slim 版 — 派派 5/24 只留圓圈頭像 + HP）-->
+            <div class="arena-hud arena-hud-slim">
                 <div class="hero-card">
                     <div class="hero-portrait">
                         <img src="assets/images/arena/hero.png" alt="hero">
                     </div>
                     <div class="hero-info">
-                        <div class="hero-name" id="hero-name-display">小派派</div>
                         <div class="hero-bars">
                             <div class="bar-row">
                                 <span class="bar-label">HP</span>
                                 <span class="bar-value" id="hero-hp-num">100 / 100</span>
                                 <div class="bar-track"><div class="bar-fill hp" id="hero-hp-fill" style="width: 100%"></div></div>
                             </div>
-                            <div class="bar-row">
-                                <span class="bar-label">MP</span>
-                                <span class="bar-value" id="hero-mp-num">50 / 50</span>
-                                <div class="bar-track"><div class="bar-fill mp" id="hero-mp-fill" style="width: 100%"></div></div>
-                            </div>
-                            <div class="hero-meta">
-                                <span class="meta-pill" id="info-subject-name">📘 數學·五年級·T1</span>
-                                <span class="meta-pill meta-status" id="combat-status">📍 距離 2 格</span>
-                            </div>
                         </div>
                     </div>
                 </div>
+                <!-- hero-name / MP / pills 派派 5/24 拿掉，hidden 但 JS 可寫 -->
+                <span id="hero-name-display" style="display:none"></span>
+                <span id="hero-mp-num" style="display:none"></span>
+                <span id="hero-mp-fill" style="display:none"></span>
+                <span id="info-subject-name" style="display:none"></span>
+                <span id="combat-status" style="display:none"></span>
+            </div>
+
+            <!-- 魔王 HP 薄條（派派 5/24 從 arena-stage 內部上移到獨立 row，不再擋戰鬥畫面） -->
+            <div class="boss-hud-strip">
+                <div class="boss-name" id="boss-name-display">★ 數學魔王 ★</div>
+                <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
             </div>
 
             <!-- 戰場 -->
             <div class="arena-stage" id="arena-stage">
                 <div class="torch-glow left"></div>
                 <div class="torch-glow right"></div>
-
-                <div class="boss-hud">
-                    <div class="boss-name" id="boss-name-display">★ 數學魔王 ★</div>
-                    <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
-                </div>
 
                 <!-- 武器切換列（派派 5/23 砍 fist + pencil 留 4） -->
                 <div class="weapon-bar" id="weapon-bar">
