@@ -25,8 +25,8 @@
 
         <!-- 開場設定面板 -->
         <div class="setup-modal" id="screen-setup">
-            <div class="setup-title">⚔ 冒險者設定 ⚔</div>
-            <div class="setup-sub">真實 EduArena 資料 · 24 職業 · 5 科 · 數十題真題庫樣本</div>
+            <div class="setup-title">⚔ PVP 對戰設定 ⚔</div>
+            <div class="setup-sub">楓之谷風 SRPG 雙人 PK · 對手從 24 職業隨機選</div>
 
             <div class="setup-section">
                 <h3>👤 玩家名稱</h3>
@@ -34,14 +34,14 @@
             </div>
 
             <div class="setup-section">
-                <h3>📚 選擇科目（決定魔王）</h3>
+                <h3>📚 選擇科目（決定題庫）</h3>
                 <div class="subject-grid" id="setup-subjects">
                     <!-- 5 科 button JS render -->
                 </div>
             </div>
 
             <div class="setup-section">
-                <h3>👹 魔王難度（3 個 tier）</h3>
+                <h3>⚔️ 對手難度（決定 HP）</h3>
                 <div class="subject-grid" id="setup-tiers">
                     <!-- 3 tier button JS render -->
                 </div>
@@ -66,7 +66,7 @@
                 </div>
             </div>
 
-            <button class="setup-start" id="setup-start">開始挑戰魔王 →</button>
+            <button class="setup-start" id="setup-start">⚔️ 開始 PVP 對戰 →</button>
         </div>
 
         <div id="screen-arena" style="display: none">
@@ -264,6 +264,7 @@ function pickWeaponByJob(job) {
    攻擊範圍 = Chebyshev ≤ 1 */
 const GRID = { cols: 5, rows: 5 };
 const BOSS_POS = { x: 2, y: 4 };
+const PVP_MODE = true;  // PVP demo：對手是真人玩家（mock AI），不是魔王
 // 嘍囉位置預留（demo 暫不啟用）
 const ENEMY_SLOTS_RESERVED = [
     { x: 4, y: 3 },  // 魔王正下方
@@ -618,14 +619,14 @@ async function attackBoss() {
     // 衝刺中段（接觸時）觸發特效
     await sleep(state.weapon === "pencil" ? 220 : 320);
     boss.classList.add("hit");
-    // 切到 tier 的 hit sprite
-    if (state.bossData && state.bossData.hit_sprite) {
+    // PVP 模式：對手 sprite 沒有 hit 變體，只用 hit class 抖動
+    if (!PVP_MODE && state.bossData && state.bossData.hit_sprite) {
         boss.src = `assets/images/${state.bossData.hit_sprite}?v=3`;
     }
     popDamage(boss, "-" + dmg, false);
     spawnHitFX(boss, state.weapon);
     spawnBigImpact(state.weapon);  // P4 武器專屬大畫面（CSS）
-    spawnHeroVfx(playerSetup.jobKey);  // 派派 5/24：24 職業專屬 VFX (Codex)
+    spawnHeroVfx(playerSetup.jobKey);  // 24 職業專屬 VFX
     stage.classList.add("impact", "zoom-impact");  // P3 命中 zoom-in + slow-mo
     setTimeout(() => stage.classList.remove("impact", "zoom-impact"), 500);
     if (navigator.vibrate) navigator.vibrate(40);
@@ -633,8 +634,8 @@ async function attackBoss() {
 
     await sleep(400);
     boss.classList.remove("hit");
-    // 還原成 idle
-    if (state.bossHP > 0 && state.bossData) {
+    // 還原成 idle（PvE 切回 boss idle sprite；PVP 不切因為 boss src 已是對手 job sprite 不變）
+    if (!PVP_MODE && state.bossHP > 0 && state.bossData) {
         boss.src = `assets/images/${state.bossData.sprite}?v=3`;
     }
 }
@@ -695,40 +696,59 @@ async function getHitByBoss() {
     // tier 等級 (t1/t2/t3 → 1/2/3)
     const tierLevel = parseInt((playerSetup.tier || "t1").replace("t", ""), 10) || 1;
 
+    if (PVP_MODE) {
+        // ===== PVP MODE：對手用 hero_vfx 攻擊主角 =====
+        boss.classList.add("charging");  // 套蓄力 scale 動畫
+        await sleep(400);
+        boss.classList.remove("charging");
+
+        // 對手招式 VFX 出現在主角身上
+        spawnOpponentVfx(state.opponentJobKey);
+        await sleep(500);
+
+        // 命中
+        const dmg = 18 + Math.floor(Math.random() * 12);  // 18-29
+        state.heroHP = Math.max(0, state.heroHP - dmg);
+        hero.classList.add("hit");
+        stage.classList.add("shake", "player-hit");
+        popDamage(hero, "-" + dmg, true);
+        if (navigator.vibrate) navigator.vibrate(30);
+        updateBars();
+        await sleep(500);
+        hero.classList.remove("hit");
+        stage.classList.remove("shake", "player-hit");
+        await moveBackward();
+        return;
+    }
+
+    // ===== PvE MODE 原邏輯 =====
     const attackSp = state.bossData && state.bossData.attack_sprite;
     const chargeSp = deriveBossFramePath(attackSp, "charge");
     const releaseSp = deriveBossFramePath(attackSp, "release");
 
-    // B2 蓄力前搖 0.45s（魔王發光、scale 變大 + 切 charge.png）
     boss.classList.add("charging");
-    swapBossSprite(chargeSp, attackSp);  // charge 圖；不存在 fallback attack
+    swapBossSprite(chargeSp, attackSp);
     await sleep(450);
     boss.classList.remove("charging");
 
-    // B1 切到 attack sprite (peak attack pose) — 維持 0.45s 讓肉眼看得到
     if (attackSp) {
         boss.src = `assets/images/${attackSp}?v=3`;
     }
 
     await sleep(50);
 
-    // B3 投射物：boss → hero，tier 越高越多
     spawnBossProjectile(tierLevel);
 
-    // 0.4s 後切到 release（follow-through 跟進姿勢）
     setTimeout(() => swapBossSprite(releaseSp, attackSp), 400);
 
-    // 飛行時間 0.5s
     await sleep(500);
 
-    // 命中：扣血 + shake + vignette + damage popup
-    const dmg = (18 + Math.floor(Math.random() * 12)) * (1 + (tierLevel - 1) * 0.3) | 0;  // tier 越高傷害越高
+    const dmg = (18 + Math.floor(Math.random() * 12)) * (1 + (tierLevel - 1) * 0.3) | 0;
     state.heroHP = Math.max(0, state.heroHP - dmg);
     hero.classList.add("hit");
     stage.classList.add("shake", "player-hit");
     popDamage(hero, "-" + dmg, true);
 
-    // B5 tier 3 stage flash + 大震動
     if (tierLevel >= 3) {
         const flash = document.createElement("div");
         flash.className = "stage-mega-flash";
@@ -743,13 +763,32 @@ async function getHitByBoss() {
     hero.classList.remove("hit");
     stage.classList.remove("shake", "player-hit");
 
-    // B4 切回 idle sprite
     if (state.bossHP > 0 && state.bossData) {
         boss.src = `assets/images/${state.bossData.sprite}?v=3`;
     }
 
-    // 答錯後退 1 格
     await moveBackward();
+}
+
+// PVP：對手用 hero_vfx 招式爆在主角身上（位置 = hero）
+function spawnOpponentVfx(jobKey) {
+    if (!jobKey) return;
+    const motion = (typeof JOB_VFX_MOTION !== 'undefined' && JOB_VFX_MOTION[jobKey]) || "expand";
+    const url = `assets/images/hero_vfx/${jobKey}.webp?v=1`;
+    const heroRect = hero.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const cx = heroRect.left - stageRect.left + heroRect.width / 2;
+    const cy = heroRect.top  - stageRect.top  + heroRect.height * 0.4;
+    const img = document.createElement("img");
+    img.className = `boss-vfx motion-${motion}`;  // 用 boss-vfx 紅色光暈表示「打來的」
+    img.onerror = () => img.remove();
+    img.src = url;
+    img.style.left = cx + "px";
+    img.style.top  = cy + "px";
+    img.style.width = "320px";
+    img.style.height = "320px";
+    stage.appendChild(img);
+    setTimeout(() => img.remove(), 900);
 }
 
 // ===== B3 魔王投射物：15 隻魔王各自的絕招（dispatcher → 8 primitive 組合）=====
@@ -1037,23 +1076,27 @@ function endGame(outcome) {
         hero.classList.remove("attacking");
         hero.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
-        sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
+        sub = PVP_MODE
+            ? `擊敗對手 ${state.opponentName || ''}！HP ${state.heroHP} · ${state.qIdx + 1} 題`
+            : `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
         overlayDelay = 2200;
     } else if (outcome === "retreat") {
-        // H. 失敗 cinematic
         const vig = document.createElement("div");
         vig.className = "lose-vignette";
         stage.appendChild(vig);
         emoji = "🏳"; title = "撤退失敗..."; titleClass = "lose";
-        sub = "被打出戰場！魔王還剩 HP " + state.bossHP;
+        sub = PVP_MODE
+            ? `被打出戰場！對手還剩 HP ${state.bossHP}`
+            : `被打出戰場！魔王還剩 HP ${state.bossHP}`;
         overlayDelay = 1200;
     } else {
-        // H. 失敗 cinematic
         const vig = document.createElement("div");
         vig.className = "lose-vignette";
         stage.appendChild(vig);
         emoji = "💀"; title = "失敗..."; titleClass = "lose";
-        sub = "魔王還剩 HP " + state.bossHP;
+        sub = PVP_MODE
+            ? `對手還剩 HP ${state.bossHP}`
+            : `魔王還剩 HP ${state.bossHP}`;
         overlayDelay = 1200;
     }
     setTimeout(() => {
@@ -1237,20 +1280,38 @@ async function startArena() {
     state.bossData = tierData;
     state.bossMaxHP = tierData.hp;
     state.bossHP = tierData.hp;
-    boss.src = `assets/images/${tierData.sprite}?v=3`;
-    document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
+
+    // ===== PVP MODE：用隨機對手職業取代魔王 =====
+    if (PVP_MODE) {
+        const opponentPool = JOBS_DATA.filter(j => j.key !== playerSetup.jobKey);
+        const oppJob = opponentPool[Math.floor(Math.random() * opponentPool.length)];
+        state.opponentJobKey = oppJob.key;
+        state.opponentName = oppJob.name;
+        boss.src = `assets/images/arena/hero_job_${oppJob.key}.png?v=3`;
+        document.getElementById("boss-name-display").textContent = `★ 對手：${oppJob.name} ★`;
+    } else {
+        boss.src = `assets/images/${tierData.sprite}?v=3`;
+        document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
+    }
 
     // 預載連續動作幀 + 楓之谷 VFX 圖 — await 等載入完成（派派 5/24：戰鬥內絕對流暢）
-    const tierKey = playerSetup.tier;  // "t1"/"t2"/"t3"
+    const tierKey = playerSetup.tier;
     const framesToPreload = [
-        `${tierData.sprite}?v=3`,
-        `${tierData.hit_sprite}?v=3`,
-        `${tierData.attack_sprite}?v=3`,
-        `${tierData.defeat_sprite}?v=3`,
-        `${deriveBossFramePath(tierData.attack_sprite, "charge")}?v=3`,
-        `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=3`,
         `boss/v2/${playerSetup.subject}/${tierKey}/vfx.webp?v=3`,
-    ].filter(Boolean);
+    ];
+    if (PVP_MODE && state.opponentJobKey) {
+        framesToPreload.push(`arena/hero_job_${state.opponentJobKey}.png?v=3`);
+        framesToPreload.push(`hero_vfx/${state.opponentJobKey}.webp?v=1`);
+    } else {
+        framesToPreload.push(
+            `${tierData.sprite}?v=3`,
+            `${tierData.hit_sprite}?v=3`,
+            `${tierData.attack_sprite}?v=3`,
+            `${tierData.defeat_sprite}?v=3`,
+            `${deriveBossFramePath(tierData.attack_sprite, "charge")}?v=3`,
+            `${deriveBossFramePath(tierData.attack_sprite, "release")}?v=3`,
+        );
+    }
     // 派派 5/24：預載目前職業的 hero VFX 圖（避免第一次攻擊載入延遲）
     if (playerSetup.jobKey) {
         framesToPreload.push(`hero_vfx/${playerSetup.jobKey}.webp?v=1`);
