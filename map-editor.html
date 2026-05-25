@@ -1845,8 +1845,11 @@ if (canvas) (function() {
     const sceneObjs = new Map();
     const __failedObjIds = new Set();  // 5/25 派派：上傳剛完 Railway 未 deploy 的 GLB → retry 用
 
+    let __callId = 0;
     async function rerender() {
+        const cid = ++__callId;
         const cfg = window.getMapConfig && window.getMapConfig();
+        console.log(`[rerender#${cid}] start cfg.objects=`, cfg?.objects?.length, 'glbCache=', [...glbCache.keys()], 'glbPromise=', [...glbPromiseCache.keys()]);
         if (!cfg || !Array.isArray(cfg.objects)) {
             for (const [id, m] of sceneObjs) { scene.remove(m); }
             sceneObjs.clear();
@@ -1865,14 +1868,16 @@ if (canvas) (function() {
         for (const obj of cfg.objects) {
             let model = sceneObjs.get(obj.id);
             if (!model) {
+                console.log(`[rerender#${cid}] -> loadGLBOnce(${obj.glb}) for ${obj.id}`);
                 try {
                     const gltf = await loadGLBOnce(obj.glb);
+                    console.log(`[rerender#${cid}] OK ${obj.id} ${obj.glb}`);
                     model = gltf.scene.clone();
                     sceneObjs.set(obj.id, model);
                     scene.add(model);
                     __failedObjIds.delete(obj.id);
                 } catch (e) {
-                    console.warn('[3d-preview] GLB load fail:', obj.glb, '— retry 5s 後');
+                    console.error(`[rerender#${cid}] FAIL ${obj.id} ${obj.glb}:`, e?.message || e);
                     __failedObjIds.add(obj.id);
                     anyFailed = true;
                     continue;
