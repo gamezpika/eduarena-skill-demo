@@ -1810,41 +1810,43 @@ if (canvas) (function() {
         }
     })();
     const glbCache = new Map();
-    const glbFailCount = new Map();  // file → 失敗次數
+    const glbPromiseCache = new Map();  // 5/25 派派：in-flight Promise 去重（避免 12 個 obj 同時 fire 12 個 HTTP request 擠 queue）
+    const glbFailCount = new Map();
     function loadGLBOnce(file) {
         if (glbCache.has(file)) return Promise.resolve(glbCache.get(file));
-        // 失敗過的 GLB 加 bust query 避過瀏覽器 cache 的 404
+        if (glbPromiseCache.has(file)) return glbPromiseCache.get(file);  // 重用 pending
         const failCount = glbFailCount.get(file) || 0;
         const url = failCount > 0
             ? `assets/3d/character/${file}?bust=${Date.now()}`
             : `assets/3d/character/${file}`;
-        return new Promise((res, rej) => {
+        const p = new Promise((res, rej) => {
             gltfLoader.load(
                 url,
                 gltf => {
                     glbCache.set(file, gltf);
+                    glbPromiseCache.delete(file);
                     glbFailCount.delete(file);
                     console.log('[3d-preview] GLB loaded:', file);
                     res(gltf);
                 },
                 undefined,
                 err => {
+                    glbPromiseCache.delete(file);
                     glbFailCount.set(file, failCount + 1);
                     rej(err);
                 }
             );
         });
+        glbPromiseCache.set(file, p);
+        return p;
     }
 
     // 場景內現有物件：obj.id → Object3D
     const sceneObjs = new Map();
     const __failedObjIds = new Set();  // 5/25 派派：上傳剛完 Railway 未 deploy 的 GLB → retry 用
 
-    let __rerenderCallCount = 0;
     async function rerender() {
-        const callId = ++__rerenderCallCount;
         const cfg = window.getMapConfig && window.getMapConfig();
-        console.log('[rerender#' + callId + '] start, cfg.objects=', cfg?.objects?.length);
         if (!cfg || !Array.isArray(cfg.objects)) {
             for (const [id, m] of sceneObjs) { scene.remove(m); }
             sceneObjs.clear();
@@ -1863,7 +1865,6 @@ if (canvas) (function() {
         for (const obj of cfg.objects) {
             let model = sceneObjs.get(obj.id);
             if (!model) {
-                console.log('[rerender#' + callId + '] loading', obj.id, obj.glb);
                 try {
                     const gltf = await loadGLBOnce(obj.glb);
                     model = gltf.scene.clone();
