@@ -677,8 +677,8 @@ function spawnWeaponTrail() {
 // 從 attack sprite 路徑推 charge/release 同 tier 路徑
 function deriveBossFramePath(attackSprite, phase) {
     if (!attackSprite) return null;
-    // e.g. "boss/v2/math/t1/attack.png" → "boss/v2/math/t1/charge.png"
-    return attackSprite.replace(/\/attack\.png$/, `/${phase}.png`);
+    // e.g. "boss/v2/math/t1/attack.webp" → "boss/v2/math/t1/charge.webp"
+    return attackSprite.replace(/\/attack\.(png|webp)$/, `/${phase}.webp`);
 }
 
 // 嘗試切換 boss sprite；圖不存在會在 img.onerror 回退
@@ -1094,7 +1094,7 @@ function switchWeapon(key) {
 // ===== Setup 流程 =====
 async function loadData() {
     const [subjResp, jobsResp] = await Promise.all([
-        fetch("assets/data/subjects.json?v=1").then(r => r.json()),
+        fetch("assets/data/subjects.json?v=2").then(r => r.json()),
         fetch("assets/data/jobs.json?v=1").then(r => r.json()),
     ]);
     SUBJECTS_DATA = subjResp;
