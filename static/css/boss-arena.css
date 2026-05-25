@@ -45,14 +45,18 @@
     z-index: 5;
     pointer-events: none;
 }
+/* 5/25 派派：整個 chip 改圓角膠囊 pill 形 — 圓頭像 + 派派字共用同個圓弧外框 */
 .arena-hud-chip .hero-card {
     display: flex;
     align-items: center;
     gap: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    padding: 0 14px 0 0;
+    background: linear-gradient(180deg, rgba(40, 20, 8, 0.78) 0%, rgba(20, 10, 4, 0.85) 100%);
+    border: 2px solid #f4d177;
+    border-radius: 999px;  /* 完全膠囊形 */
+    box-shadow:
+        inset 0 1px 0 rgba(255, 220, 160, 0.35),
+        0 3px 8px rgba(0, 0, 0, 0.6);
     pointer-events: none;
 }
 .arena-hud-chip .hero-card::before { display: none; }
@@ -86,27 +90,20 @@
     white-space: nowrap;
     z-index: 3;
 }
-/* 名字 — 5/25 派派：拿掉深褐底色，純文字 + 強化字體陰影保可讀 */
+/* 名字 — 純文字疊在 hero-card 膠囊內（背景由 hero-card 統一提供）*/
 .hero-name-chip {
     background: transparent;
     color: #ffe2a8;
     font-size: 13px;
     font-weight: 800;
-    padding: 5px 10px 5px 14px;
-    margin-left: -6px;
+    padding: 0 0 0 10px;
     border: none;
-    text-shadow:
-        0 0 4px rgba(0, 0, 0, 1),
-        0 2px 4px rgba(0, 0, 0, 0.95),
-        1px 1px 2px #000,
-        -1px -1px 2px #000,
-        0 0 8px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 4px rgba(0, 0, 0, 0.6);
     letter-spacing: 1px;
     max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    z-index: 1;
 }
 
 /* 5/25 派派 A 方案：魔王 HP 飄頭頂（跟主角綠條對稱），舊 boss-hud-overlay 拿掉 */
@@ -1792,11 +1789,11 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
 }
 .setup-start:active { transform: scale(0.97); }
 
-/* 返回首頁鈕（左上） */
+/* 返回首頁鈕（5/25 派派：改右上避開左上 chip）*/
 .arena-back {
     position: absolute;
     top: 8px;
-    left: 8px;
+    right: 8px;
     z-index: 50;
     width: 36px;
     height: 36px;
