@@ -648,7 +648,9 @@ function distToSegment(p, a, b) {
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 function renderPathOverlay() {
-    pathSvg.innerHTML = '';
+    // 5/25 bug fix: 不要清整個 SVG（會清掉 renderPolygons 加的 polygon）
+    // 只清自己加的 polyline
+    pathSvg.querySelectorAll('polyline').forEach(el => el.remove());
     if (!mapConfig) return;
     const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
     pathSvg.setAttribute('width', mw);
