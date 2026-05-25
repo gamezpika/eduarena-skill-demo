@@ -213,6 +213,41 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         }
     );
 
+    // 5/25 派派：載 tree.glb 在 4 角各放 3 棵
+    gltfLoader.load(
+        'assets/3d/character/tree.glb',
+        (gltf) => {
+            const treeBase = gltf.scene;
+            const tbbox = new THREE.Box3().setFromObject(treeBase);
+            const treeH = tbbox.max.y - tbbox.min.y;
+            const baseScale = 6 / Math.max(treeH, 0.001);  // 樹高 = 6 scene units（比 chibi 3.5 高）
+            const positions = [
+                // 左上 3 棵
+                [-42, -42], [-36, -45], [-45, -36],
+                // 右上 3 棵
+                [42, -42], [36, -45], [45, -36],
+                // 左下 3 棵
+                [-42, 42], [-36, 45], [-45, 36],
+                // 右下 3 棵
+                [42, 42], [36, 45], [45, 36],
+            ];
+            positions.forEach(([x, z]) => {
+                const t = treeBase.clone();
+                const s = baseScale * (0.75 + Math.random() * 0.45);
+                t.scale.setScalar(s);
+                const ttbbox = new THREE.Box3().setFromObject(t);
+                t.position.set(x, -ttbbox.min.y, z);
+                t.rotation.y = Math.random() * Math.PI * 2;
+                scene.add(t);
+            });
+            console.log('[chibi] trees loaded:', positions.length);
+        },
+        undefined,
+        (err) => {
+            console.warn('[chibi] tree.glb load failed:', err);
+        }
+    );
+
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.0, 24),
         new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = -0.04;
