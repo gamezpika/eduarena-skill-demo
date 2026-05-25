@@ -209,6 +209,61 @@
             pointer-events: none;
         }
         .path-mode-hint.show { display: block; }
+        .object-mode-hint {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(220,140,40,0.95); color: #fff;
+            padding: 10px 20px; border-radius: 999px;
+            font-size: 13px; font-weight: 700; z-index: 200;
+            display: none; pointer-events: none;
+        }
+        .object-mode-hint.show { display: block; }
+        /* GLB picker card */
+        .glb-card {
+            background: #1a1f2e; border: 2px solid #444;
+            border-radius: 6px; padding: 6px 4px;
+            font-size: 20px; text-align: center; cursor: pointer;
+            transition: border 0.1s, background 0.1s;
+        }
+        .glb-card:hover { background: #232938; border-color: #888; }
+        .glb-card.selected {
+            background: #3a2e0a; border-color: #fdc500;
+            box-shadow: 0 0 8px rgba(253,197,0,0.4);
+        }
+        .glb-card .glb-name {
+            font-size: 9px; color: #aaa; margin-top: 2px;
+            font-weight: 700; line-height: 1;
+        }
+        /* 地圖上 emoji 物件 */
+        .obj-emoji {
+            position: absolute;
+            font-size: 26px;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            user-select: none;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            pointer-events: auto;
+            transition: outline 0.1s, filter 0.1s;
+            outline: 0 solid transparent;
+        }
+        .obj-emoji:active { cursor: grabbing; }
+        .obj-emoji.selected {
+            outline: 3px solid #fdc500;
+            outline-offset: 2px;
+            border-radius: 50%;
+            filter: drop-shadow(0 0 8px #fdc500) drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+        }
+        /* 已放清單 row */
+        .obj-row {
+            padding: 6px 12px; font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #1a1f2e;
+        }
+        .obj-row:hover { background: #2a3144; }
+        .obj-row.selected { background: #fdc500; color: #1a1f2e; font-weight: 700; }
+        .obj-row-emoji { font-size: 16px; }
+        .obj-row-name { flex: 1; }
+        .obj-row-coords { font-size: 10px; color: #888; font-family: monospace; }
+        .obj-row.selected .obj-row-coords { color: #1a1f2e; }
     </style>
 </head>
 <body>
@@ -216,6 +271,10 @@
 <div class="map-area" id="mapArea">
     <div class="map-frame" id="mapFrame">
         <img id="map-img" src="" alt="map" style="display:none">
+        <!-- 物件 emoji overlay（5/25 派派 3D 物件擺放工具）-->
+        <div class="objects-emoji-overlay" id="objectsOverlay" style="
+            position:absolute; inset:0; pointer-events:none; z-index:6;
+        "></div>
         <div id="empty-placeholder" style="
             width: 480px; height: 480px;
             background: #1a1f2e;
@@ -256,8 +315,27 @@
     </div>
 
     <div class="mode-tabs">
-        <button id="tab-bbox" class="active">📦 編輯 bbox</button>
-        <button id="tab-path">🚶 編輯 path</button>
+        <button id="tab-bbox" class="active">📦 bbox</button>
+        <button id="tab-path">🚶 path</button>
+        <button id="tab-objects">📍 物件</button>
+    </div>
+
+    <!-- 物件模式：GLB picker + 已放物件清單 -->
+    <div class="objects-panel" id="objectsPanel" style="display:none;">
+        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
+            選 GLB → 點地圖放物件
+        </div>
+        <div class="glb-picker" id="glbPicker" style="
+            display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;
+            padding:10px 12px; border-bottom:1px solid #0d1019;
+        "></div>
+        <div style="padding:8px 12px; font-size:11px; color:#888;">
+            已放置物件（<span id="objCount">0</span>）
+        </div>
+        <div class="objects-list" id="objectsList" style="
+            max-height:200px; overflow-y:auto; border-bottom:1px solid #0d1019;
+        "></div>
+        <div class="object-detail" id="objectDetail" style="padding:14px;"></div>
     </div>
 
     <div class="building-list" id="buildingList"></div>
@@ -271,6 +349,7 @@
     <div class="help">
         <b>bbox 模式</b>：拖拉 bbox 框中間移動、4 角拖拉縮放<br>
         <b>path 模式</b>：點地圖任一處新增 waypoint；點 waypoint 刪除<br>
+        <b>物件模式</b>：左下選 GLB → 點地圖放；拖物件移動；點選右側調 scale/rotation<br>
         <b>右側欄</b>：手動輸入 bbox 4 值或 path 座標
     </div>
 
@@ -287,6 +366,7 @@
 </aside>
 
 <div class="path-mode-hint" id="pathHint">🚶 path 編輯模式 — 點地圖加 waypoint</div>
+<div class="object-mode-hint" id="objectHint">📍 物件模式 — 左下選 GLB → 點地圖放</div>
 
 <div class="export-modal" id="exportModal">
     <div class="export-modal-card">
@@ -303,7 +383,22 @@
 <script>
 let mapConfig = null;
 let selectedBuildingId = null;
-let mode = 'bbox';  // 'bbox' or 'path'
+let mode = 'bbox';  // 'bbox' | 'path' | 'objects'
+
+// 5/25 派派 3D 物件擺放工具
+const AVAILABLE_GLBS = [
+    { file: 'tree.glb',                emoji: '🌲', name: '樹' },
+    { file: 'forest.glb',              emoji: '🌳', name: '森林' },
+    { file: 'mei.glb',                 emoji: '🧙‍♀️', name: 'mei' },
+    { file: 'naughty_boy_chibi_draco.glb', emoji: '🧑', name: 'boy' },
+];
+let pendingGlbFile = null;     // 點 GLB picker 後待放
+let selectedObjectId = null;
+let __objectIdCounter = 0;
+function nextObjectId() {
+    __objectIdCounter++;
+    return 'obj_' + String(__objectIdCounter).padStart(3, '0');
+}
 
 const mapImg = document.getElementById('map-img');
 const mapFrame = document.getElementById('mapFrame');
@@ -312,6 +407,10 @@ const buildingList = document.getElementById('buildingList');
 const buildingDetail = document.getElementById('buildingDetail');
 const tabBbox = document.getElementById('tab-bbox');
 const tabPath = document.getElementById('tab-path');
+const tabObjects = document.getElementById('tab-objects');
+const objectHint = document.getElementById('objectHint');
+const objectsPanel = document.getElementById('objectsPanel');
+const objectsOverlay = document.getElementById('objectsOverlay');
 const pathHint = document.getElementById('pathHint');
 
 // ─── 預設 mask color palette（新建 building 自動分色）
@@ -406,8 +505,16 @@ function loadServerMap(useCachedConfig) {
         .then(json => {
             const serverConfig = json.map_config;
             serverConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            if (!Array.isArray(serverConfig.objects)) serverConfig.objects = [];
             mapConfig = useCachedConfig || serverConfig;
             mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            if (!Array.isArray(mapConfig.objects)) mapConfig.objects = [];
+            // 5/25 派派：避免 reload 後 nextObjectId() 從 1 開始撞 ID
+            const maxId = mapConfig.objects.reduce((m, o) => {
+                const mt = (o.id || '').match(/^obj_(\d+)$/);
+                return mt ? Math.max(m, parseInt(mt[1], 10)) : m;
+            }, 0);
+            __objectIdCounter = maxId;
             img.src = 'assets/images/world_map_iso.png?v=' + Date.now();
             img.style.display = 'block';
             placeholder.style.display = 'none';
@@ -457,10 +564,16 @@ attachLoadServerBtn();
 loadInitialConfig();
 
 function renderAll() {
+    // 5/25 派派：確保 mapConfig.objects 存在
+    if (mapConfig && !Array.isArray(mapConfig.objects)) mapConfig.objects = [];
     renderBuildingList();
     renderPolygons();
     renderPathOverlay();
     renderDetail();
+    renderObjects();
+    renderGlbPicker();
+    renderObjectsList();
+    renderObjectDetail();
     autoSave();  // 每次 render 觸發 debounced save
 }
 
@@ -815,32 +928,213 @@ function renderDetail() {
     });
 }
 
-// 點地圖加 waypoint (path 模式)
+// 點地圖加 waypoint (path 模式) / 物件 (objects 模式)
 mapFrame.addEventListener('click', e => {
-    if (mode !== 'path' || !selectedBuildingId) return;
     if (e.target.classList.contains('path-waypoint')) return;
     if (e.target.classList.contains('bbox') || e.target.classList.contains('bbox-handle')) return;
-
-    const rect = mapImg.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
-    if (!b) return;
-    b.path.push({ x: parseFloat(nx.toFixed(3)), y: parseFloat(ny.toFixed(3)) });
-    renderAll();
+    if (e.target.classList.contains('obj-emoji')) return;  // 點 emoji 走 emoji handler
+    if (mode === 'path') {
+        if (!selectedBuildingId) return;
+        const rect = mapImg.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width;
+        const ny = (e.clientY - rect.top) / rect.height;
+        const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
+        if (!b) return;
+        b.path.push({ x: parseFloat(nx.toFixed(3)), y: parseFloat(ny.toFixed(3)) });
+        renderAll();
+    } else if (mode === 'objects') {
+        if (!pendingGlbFile) return;  // 沒選 GLB → 不加
+        const rect = mapImg.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width;
+        const ny = (e.clientY - rect.top) / rect.height;
+        if (!mapConfig.objects) mapConfig.objects = [];
+        const obj = {
+            id: nextObjectId(),
+            glb: pendingGlbFile,
+            x: parseFloat(nx.toFixed(4)),
+            y: parseFloat(ny.toFixed(4)),
+            scale: 1.0,
+            rotation: parseFloat((Math.random() * Math.PI * 2).toFixed(3)),
+        };
+        mapConfig.objects.push(obj);
+        selectedObjectId = obj.id;
+        renderAll();
+    }
 });
 
 // Tab 切換
-tabBbox.addEventListener('click', () => {
-    mode = 'bbox'; tabBbox.classList.add('active'); tabPath.classList.remove('active');
-    pathHint.classList.remove('show');
-    renderPolygons();  // 重 render 套用新 pointer-events
-});
-tabPath.addEventListener('click', () => {
-    mode = 'path'; tabPath.classList.add('active'); tabBbox.classList.remove('active');
-    pathHint.classList.add('show');
-    renderPolygons();
-});
+function setMode(newMode) {
+    mode = newMode;
+    tabBbox.classList.toggle('active', newMode === 'bbox');
+    tabPath.classList.toggle('active', newMode === 'path');
+    tabObjects.classList.toggle('active', newMode === 'objects');
+    pathHint.classList.toggle('show', newMode === 'path');
+    objectHint.classList.toggle('show', newMode === 'objects');
+    // 切 mode 時：右側 panel 顯示對應內容
+    objectsPanel.style.display = newMode === 'objects' ? 'block' : 'none';
+    buildingList.style.display = newMode === 'objects' ? 'none' : 'block';
+    buildingDetail.style.display = newMode === 'objects' ? 'none' : 'block';
+    renderAll();
+}
+tabBbox.addEventListener('click', () => setMode('bbox'));
+tabPath.addEventListener('click', () => setMode('path'));
+tabObjects.addEventListener('click', () => setMode('objects'));
+
+// ─── 物件渲染 + 拖拉 + UI（5/25 派派 3D 物件擺放工具）─────
+function renderGlbPicker() {
+    const picker = document.getElementById('glbPicker');
+    if (!picker) return;
+    picker.innerHTML = '';
+    AVAILABLE_GLBS.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'glb-card' + (pendingGlbFile === g.file ? ' selected' : '');
+        card.innerHTML = `${g.emoji}<div class="glb-name">${g.name}</div>`;
+        card.title = g.file;
+        card.addEventListener('click', () => {
+            pendingGlbFile = pendingGlbFile === g.file ? null : g.file;  // 再點取消
+            renderGlbPicker();
+        });
+        picker.appendChild(card);
+    });
+}
+
+function renderObjects() {
+    if (!objectsOverlay) return;
+    objectsOverlay.innerHTML = '';
+    if (!mapConfig || !Array.isArray(mapConfig.objects)) return;
+    const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
+    if (mw < 1 || mh < 1) return;
+    // 物件模式時 overlay 接觸 click，其他模式不擋
+    objectsOverlay.style.pointerEvents = mode === 'objects' ? 'auto' : 'none';
+    mapConfig.objects.forEach(obj => {
+        const meta = AVAILABLE_GLBS.find(g => g.file === obj.glb);
+        const emoji = meta ? meta.emoji : '📦';
+        const el = document.createElement('div');
+        el.className = 'obj-emoji' + (obj.id === selectedObjectId ? ' selected' : '');
+        el.textContent = emoji;
+        el.style.left = (obj.x * mw) + 'px';
+        el.style.top = (obj.y * mh) + 'px';
+        el.style.fontSize = (22 * (obj.scale || 1)) + 'px';
+        el.dataset.id = obj.id;
+        // 點選
+        el.addEventListener('mousedown', ev => {
+            if (mode !== 'objects') return;
+            ev.stopPropagation();
+            selectedObjectId = obj.id;
+            startObjectDrag(obj, ev);
+        });
+        objectsOverlay.appendChild(el);
+    });
+}
+
+let _objDragging = null;
+function startObjectDrag(obj, e) {
+    _objDragging = { obj, startX: e.clientX, startY: e.clientY, baseX: obj.x, baseY: obj.y, moved: false };
+    document.addEventListener('mousemove', objDragMove);
+    document.addEventListener('mouseup', objDragEnd);
+    renderAll();
+}
+function objDragMove(e) {
+    if (!_objDragging) return;
+    const rect = mapImg.getBoundingClientRect();
+    const dx = (e.clientX - _objDragging.startX) / rect.width;
+    const dy = (e.clientY - _objDragging.startY) / rect.height;
+    if (Math.abs(dx) + Math.abs(dy) > 0.003) _objDragging.moved = true;
+    _objDragging.obj.x = Math.max(0, Math.min(1, _objDragging.baseX + dx));
+    _objDragging.obj.y = Math.max(0, Math.min(1, _objDragging.baseY + dy));
+    _objDragging.obj.x = parseFloat(_objDragging.obj.x.toFixed(4));
+    _objDragging.obj.y = parseFloat(_objDragging.obj.y.toFixed(4));
+    renderObjects();
+    renderObjectsList();
+    renderObjectDetail();
+}
+function objDragEnd() {
+    document.removeEventListener('mousemove', objDragMove);
+    document.removeEventListener('mouseup', objDragEnd);
+    if (_objDragging) {
+        if (_objDragging.moved) autoSave();
+        _objDragging = null;
+    }
+}
+
+function renderObjectsList() {
+    const list = document.getElementById('objectsList');
+    const count = document.getElementById('objCount');
+    if (!list || !count) return;
+    list.innerHTML = '';
+    const objs = (mapConfig && mapConfig.objects) || [];
+    count.textContent = objs.length;
+    objs.forEach(obj => {
+        const meta = AVAILABLE_GLBS.find(g => g.file === obj.glb);
+        const emoji = meta ? meta.emoji : '📦';
+        const name = meta ? meta.name : obj.glb;
+        const row = document.createElement('div');
+        row.className = 'obj-row' + (obj.id === selectedObjectId ? ' selected' : '');
+        row.innerHTML = `
+            <span class="obj-row-emoji">${emoji}</span>
+            <span class="obj-row-name">${name}</span>
+            <span class="obj-row-coords">${obj.x.toFixed(2)},${obj.y.toFixed(2)}</span>
+        `;
+        row.addEventListener('click', () => {
+            selectedObjectId = obj.id;
+            renderAll();
+        });
+        list.appendChild(row);
+    });
+}
+
+function renderObjectDetail() {
+    const detail = document.getElementById('objectDetail');
+    if (!detail) return;
+    if (!selectedObjectId || !mapConfig || !mapConfig.objects) {
+        detail.innerHTML = '<div style="text-align:center;color:#888;padding:14px 0;font-size:12px;">點地圖物件或上方清單編輯</div>';
+        return;
+    }
+    const obj = mapConfig.objects.find(o => o.id === selectedObjectId);
+    if (!obj) {
+        detail.innerHTML = '';
+        return;
+    }
+    const meta = AVAILABLE_GLBS.find(g => g.file === obj.glb);
+    detail.innerHTML = `
+        <h3 style="font-size:13px;color:#fdc500;margin-bottom:8px;border-bottom:1px solid #444;padding-bottom:4px;">
+            ${meta ? meta.emoji + ' ' + meta.name : obj.glb} <span style="color:#888;font-size:11px;font-weight:normal;">${obj.id}</span>
+        </h3>
+        <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:6px;font-size:11px;margin-bottom:8px;align-items:center;">
+            <div style="color:#888;">位置</div>
+            <input type="number" id="objX" step="0.001" min="0" max="1" value="${obj.x.toFixed(4)}">
+            <input type="number" id="objY" step="0.001" min="0" max="1" value="${obj.y.toFixed(4)}">
+            <div style="color:#888;">大小</div>
+            <input type="number" id="objScale" step="0.05" min="0.1" max="5" value="${obj.scale.toFixed(2)}" style="grid-column: span 2;">
+            <div style="color:#888;">轉向</div>
+            <input type="number" id="objRotation" step="0.1" min="0" max="6.3" value="${obj.rotation.toFixed(2)}" style="grid-column: span 2;">
+        </div>
+        <button class="btn-danger" id="btnDeleteObject" style="width:100%;padding:6px;font-size:12px;font-weight:700;background:#ff5050;color:#fff;border:none;border-radius:4px;cursor:pointer;">🗑 刪除這個物件</button>
+    `;
+    const sync = () => {
+        const x = parseFloat(detail.querySelector('#objX').value) || 0;
+        const y = parseFloat(detail.querySelector('#objY').value) || 0;
+        const scale = parseFloat(detail.querySelector('#objScale').value) || 1;
+        const rotation = parseFloat(detail.querySelector('#objRotation').value) || 0;
+        obj.x = parseFloat(x.toFixed(4));
+        obj.y = parseFloat(y.toFixed(4));
+        obj.scale = parseFloat(scale.toFixed(2));
+        obj.rotation = parseFloat(rotation.toFixed(3));
+        renderObjects();
+        renderObjectsList();
+        autoSave();
+    };
+    ['objX', 'objY', 'objScale', 'objRotation'].forEach(id => {
+        detail.querySelector('#' + id).addEventListener('input', sync);
+    });
+    detail.querySelector('#btnDeleteObject').addEventListener('click', () => {
+        if (!confirm('刪除這個物件？')) return;
+        const idx = mapConfig.objects.findIndex(o => o.id === selectedObjectId);
+        if (idx >= 0) mapConfig.objects.splice(idx, 1);
+        selectedObjectId = null;
+        renderAll();
+    });
+}
 
 // 匯出 JSON
 document.getElementById('btnExport').addEventListener('click', () => {

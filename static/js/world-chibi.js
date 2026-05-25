@@ -228,51 +228,46 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         }
         return { x: _unprojVec.x, z: _unprojVec.z };
     }
-    gltfLoader.load(
-        'assets/3d/character/tree.glb',
-        (gltf) => {
-            const treeBase = gltf.scene;
-            const tbbox = new THREE.Box3().setFromObject(treeBase);
-            const treeH = tbbox.max.y - tbbox.min.y;
-            const baseScale = 11 / Math.max(treeH, 0.001);  // 樹高 11 scene units 大顆
-            // mapImg normalized 位置 — 散在邊緣 + 縫隙空地（避開建築 polygon）
-            const treeMapPositions = [
-                // 上方邊緣（4 棵）
-                { mx: 0.06, my: 0.04 }, { mx: 0.35, my: 0.025 },
-                { mx: 0.62, my: 0.025 }, { mx: 0.94, my: 0.04 },
-                // 左中右中（2 棵）
-                { mx: 0.03, my: 0.5 }, { mx: 0.97, my: 0.5 },
-                // 下方邊緣（4 棵）
-                { mx: 0.06, my: 0.96 }, { mx: 0.35, my: 0.975 },
-                { mx: 0.62, my: 0.975 }, { mx: 0.94, my: 0.96 },
-                // 內部縫隙空地（2 棵 — 不一定避得開要等 isWalkable 過濾）
-                { mx: 0.18, my: 0.27 }, { mx: 0.82, my: 0.72 },
-            ];
-            let placed = 0, skipped = 0;
-            treeMapPositions.forEach(({ mx, my }) => {
-                const { x, z } = mapNormToSceneCoord(mx, my);
-                // 過濾撞建築 polygon
-                if (mapConfig && !isWalkable(x, z)) {
-                    // 等 mapConfig 載入後再過濾，現在沒 config 就先放
-                    skipped++;
-                    return;
-                }
-                const t = treeBase.clone();
-                const s = baseScale * (0.8 + Math.random() * 0.4);
-                t.scale.setScalar(s);
-                const ttbbox = new THREE.Box3().setFromObject(t);
-                t.position.set(x, -ttbbox.min.y, z);
-                t.rotation.y = Math.random() * Math.PI * 2;
-                scene.add(t);
-                placed++;
-            });
-            console.log('[chibi] trees:', placed, 'placed,', skipped, 'skipped (blocked)');
-        },
-        undefined,
-        (err) => {
-            console.warn('[chibi] tree.glb load failed:', err);
+    // 5/25 派派：tree 寫死 12 棵已搬到 mapConfig.objects[]（map-editor 編輯）
+    // GLB cache（避免同一 GLB 重複下載）
+    const _glbCache = new Map();
+    function loadGLBOnce(filename) {
+        if (_glbCache.has(filename)) return Promise.resolve(_glbCache.get(filename));
+        return new Promise((res, rej) => {
+            gltfLoader.load(
+                'assets/3d/character/' + filename,
+                (gltf) => { _glbCache.set(filename, gltf); res(gltf); },
+                undefined,
+                (err) => rej(err)
+            );
+        });
+    }
+    async function loadConfigObjects() {
+        if (!mapConfig || !Array.isArray(mapConfig.objects) || mapConfig.objects.length === 0) {
+            console.log('[chibi] no config objects');
+            return;
         }
-    );
+        let placed = 0;
+        for (const obj of mapConfig.objects) {
+            try {
+                const gltf = await loadGLBOnce(obj.glb);
+                const model = gltf.scene.clone();
+                const bbox = new THREE.Box3().setFromObject(model);
+                const h = bbox.max.y - bbox.min.y;
+                const baseScale = 8 / Math.max(h, 0.001);
+                model.scale.setScalar(baseScale * (obj.scale || 1));
+                const { x, z } = mapNormToSceneCoord(obj.x, obj.y);
+                const bbox2 = new THREE.Box3().setFromObject(model);
+                model.position.set(x, -bbox2.min.y, z);
+                model.rotation.y = obj.rotation || 0;
+                scene.add(model);
+                placed++;
+            } catch (e) {
+                console.warn('[chibi] obj load failed:', obj, e);
+            }
+        }
+        console.log('[chibi] loaded', placed, '/', mapConfig.objects.length, 'config objects');
+    }
 
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.0, 24),
         new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 }));
@@ -334,6 +329,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             });
             renderPolygonDebug();
             console.log('[chibi] map config loaded:', mapConfig.buildings.length, 'buildings (polygon 紅框已顯示)');
+            // 5/25 派派：載 mapConfig.objects[] 上的 3D 物件
+            loadConfigObjects();
 
             // 接 hotspot click → chibi 自動走過去
             document.querySelectorAll('.wd-sprite[data-tap]').forEach(btn => {

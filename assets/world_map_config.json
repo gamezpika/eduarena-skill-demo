@@ -690,6 +690,104 @@
         "path": []
       }
     ],
-    "connections": []
+    "connections": [],
+    "objects": [
+      {
+        "id": "obj_001",
+        "glb": "tree.glb",
+        "x": 0.06,
+        "y": 0.04,
+        "scale": 1.06,
+        "rotation": 0.157
+      },
+      {
+        "id": "obj_002",
+        "glb": "tree.glb",
+        "x": 0.35,
+        "y": 0.025,
+        "scale": 0.91,
+        "rotation": 1.402
+      },
+      {
+        "id": "obj_003",
+        "glb": "tree.glb",
+        "x": 0.62,
+        "y": 0.025,
+        "scale": 1.09,
+        "rotation": 4.25
+      },
+      {
+        "id": "obj_004",
+        "glb": "tree.glb",
+        "x": 0.94,
+        "y": 0.04,
+        "scale": 1.16,
+        "rotation": 0.546
+      },
+      {
+        "id": "obj_005",
+        "glb": "tree.glb",
+        "x": 0.03,
+        "y": 0.5,
+        "scale": 0.97,
+        "rotation": 0.187
+      },
+      {
+        "id": "obj_006",
+        "glb": "tree.glb",
+        "x": 0.97,
+        "y": 0.5,
+        "scale": 0.89,
+        "rotation": 3.174
+      },
+      {
+        "id": "obj_007",
+        "glb": "tree.glb",
+        "x": 0.06,
+        "y": 0.96,
+        "scale": 0.81,
+        "rotation": 1.249
+      },
+      {
+        "id": "obj_008",
+        "glb": "tree.glb",
+        "x": 0.35,
+        "y": 0.975,
+        "scale": 1.06,
+        "rotation": 3.422
+      },
+      {
+        "id": "obj_009",
+        "glb": "tree.glb",
+        "x": 0.62,
+        "y": 0.975,
+        "scale": 0.89,
+        "rotation": 3.701
+      },
+      {
+        "id": "obj_010",
+        "glb": "tree.glb",
+        "x": 0.94,
+        "y": 0.96,
+        "scale": 1.12,
+        "rotation": 0.041
+      },
+      {
+        "id": "obj_011",
+        "glb": "tree.glb",
+        "x": 0.18,
+        "y": 0.27,
+        "scale": 1.12,
+        "rotation": 4.384
+      },
+      {
+        "id": "obj_012",
+        "glb": "tree.glb",
+        "x": 0.82,
+        "y": 0.72,
+        "scale": 0.94,
+        "rotation": 0.976
+      }
+    ]
   }
 }
