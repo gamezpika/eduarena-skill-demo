@@ -10,6 +10,7 @@
  * - 到達 building 時依 interaction_type 開 demo modal
  */
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 (function () {
     "use strict";
@@ -166,8 +167,39 @@ import * as THREE from 'three';
         return { group: root, leftArm, rightArm, leftLeg, rightLeg, head };
     }
 
+    // 5/25 派派 B 方案：載 GLB 3D 模型取代 primitives
     const chibi = makeChibiStudent();
+    // 先放 primitives 當 placeholder（GLB load 完會替換）
     player.add(chibi.group);
+
+    // 載 naughty_boy_chibi.glb
+    const gltfLoader = new GLTFLoader();
+    let gltfModel = null;
+    gltfLoader.load(
+        'assets/3d/character/naughty_boy_chibi.glb',
+        (gltf) => {
+            // GLB 載入成功 → 砍掉 primitives，換 3D 模型
+            player.remove(chibi.group);
+            gltfModel = gltf.scene;
+            // 計算 bbox 自動 scale 到合適大小（目標高度 ≈ 3.5 跟原 primitives 一致）
+            const bbox = new THREE.Box3().setFromObject(gltfModel);
+            const height = bbox.max.y - bbox.min.y;
+            const targetHeight = 3.5;
+            const scale = targetHeight / Math.max(height, 0.001);
+            gltfModel.scale.setScalar(scale);
+            // 把模型對齊地面（y=0 = 腳底）
+            const bbox2 = new THREE.Box3().setFromObject(gltfModel);
+            gltfModel.position.y = -bbox2.min.y;
+            // sprite 預設可能面向 -Z，旋轉讓它面向 +Z（跟玩家移動方向一致）
+            // 後續 game loop 會用 player.rotation.y 控方向
+            player.add(gltfModel);
+            console.log('[chibi] GLB loaded, scale=', scale.toFixed(3), 'height=', height.toFixed(2));
+        },
+        undefined,  // progress
+        (err) => {
+            console.warn('[chibi] GLB load failed, fallback to primitives:', err);
+        }
+    );
 
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.0, 24),
         new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32 }));
