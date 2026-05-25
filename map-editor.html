@@ -1819,26 +1819,27 @@ if (canvas) (function() {
         const url = failCount > 0
             ? `assets/3d/character/${file}?bust=${Date.now()}`
             : `assets/3d/character/${file}`;
-        // 5/25 派派：用 fetch + parse 取代 gltfLoader.load 解 GLTFLoader 內部 hang
-        console.log('[3d-preview] fetch start', file);
-        const p = fetch(url)
-            .then(r => {
-                console.log('[3d-preview] fetch headers', file, r.status);
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.arrayBuffer();
-            })
-            .then(buf => new Promise((res, rej) => {
-                console.log('[3d-preview] parsing', file, 'buf=', buf.byteLength);
+        // 5/25 派派：用 XHR + parse 取代 fetch 跟 gltfLoader.load（後兩者對連續 GLB 載入會卡）
+        const p = new Promise((res, rej) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'arraybuffer';
+            xhr.onload = () => {
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    rej(new Error(`HTTP ${xhr.status}`));
+                    return;
+                }
+                const buf = xhr.response;
                 gltfLoader.parse(buf, '', gltf => {
                     glbCache.set(file, gltf);
                     glbFailCount.delete(file);
                     console.log('[3d-preview] GLB loaded:', file);
                     res(gltf);
-                }, err => {
-                    console.error('[3d-preview] parse fail', file, err);
-                    rej(err);
-                });
-            }))
+                }, err => rej(err));
+            };
+            xhr.onerror = () => rej(new Error('XHR network error'));
+            xhr.send();
+        })
             .catch(err => {
                 glbFailCount.set(file, failCount + 1);
                 throw err;
