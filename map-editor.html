@@ -397,50 +397,61 @@ function autoSave() {
     }, 300);  // debounce 300ms
 }
 
-// 載入 config — 只在有 localStorage 暫存時 prompt 載入，否則保持空白
+// 共用：載 server 底圖（+ 可選自訂 config，預設用 server config）
+function loadServerMap(useCachedConfig) {
+    const placeholder = document.getElementById('empty-placeholder');
+    const img = document.getElementById('map-img');
+    return fetch('assets/world_map_config.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(json => {
+            const serverConfig = json.map_config;
+            serverConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            mapConfig = useCachedConfig || serverConfig;
+            mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            img.src = 'assets/images/world_map_iso.png?v=' + Date.now();
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+            img.onload = () => {
+                document.getElementById('mapSrc').textContent =
+                    'world_map_iso.png × world_map_config.json';
+                renderAll();
+            };
+        })
+        .catch(e => console.warn('[loadServerMap] failed:', e));
+}
+
+// 開啟自動載入：有 localStorage 暫存就 prompt 選暫存/server，沒暫存就直接 server
 function loadInitialConfig() {
     const cached = localStorage.getItem(LS_KEY);
-    if (!cached) return;  // 沒暫存 → 留空白等使用者選
+    if (!cached) {
+        loadServerMap();
+        return;
+    }
     try {
         const data = JSON.parse(cached);
         const age = (Date.now() - data.ts) / 1000 / 60;  // 分鐘
         const ageStr = age < 1 ? '剛剛' : age < 60 ? `${Math.floor(age)} 分鐘前` : `${Math.floor(age/60)} 小時前`;
         if (confirm(`偵測到瀏覽器有 ${ageStr} 的編輯暫存\n\n` +
-                    '按「確定」載入暫存版本（繼續上次編輯）\n' +
-                    '按「取消」保持空白（手動選底圖載入）')) {
-            // 載入暫存（但底圖派派還是要選 — 因為 base64 太大不存 localStorage）
-            mapConfig = data.config;
-            mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
-            renderAll();
+                    '按「確定」用暫存版 polygon（繼續上次編輯）\n' +
+                    '按「取消」用 server 最新版 polygon\n\n' +
+                    '(兩種都會自動載 server 底圖)')) {
+            loadServerMap(data.config);
             document.getElementById('autosaveStatus').textContent =
-                `💾 已載入暫存（${ageStr}存的），請手動載底圖`;
+                `💾 已載入暫存（${ageStr}存的）+ server 底圖`;
+        } else {
+            loadServerMap();
         }
-    } catch (e) { console.warn('load cache fail:', e); }
+    } catch (e) {
+        console.warn('load cache fail:', e);
+        loadServerMap();
+    }
 }
 
-// 「載入 server 既有 config + 底圖」按鈕（讓派派想用既有版本時手動觸發）
+// 「📥 載入 server」按鈕 — 強制重載 server config 覆蓋暫存
 function attachLoadServerBtn() {
     const btn = document.getElementById('btnLoadServer');
     if (!btn) return;
-    btn.addEventListener('click', () => {
-        const placeholder = document.getElementById('empty-placeholder');
-        const img = document.getElementById('map-img');
-        // 載 iso 底圖 + 既有 config
-        fetch('assets/world_map_config.json?v=' + Date.now())
-            .then(r => r.json())
-            .then(json => {
-                mapConfig = json.map_config;
-                mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
-                img.src = 'assets/images/world_map_iso.png?v=' + Date.now();
-                img.style.display = 'block';
-                placeholder.style.display = 'none';
-                img.onload = () => {
-                    document.getElementById('mapSrc').textContent =
-                        'world_map_iso.png × world_map_config.json';
-                    renderAll();
-                };
-            });
-    });
+    btn.addEventListener('click', () => loadServerMap());
 }
 attachLoadServerBtn();
 loadInitialConfig();
