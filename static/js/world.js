@@ -12,16 +12,15 @@
     if (!vp || !world) return;
 
     // ─── world isometric map 1024×1024 = 1:1 比例
-    // 寬 = viewport × 1.5（左右拖曳空間更大，地圖細節也更大）
-    // 高 = 寬 × MAP_RATIO（1.0 = 正方形）
-    const MAP_RATIO = 1.0;
+    // 5/25 派派：mapImg 兩邊都 ≥ viewport（蓋滿不留藍底 gap）
     function fitWorldSize() {
         const w = vp.clientWidth;
         const vpH = vp.clientHeight;
         if (w < 1 || vpH < 1) return;
-        const worldW = w * 1.5;
-        world.style.width = worldW + "px";
-        world.style.height = (worldW * MAP_RATIO) + "px";
+        // 取 viewport 較長一邊乘 1.5 當 mapImg 尺寸，保持 1:1 不變形
+        const size = Math.max(w, vpH) * 1.2;
+        world.style.width = size + "px";
+        world.style.height = size + "px";
     }
     fitWorldSize();
     window.addEventListener("resize", () => {
