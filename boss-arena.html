@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=55">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=56">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -73,24 +73,17 @@
 
             <button class="arena-back" onclick="location.href='index.html'" title="返回首頁">←</button>
 
-            <!-- 上方主角 HUD（slim 版 — 派派 5/24 只留圓圈頭像 + HP）-->
+            <!-- 上方主角 HUD（5/25 派派 B 方案：HP 條搬主角頭頂，保留 portrait + 名字）-->
             <div class="arena-hud arena-hud-slim">
                 <div class="hero-card">
                     <div class="hero-portrait">
                         <img src="assets/images/arena/hero.png" alt="hero">
                     </div>
-                    <div class="hero-info">
-                        <div class="hero-bars">
-                            <div class="bar-row">
-                                <span class="bar-label">HP</span>
-                                <span class="bar-value" id="hero-hp-num">100 / 100</span>
-                                <div class="bar-track"><div class="bar-fill hp" id="hero-hp-fill" style="width: 100%"></div></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="hero-name-only" id="hero-name-display">派派</div>
                 </div>
-                <!-- hero-name / MP / pills 派派 5/24 拿掉，hidden 但 JS 可寫 -->
-                <span id="hero-name-display" style="display:none"></span>
+                <!-- 隱藏節點供舊 JS 寫，避免 undefined -->
+                <span id="hero-hp-num" style="display:none"></span>
+                <span id="hero-hp-fill" style="display:none"></span>
                 <span id="hero-mp-num" style="display:none"></span>
                 <span id="hero-mp-fill" style="display:none"></span>
                 <span id="info-subject-name" style="display:none"></span>
@@ -193,7 +186,12 @@
                   <polygon class="grid-tile" data-x="4" data-y="4" points="75.2,68.0 83.6,71.5 92.0,68.0 83.6,64.5" />
                 </svg>
 
-                <img src="assets/images/arena/hero_iso.png?v=3" class="fighter-hero" id="fighter-hero" data-x="2" data-y="2" alt="hero">
+                <div class="fighter-hero" id="fighter-hero-wrap" data-x="2" data-y="2">
+                    <div class="hero-floating-hp" id="hero-floating-hp">
+                        <div class="hero-floating-hp-fill" id="hero-floating-hp-fill" style="width: 100%"></div>
+                    </div>
+                    <img src="assets/images/arena/hero_iso.png?v=3" class="fighter-hero-img" id="fighter-hero" alt="hero">
+                </div>
                 <img src="assets/images/arena/boss_iso.png?v=3" class="fighter-boss" id="fighter-boss" alt="boss">
             </div>
 
@@ -300,19 +298,23 @@ const state = {
 const $ = (id) => document.getElementById(id);
 const stage = $("arena-stage");
 const hero  = $("fighter-hero");
+const heroWrap = $("fighter-hero-wrap");
 const boss  = $("fighter-boss");
 
 function updateBars() {
     $("hero-hp-num").textContent = `${state.heroHP} / ${state.heroMaxHP}`;
     $("hero-hp-fill").style.width = (state.heroHP / state.heroMaxHP * 100) + "%";
+    // 5/25 派派 B 方案：主角頭頂飄浮 HP 條（綠）
+    const floatHp = $("hero-floating-hp-fill");
+    if (floatHp) floatHp.style.width = (state.heroHP / state.heroMaxHP * 100) + "%";
     $("hero-mp-num").textContent = `${state.heroMP} / ${state.heroMaxMP}`;
     $("hero-mp-fill").style.width = (state.heroMP / state.heroMaxMP * 100) + "%";
     $("boss-hp-fill").style.width = (state.bossHP / state.bossMaxHP * 100) + "%";
 }
 
 function updateGridHighlight() {
-    hero.dataset.x = state.heroPos.x;
-    hero.dataset.y = state.heroPos.y;
+    heroWrap.dataset.x = state.heroPos.x;
+    heroWrap.dataset.y = state.heroPos.y;
 
     // 5×5 grid 動態高亮（清所有 class → 重算）
     document.querySelectorAll(".grid-tile").forEach(el => {
@@ -608,9 +610,9 @@ async function attackBoss() {
 
     // B. 武器專屬攻擊動畫（依當前武器套對應 keyframes）
     const attackClass = `attacking-${state.weapon}`;
-    hero.classList.add(attackClass);
+    heroWrap.classList.add(attackClass);
     const attackDur = state.weapon === "pencil" ? 500 : (state.weapon === "staff" ? 750 : 700);
-    setTimeout(() => hero.classList.remove(attackClass), attackDur);
+    setTimeout(() => heroWrap.classList.remove(attackClass), attackDur);
 
     // 武器專屬軌跡（從主角往魔王劃過去）
     spawnWeaponTrail();
@@ -724,7 +726,7 @@ async function getHitByBoss() {
     // 命中：扣血 + shake + vignette + damage popup
     const dmg = (18 + Math.floor(Math.random() * 12)) * (1 + (tierLevel - 1) * 0.3) | 0;  // tier 越高傷害越高
     state.heroHP = Math.max(0, state.heroHP - dmg);
-    hero.classList.add("hit");
+    heroWrap.classList.add("hit");
     stage.classList.add("shake", "player-hit");
     popDamage(hero, "-" + dmg, true);
 
@@ -740,7 +742,7 @@ async function getHitByBoss() {
     updateBars();
     await sleep(500);
 
-    hero.classList.remove("hit");
+    heroWrap.classList.remove("hit");
     stage.classList.remove("shake", "player-hit");
 
     // B4 切回 idle sprite
@@ -1034,8 +1036,8 @@ function endGame(outcome) {
             boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
         }
         stage.classList.add("slow-mo");
-        hero.classList.remove("attacking");
-        hero.classList.add("victory");
+        heroWrap.classList.remove("attacking");
+        heroWrap.classList.add("victory");
         emoji = "🎉"; title = "勝利！"; titleClass = "";
         sub = `擊敗魔王！剩餘 HP：${state.heroHP} · 答對 ${state.qIdx + 1} 題`;
         overlayDelay = 2200;
@@ -1292,8 +1294,8 @@ async function startArena() {
     // 開場進場動畫
     updateBars();
     updateGridHighlight();
-    hero.classList.add("entering");
-    setTimeout(() => hero.classList.remove("entering"), 1100);
+    heroWrap.classList.add("entering");
+    setTimeout(() => heroWrap.classList.remove("entering"), 1100);
 
     // 初始化 CombatEngine + 註冊單位 + 綁示範技能按鈕
     initCombatEngine();

@@ -34,6 +34,15 @@
 .arena-hud-slim .bar-row {
     font-size: 12px;
 }
+/* 5/25 派派 B 方案：HP 條搬主角頭頂後，HUD 只剩 portrait + 名字 */
+.hero-name-only {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffe2a8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 6px rgba(0, 0, 0, 0.6);
+    letter-spacing: 1px;
+    flex: 1;
+}
 
 /* 魔王 HP 條（派派 5/24 恢復：absolute overlay 在 arena-stage 上方空白區，不佔 layout）*/
 .boss-hud-overlay {
@@ -274,17 +283,43 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
    corner (x, y) lerp: left = 22 + x*8 + y*5 (%), bottom = 62 - x*3 - y*7 (%)
    center (格中心) = corner (x+0.5, y+0.5) lerp */
 
-/* 主角站位 — 用 data-x/data-y 對位 */
+/* 主角站位 — 用 data-x/data-y 對位（5/25 改成 wrapper div 包 img + 頭頂 HP 條）*/
 .fighter-hero {
     position: absolute;
     width: 120px;
-    height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
     animation: heroIdle 2.4s ease-in-out infinite;
     transition: left 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
                 bottom 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+.fighter-hero-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
+}
+/* 頭頂飄浮 HP 條（5/25 派派 B 方案：菇勇者風小綠條）*/
+.hero-floating-hp {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 65%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    pointer-events: none;
+}
+.hero-floating-hp-fill {
+    height: 100%;
+    background: linear-gradient(180deg, #6dff8c 0%, #2ecc71 60%, #1e9c5a 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: width 0.35s ease-out;
 }
 /* hero 格中心 — 真等距菱形（對稱 col↘ row↗）
    (2,2) center 在 stage 正中央 50/50；z-index 依 bottom 算（畫面下=近=高z） */
