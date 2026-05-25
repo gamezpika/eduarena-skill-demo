@@ -48,12 +48,12 @@ import * as THREE from 'three';
     fillLight.position.set(-20, 30, -20);
     scene.add(fillLight);
 
-    // ─── chibi 小學生
+    // ─── chibi 小學生（5/25 派派 B 方案：對齊 hero_iso_sword.png 樣式）
+    // 白 T + 卡其短褲 + 白鞋 + 棕髮 + 拿銀色劍（拿掉紅帽/眼鏡/書包）
     const COLORS = {
-        skin: 0xfdd9b0, hair: 0x2b1a0a, shirt: 0x3498db, pants: 0x34495e,
-        shoes: 0x2c3e50, eye: 0x1a1a1a, mouth: 0xc0392b, cheek: 0xff7e90,
-        hat: 0xc0392b, hatDark: 0x8b0000, backpack: 0xf39c12, strap: 0x2c3e50,
-        glassFrame: 0x2c3e50,
+        skin: 0xfdd9b0, hair: 0x6b4226, shirt: 0xf5f5f5, pants: 0xc4a373,
+        shoes: 0xffffff, eye: 0x1a3a5a, mouth: 0xc0392b, cheek: 0xff7e90,
+        bladeMetal: 0xd8dde6, swordGuard: 0xb8923a, swordHandle: 0x5a3a1a,
     };
 
     const player = new THREE.Group();
@@ -66,81 +66,101 @@ import * as THREE from 'three';
             new THREE.MeshStandardMaterial({ color: COLORS.skin, roughness: 0.6 }));
         head.position.y = 2.55; root.add(head);
 
+        // 棕色蓬鬆頭髮 — 主半球 + 小撮髮絲讓更蓬
         const hair = new THREE.Mesh(
-            new THREE.SphereGeometry(0.98, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.8),
+            new THREE.SphereGeometry(1.02, 24, 18, 0, Math.PI * 2, 0, Math.PI / 1.7),
             new THREE.MeshStandardMaterial({ color: COLORS.hair, roughness: 0.85 }));
-        hair.position.y = 2.55; hair.rotation.x = -0.12; root.add(hair);
-
-        const hatTop = new THREE.Mesh(
-            new THREE.SphereGeometry(0.92, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.3),
-            new THREE.MeshStandardMaterial({ color: COLORS.hat, roughness: 0.7 }));
-        hatTop.position.y = 2.85; root.add(hatTop);
-        const hatBrim = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16, 1, false, -Math.PI / 2.5, Math.PI / 1.25),
-            new THREE.MeshStandardMaterial({ color: COLORS.hatDark, roughness: 0.7 }));
-        hatBrim.position.set(0, 2.75, 0.45); root.add(hatBrim);
-
-        [-0.32, 0.32].forEach(x => {
-            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.04, 8, 20),
-                new THREE.MeshStandardMaterial({ color: COLORS.glassFrame, metalness: 0.5, roughness: 0.3 }));
-            ring.position.set(x, 2.55, 0.92); root.add(ring);
+        hair.position.y = 2.55; hair.rotation.x = -0.18; root.add(hair);
+        // 額前一撮髮
+        [-0.4, 0.1, 0.45].forEach((x, i) => {
+            const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8),
+                new THREE.MeshStandardMaterial({ color: COLORS.hair, roughness: 0.85 }));
+            tuft.position.set(x, 2.95 + (i === 1 ? 0.05 : 0), 0.7 + (i % 2) * 0.1);
+            tuft.scale.set(1, 0.7, 0.7);
+            root.add(tuft);
         });
-        const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.04),
-            new THREE.MeshStandardMaterial({ color: COLORS.glassFrame }));
-        bridge.position.set(0, 2.55, 0.92); root.add(bridge);
 
+        // 大眼睛（藍色虹膜，比之前黑眼大一圈）
         [-0.32, 0.32].forEach(x => {
-            const eye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10),
+            const eye = new THREE.Mesh(new THREE.SphereGeometry(0.19, 14, 12),
                 new THREE.MeshStandardMaterial({ color: COLORS.eye }));
-            eye.position.set(x, 2.55, 0.83); root.add(eye);
-            const shine = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6),
-                new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5 }));
-            shine.position.set(x + 0.05, 2.62, 0.97); root.add(shine);
+            eye.position.set(x, 2.55, 0.82); root.add(eye);
+            const shine = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8),
+                new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.7 }));
+            shine.position.set(x + 0.06, 2.62, 0.96); root.add(shine);
         });
 
-        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.05, 0.04),
+        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.04),
             new THREE.MeshStandardMaterial({ color: COLORS.mouth }));
-        mouth.position.set(0, 2.2, 0.92); root.add(mouth);
+        mouth.position.set(0, 2.22, 0.92); root.add(mouth);
 
+        // 淡腮紅
         [-0.55, 0.55].forEach(x => {
             const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8),
-                new THREE.MeshStandardMaterial({ color: COLORS.cheek, transparent: true, opacity: 0.55 }));
+                new THREE.MeshStandardMaterial({ color: COLORS.cheek, transparent: true, opacity: 0.45 }));
             cheek.position.set(x, 2.32, 0.78); cheek.scale.set(1, 0.6, 0.3); root.add(cheek);
         });
 
+        // 白 T 恤
         const body = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.3, 0.65),
             new THREE.MeshStandardMaterial({ color: COLORS.shirt, roughness: 0.6 }));
         body.position.y = 1.15; root.add(body);
 
+        // 左手（沒拿東西，下垂）
         const leftArm = new THREE.Group();
         leftArm.position.set(-0.7, 1.75, 0); root.add(leftArm);
-        const leftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.3, 10),
-            new THREE.MeshStandardMaterial({ color: COLORS.skin, roughness: 0.65 }));
+        const armMaterial = new THREE.MeshStandardMaterial({ color: COLORS.skin, roughness: 0.65 });
+        const leftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.3, 10), armMaterial);
         leftArmMesh.position.y = -0.65; leftArm.add(leftArmMesh);
+
+        // 右手（拿劍，所以位置稍微往前 + 略抬起）
         const rightArm = new THREE.Group();
         rightArm.position.set(0.7, 1.75, 0); root.add(rightArm);
         rightArm.add(leftArmMesh.clone());
 
+        // 右手拿的劍 — 棕色握把 + 金色護手 + 銀色劍刃，從手掌位置向上指
+        const sword = new THREE.Group();
+        sword.position.set(0, -1.25, 0.35);    // 右手末端外側
+        sword.rotation.x = -0.4;                // 略往前傾顯擺式
+        // 握把
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.42, 0.16),
+            new THREE.MeshStandardMaterial({ color: COLORS.swordHandle, roughness: 0.75 }));
+        handle.position.y = 0; sword.add(handle);
+        // 護手（十字格）
+        const guard = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.18),
+            new THREE.MeshStandardMaterial({ color: COLORS.swordGuard, metalness: 0.7, roughness: 0.25 }));
+        guard.position.y = 0.26; sword.add(guard);
+        // 劍刃（銀色，光滑反光）
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.7, 0.05),
+            new THREE.MeshStandardMaterial({
+                color: COLORS.bladeMetal, metalness: 0.85, roughness: 0.15,
+                emissive: 0x3a4555, emissiveIntensity: 0.15
+            }));
+        blade.position.y = 1.15; sword.add(blade);
+        // 劍尖（三角）
+        const tip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.25, 4),
+            new THREE.MeshStandardMaterial({ color: COLORS.bladeMetal, metalness: 0.85, roughness: 0.15 }));
+        tip.position.y = 2.10; sword.add(tip);
+        rightArm.add(sword);
+
+        // 腳 — 上半段卡其短褲 + 下半段膚色小腿 + 白鞋
         const leftLeg = new THREE.Group();
         leftLeg.position.set(-0.28, 0.5, 0); root.add(leftLeg);
-        const leftLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.2, 1.0, 10),
-            new THREE.MeshStandardMaterial({ color: COLORS.pants, roughness: 0.7 }));
-        leftLegMesh.position.y = -0.5; leftLeg.add(leftLegMesh);
+        const pantsMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.45, 10),
+            new THREE.MeshStandardMaterial({ color: COLORS.pants, roughness: 0.75 }));
+        pantsMesh.position.y = -0.225; leftLeg.add(pantsMesh);
+        const calfMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.18, 0.55, 10),
+            new THREE.MeshStandardMaterial({ color: COLORS.skin, roughness: 0.65 }));
+        calfMesh.position.y = -0.725; leftLeg.add(calfMesh);
         const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.2, 0.5),
-            new THREE.MeshStandardMaterial({ color: COLORS.shoes, roughness: 0.7 }));
+            new THREE.MeshStandardMaterial({ color: COLORS.shoes, roughness: 0.55 }));
         leftShoe.position.set(0, -1.0, 0.07); leftLeg.add(leftShoe);
+
         const rightLeg = new THREE.Group();
         rightLeg.position.set(0.28, 0.5, 0); root.add(rightLeg);
-        rightLeg.add(leftLegMesh.clone()); rightLeg.add(leftShoe.clone());
-
-        const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.0, 0.4),
-            new THREE.MeshStandardMaterial({ color: COLORS.backpack, roughness: 0.65 }));
-        backpack.position.set(0, 1.25, -0.5); root.add(backpack);
-        [-0.25, 0.25].forEach(x => {
-            const strap = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.2, 0.1),
-                new THREE.MeshStandardMaterial({ color: COLORS.strap }));
-            strap.position.set(x, 1.3, -0.35); root.add(strap);
-        });
+        rightLeg.add(pantsMesh.clone());
+        rightLeg.add(calfMesh.clone());
+        rightLeg.add(leftShoe.clone());
 
         root.position.y = -0.05;
         return { group: root, leftArm, rightArm, leftLeg, rightLeg, head };
