@@ -1,8 +1,29 @@
 {
   "glbs": [
-    { "file": "tree.glb", "emoji": "🌲", "name": "樹" },
-    { "file": "forest.glb", "emoji": "🌳", "name": "森林" },
-    { "file": "mei.glb", "emoji": "🧙‍♀️", "name": "mei" },
-    { "file": "naughty_boy_chibi_draco.glb", "emoji": "🧑", "name": "boy" }
+    {
+      "file": "tree.glb",
+      "emoji": "🌲",
+      "name": "樹"
+    },
+    {
+      "file": "forest.glb",
+      "emoji": "🌳",
+      "name": "森林"
+    },
+    {
+      "file": "mei.glb",
+      "emoji": "🧙‍♀️",
+      "name": "mei"
+    },
+    {
+      "file": "naughty_boy_chibi_draco.glb",
+      "emoji": "🧑",
+      "name": "boy"
+    },
+    {
+      "file": "tree2.glb",
+      "emoji": "🌲🌲",
+      "name": "橄欖樹"
+    }
   ]
 }
