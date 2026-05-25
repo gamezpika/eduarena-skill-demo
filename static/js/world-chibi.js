@@ -173,17 +173,19 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     // 先放 primitives 當 placeholder（GLB load 完會替換）
     player.add(chibi.group);
 
-    // 載 naughty_boy_chibi_draco.glb（Draco 壓縮 28→5.7MB）
+    // 載 mei.glb（派派 5/25：1.2MB 含 1 animation + skin 骨架）
     const gltfLoader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
     let gltfModel = null;
     let gltfBaseY = 0;
+    let gltfMixer = null;
+    let gltfAction = null;
+    const gltfClock = new THREE.Clock();
     gltfLoader.load(
-        'assets/3d/character/naughty_boy_chibi_draco.glb',
+        'assets/3d/character/mei.glb',
         (gltf) => {
-            // GLB 載入成功 → 砍掉 primitives，換 3D 模型
             player.remove(chibi.group);
             gltfModel = gltf.scene;
             const bbox = new THREE.Box3().setFromObject(gltfModel);
@@ -193,9 +195,17 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             gltfModel.scale.setScalar(scale);
             const bbox2 = new THREE.Box3().setFromObject(gltfModel);
             gltfModel.position.y = -bbox2.min.y;
-            gltfBaseY = gltfModel.position.y;  // 記住基準位置，walk 動畫上下偏移用
+            gltfBaseY = gltfModel.position.y;
             player.add(gltfModel);
-            console.log('[chibi] GLB loaded, scale=', scale.toFixed(3), 'height=', height.toFixed(2));
+            // 接動畫
+            if (gltf.animations && gltf.animations.length > 0) {
+                gltfMixer = new THREE.AnimationMixer(gltfModel);
+                gltfAction = gltfMixer.clipAction(gltf.animations[0]);
+                gltfAction.play();
+                console.log('[chibi] GLB loaded with', gltf.animations.length, 'anim:', gltf.animations[0].name);
+            } else {
+                console.log('[chibi] GLB loaded (no animation), scale=', scale.toFixed(3));
+            }
         },
         undefined,
         (err) => {
@@ -516,23 +526,19 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             chibi.rightLeg.rotation.x = Math.sin(walkPhase) * 0.55;
             chibi.group.position.y = -0.05 + Math.abs(Math.sin(walkPhase)) * 0.08;
             chibi.head.rotation.z = Math.sin(walkPhase * 0.5) * 0.06;
-            // 5/25 派派 A 方案：GLB fake walk anim — 上下彈跳 + 左右擺動
-            if (gltfModel) {
-                gltfModel.position.y = gltfBaseY + Math.abs(Math.sin(walkPhase * 1.6)) * 0.22;
-                gltfModel.rotation.z = Math.sin(walkPhase) * 0.07;
-            }
+            // mei.glb 用 GLB 自帶 animation，走動時稍微加速
+            if (gltfAction) gltfAction.timeScale = 1.6;
         } else {
             chibi.leftArm.rotation.x *= 0.85;
             chibi.rightArm.rotation.x *= 0.85;
             chibi.leftLeg.rotation.x *= 0.85;
             chibi.rightLeg.rotation.x *= 0.85;
             chibi.group.position.y = -0.05 + Math.sin(Date.now() * 0.003) * 0.03;
-            // GLB idle 緩慢呼吸
-            if (gltfModel) {
-                gltfModel.position.y = gltfBaseY + Math.sin(Date.now() * 0.003) * 0.06;
-                gltfModel.rotation.z *= 0.92;
-            }
+            // 停下時動畫減速 = idle
+            if (gltfAction) gltfAction.timeScale = 0.6;
         }
+        // 5/25 派派：跑 GLB 自帶骨骼動畫
+        if (gltfMixer) gltfMixer.update(gltfClock.getDelta());
 
         player.position.x = px;
         player.position.z = py;
