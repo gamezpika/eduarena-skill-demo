@@ -95,7 +95,7 @@
             </div>
 
             <div class="setup-section">
-                <h3>🎓 選擇職業（24 個，影響武器 + HP/MP）</h3>
+                <h3>🎓 選擇職業（24 個，影響武器 + HP）</h3>
                 <div class="job-grid" id="setup-jobs">
                     <!-- 24 職業 JS render -->
                 </div>
@@ -1395,11 +1395,11 @@ function selectJob(job) {
     });
     const preview = document.getElementById("job-preview");
     if (!job) {
-        preview.innerHTML = `<div class="job-name">🎒 學生（預設）</div>HP 100 / MP 50 / 武器：⚔️ 劍`;
+        preview.innerHTML = `<div class="job-name">🎒 學生（預設）</div>HP 300 / 武器：⚔️ 劍`;
     } else {
         const w = pickWeaponByJob(job);
         const wEmoji = { sword: "⚔️", book: "📕", staff: "🪄", gauntlet: "🥊" }[w];
-        const buff = job.tier === 1 ? "HP +20 / MP +10" : job.tier === 2 ? "HP +40 / MP +20" : "HP +60 / MP +30";
+        const buff = job.tier === 1 ? "T1 入門" : job.tier === 2 ? "T2 進階" : "T3 高階";
         preview.innerHTML = `<div class="job-name">${job.name}</div>${job.skill_desc || job.description}<br>武器：${wEmoji} ${w} · ${buff}`;
     }
 }
@@ -1654,7 +1654,7 @@ function initCombatEngine() {
         updateBars();
     });
     engine.on('skill_blocked', ({ reason }) => {
-        showToast(reason === 'not_enough_mp' ? '⚠ MP 不夠！' : '⚠ 技能無法施放');
+        showToast('⚠ 技能無法施放');
     });
     engine.on('unit_defeated', ({ unit }) => {
         if (unit.id === 'boss') {
