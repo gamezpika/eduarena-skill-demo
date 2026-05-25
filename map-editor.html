@@ -1600,7 +1600,9 @@ if (canvas) (function() {
                     continue;
                 }
             }
-            // 套用 transform
+            // 套用 transform（先 reset scale 算 original bbox，避免累積錯誤）
+            model.scale.set(1, 1, 1);
+            model.position.set(0, 0, 0);
             const bbox = new THREE.Box3().setFromObject(model);
             const h = bbox.max.y - bbox.min.y;
             if (h > 0) {
