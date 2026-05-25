@@ -390,6 +390,7 @@ import * as THREE from 'three';
     const HALF_W = SCENE_W / 2, HALF_H = SCENE_H / 2;
     const ARRIVE_DIST = 4.0;  // 距離 building.center < 4 = 到達
     let walkPhase = 0;
+    let _isMoving = false;  // 5/25 派派：給 world.js 鏡頭跟隨用
 
     function loop() {
         requestAnimationFrame(loop);
@@ -427,6 +428,7 @@ import * as THREE from 'three';
 
         const moveLen = Math.hypot(dx, dy);
         const isMoving = moveLen > 0.05;
+        _isMoving = isMoving;
 
         if (isMoving) {
             const norm = Math.max(moveLen, 1);
@@ -477,6 +479,10 @@ import * as THREE from 'three';
     window.eduChibi = {
         player, chibi, scene, camera,
         get pos() { return { x: px, y: py }; },
+        // 5/25 派派：給 world.js 鏡頭跟隨用 — chibi 在 mapImg 上的 normalized 0..1
+        getMapNorm() { return sceneToScreenNorm(px, py); },
+        // 玩家是否正在移動（鍵盤 / 搖桿 / auto-move）
+        get isMoving() { return _isMoving; },
         get config() { return mapConfig; },
         check(x, y) { return isWalkable(x ?? px, y ?? py); },
         goto(key) {

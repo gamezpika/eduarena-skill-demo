@@ -109,6 +109,25 @@
         kick();
     }, { passive: false });
 
+    // ─── 5/25 派派 A 方案：鏡頭跟隨 chibi（chibi 走動時自動把 chibi 帶到畫面中央）
+    let followFrozen = false;
+    function followChibi() {
+        if (followFrozen) return;
+        const c = window.eduChibi;
+        if (!c || !c.getMapNorm || !c.isMoving) return;
+        const { nx, ny } = c.getMapNorm();
+        if (!isFinite(nx) || !isFinite(ny)) return;
+        const wW = world.offsetWidth, wH = world.offsetHeight;
+        const vpW = vp.clientWidth, vpH = vp.clientHeight;
+        if (wW < 1 || wH < 1) return;
+        bounds();
+        // chibi 在 world 內 px → world translate 要讓 chibi 落在 viewport 中央
+        targetX = clampX(vpW / 2 - nx * wW);
+        targetY = clampY(vpH / 2 - ny * wH);
+        kick();
+    }
+    setInterval(followChibi, 50);  // 20Hz 主動跟隨
+
     // ─── Pointer 2D 拖曳 + flick 慣性 ──────────────
     let down = false, dragOn = false;
     let sX = 0, sY = 0, sTX = 0, sTY = 0;
@@ -122,6 +141,7 @@
     vp.addEventListener("pointerdown", e => {
         bounds();
         down = true; dragOn = false; suppressClick = false;
+        followFrozen = true;  // 5/25 派派：拖曳期間暫停鏡頭跟隨
         try { vp.setPointerCapture(e.pointerId); } catch (_) {}
         sX = e.clientX; sY = e.clientY;
         sTX = targetX; sTY = targetY;
@@ -159,6 +179,8 @@
             targetY = clampY(targetY + fvY * 220);
             kick();
         }
+        // 5/25 派派：拖曳結束 1.5s 後恢復 follow
+        setTimeout(() => { followFrozen = false; }, 1500);
     }
     vp.addEventListener("pointerup", endDrag);
     vp.addEventListener("pointercancel", endDrag);
