@@ -106,15 +106,16 @@
             font-size: 11px; font-weight: 700; cursor: pointer;
         }
         .autosave-row {
-            display: flex; gap: 8px; padding: 6px 12px;
+            display: flex; gap: 6px; padding: 6px 12px;
             background: #1a3014; border-top: 1px solid #0d1019;
             font-size: 11px; color: #8fbe6f; align-items: center;
+            flex-wrap: nowrap;
         }
-        .autosave-row #autosaveStatus { flex: 1; }
+        .autosave-row #autosaveStatus { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .autosave-row button {
-            padding: 4px 10px; border: none; border-radius: 3px;
+            padding: 4px 8px; border: none; border-radius: 3px;
             font-size: 10px; font-weight: 700; cursor: pointer;
-            background: #444; color: #fff;
+            background: #444; color: #fff; white-space: nowrap; flex-shrink: 0;
         }
 
         .building-list {
@@ -276,10 +277,12 @@
     <div class="autosave-row">
         <span id="autosaveStatus">💾 localStorage 自動存</span>
         <button class="btn-secondary" id="btnClearCache">清暫存</button>
+        <button class="btn-secondary" id="btnPatReset">⚙️ PAT</button>
     </div>
     <div class="panel-footer">
         <button class="btn-secondary" id="btnReset">重置</button>
-        <button class="btn-primary" id="btnExport">匯出 JSON</button>
+        <button class="btn-secondary" id="btnExport">📋 匯出</button>
+        <button class="btn-primary" id="btnPushGitHub">🚀 推 GitHub</button>
     </div>
 </aside>
 
@@ -865,6 +868,118 @@ document.getElementById('btnClearCache').addEventListener('click', () => {
     if (!confirm('清掉瀏覽器暫存？下次重新整理會載入 server config')) return;
     localStorage.removeItem(LS_KEY);
     document.getElementById('autosaveStatus').textContent = '💾 暫存已清';
+});
+
+// ─── 一鍵推 GitHub ────────────────────────────────────────────────
+const GH_REPO_OWNER = 'gamezpika';
+const GH_REPO_NAME = 'eduarena-skill-demo';
+const GH_FILE_PATH = 'assets/world_map_config.json';
+const GH_BRANCH = 'main';
+const GH_PAT_KEY = 'wmEditPAT';
+
+function utf8ToBase64(str) {
+    // 中文 / emoji 安全 base64 編碼
+    return btoa(unescape(encodeURIComponent(str)));
+}
+
+async function pushToGitHub() {
+    let pat = localStorage.getItem(GH_PAT_KEY);
+    if (!pat) {
+        pat = prompt(
+            '第一次使用：請貼 GitHub Personal Access Token\n\n' +
+            '建 token 步驟：\n' +
+            '1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained\n' +
+            '2. Repository access: Only select repositories → eduarena-skill-demo\n' +
+            '3. Permissions → Contents: Read and write\n' +
+            '4. Generate → 複製貼這裡（只存你瀏覽器 localStorage，不上 git）'
+        );
+        if (!pat || !pat.trim()) return;
+        pat = pat.trim();
+        localStorage.setItem(GH_PAT_KEY, pat);
+    }
+
+    const btn = document.getElementById('btnPushGitHub');
+    const status = document.getElementById('autosaveStatus');
+    const origText = btn.textContent;
+    btn.disabled = true;
+
+    const apiBase = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${GH_FILE_PATH}`;
+    const authHeaders = {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
+
+    try {
+        // 1. 取得當前 file SHA
+        btn.textContent = '⏳ 取 SHA...';
+        status.textContent = '🔍 查詢 GitHub 上 config 版本...';
+        const getRes = await fetch(`${apiBase}?ref=${GH_BRANCH}`, { headers: authHeaders });
+        if (!getRes.ok) {
+            if (getRes.status === 401) {
+                localStorage.removeItem(GH_PAT_KEY);
+                throw new Error('PAT 無效或過期，已自動清除。請重試輸入新 token');
+            }
+            if (getRes.status === 404) {
+                throw new Error('找不到 repo 或 file path。檢查 PAT 是否有這個 repo 的 Contents 權限');
+            }
+            throw new Error(`取 SHA 失敗 (HTTP ${getRes.status})`);
+        }
+        const fileData = await getRes.json();
+        const sha = fileData.sha;
+
+        // 2. PUT 新內容
+        btn.textContent = '⏳ 推送中...';
+        status.textContent = '🚀 推送 config 到 GitHub...';
+        const content = JSON.stringify({ map_config: mapConfig }, null, 2);
+        const contentB64 = utf8ToBase64(content);
+        const ts = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
+
+        const putRes = await fetch(apiBase, {
+            method: 'PUT',
+            headers: { ...authHeaders, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `update(world): polygon config 從 map-editor 一鍵推 (${ts})`,
+                content: contentB64,
+                sha: sha,
+                branch: GH_BRANCH,
+            }),
+        });
+        if (!putRes.ok) {
+            const errText = await putRes.text();
+            if (putRes.status === 409) {
+                throw new Error('版本衝突：GitHub 上的 config 已被別處修改。請先「重置」載入最新版再編輯');
+            }
+            throw new Error(`推送失敗 (HTTP ${putRes.status}): ${errText.slice(0, 200)}`);
+        }
+        const result = await putRes.json();
+        const shortSha = result.commit.sha.slice(0, 7);
+        btn.textContent = '✅ 已推送';
+        status.textContent = `🚀 已推 GitHub ${shortSha}，Railway 約 1 分鐘後上線`;
+        setTimeout(() => {
+            btn.textContent = origText;
+            btn.disabled = false;
+        }, 4000);
+    } catch (e) {
+        console.error('[push] failed:', e);
+        alert('推送失敗：\n\n' + e.message);
+        btn.textContent = origText;
+        btn.disabled = false;
+        status.textContent = '❌ 推送失敗，見 alert';
+    }
+}
+
+document.getElementById('btnPushGitHub').addEventListener('click', pushToGitHub);
+
+document.getElementById('btnPatReset').addEventListener('click', () => {
+    const hasToken = !!localStorage.getItem(GH_PAT_KEY);
+    if (!hasToken) {
+        alert('目前沒存 PAT。下次點「🚀 推 GitHub」會跳出輸入框');
+        return;
+    }
+    if (!confirm('清除已存的 GitHub PAT？\n\n下次推送會重新跳輸入框')) return;
+    localStorage.removeItem(GH_PAT_KEY);
+    alert('PAT 已清');
 });
 
 // 圖片載入完才能算尺寸
