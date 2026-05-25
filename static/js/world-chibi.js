@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 (function () {
     "use strict";
@@ -178,6 +179,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
+    gltfLoader.setMeshoptDecoder(MeshoptDecoder);  // 5/25 派派：fountain.glb gltfpack 壓縮用
     let gltfModel = null;
     let gltfBaseY = 0;
     let gltfMixer = null;
