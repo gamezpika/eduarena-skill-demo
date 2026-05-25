@@ -213,34 +213,60 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         }
     );
 
-    // 5/25 派派：載 tree.glb 在 4 角各放 3 棵
+    // 5/25 派派：載 tree.glb 在 mapImg 各空地放分散樹（避開 polygon 建築）
+    const _unprojVec = new THREE.Vector3();
+    const _camDir = new THREE.Vector3();
+    function mapNormToSceneCoord(nx, ny) {
+        const ndcX = nx * 2 - 1;
+        const ndcY = 1 - ny * 2;
+        _unprojVec.set(ndcX, ndcY, 0);
+        _unprojVec.unproject(camera);
+        camera.getWorldDirection(_camDir);
+        if (Math.abs(_camDir.y) > 1e-6) {
+            const t = -_unprojVec.y / _camDir.y;
+            _unprojVec.add(_camDir.clone().multiplyScalar(t));
+        }
+        return { x: _unprojVec.x, z: _unprojVec.z };
+    }
     gltfLoader.load(
         'assets/3d/character/tree.glb',
         (gltf) => {
             const treeBase = gltf.scene;
             const tbbox = new THREE.Box3().setFromObject(treeBase);
             const treeH = tbbox.max.y - tbbox.min.y;
-            const baseScale = 6 / Math.max(treeH, 0.001);  // 樹高 = 6 scene units（比 chibi 3.5 高）
-            const positions = [
-                // 左上 3 棵
-                [-42, -42], [-36, -45], [-45, -36],
-                // 右上 3 棵
-                [42, -42], [36, -45], [45, -36],
-                // 左下 3 棵
-                [-42, 42], [-36, 45], [-45, 36],
-                // 右下 3 棵
-                [42, 42], [36, 45], [45, 36],
+            const baseScale = 11 / Math.max(treeH, 0.001);  // 樹高 11 scene units 大顆
+            // mapImg normalized 位置 — 散在邊緣 + 縫隙空地（避開建築 polygon）
+            const treeMapPositions = [
+                // 上方邊緣（4 棵）
+                { mx: 0.06, my: 0.04 }, { mx: 0.35, my: 0.025 },
+                { mx: 0.62, my: 0.025 }, { mx: 0.94, my: 0.04 },
+                // 左中右中（2 棵）
+                { mx: 0.03, my: 0.5 }, { mx: 0.97, my: 0.5 },
+                // 下方邊緣（4 棵）
+                { mx: 0.06, my: 0.96 }, { mx: 0.35, my: 0.975 },
+                { mx: 0.62, my: 0.975 }, { mx: 0.94, my: 0.96 },
+                // 內部縫隙空地（2 棵 — 不一定避得開要等 isWalkable 過濾）
+                { mx: 0.18, my: 0.27 }, { mx: 0.82, my: 0.72 },
             ];
-            positions.forEach(([x, z]) => {
+            let placed = 0, skipped = 0;
+            treeMapPositions.forEach(({ mx, my }) => {
+                const { x, z } = mapNormToSceneCoord(mx, my);
+                // 過濾撞建築 polygon
+                if (mapConfig && !isWalkable(x, z)) {
+                    // 等 mapConfig 載入後再過濾，現在沒 config 就先放
+                    skipped++;
+                    return;
+                }
                 const t = treeBase.clone();
-                const s = baseScale * (0.75 + Math.random() * 0.45);
+                const s = baseScale * (0.8 + Math.random() * 0.4);
                 t.scale.setScalar(s);
                 const ttbbox = new THREE.Box3().setFromObject(t);
                 t.position.set(x, -ttbbox.min.y, z);
                 t.rotation.y = Math.random() * Math.PI * 2;
                 scene.add(t);
+                placed++;
             });
-            console.log('[chibi] trees loaded:', positions.length);
+            console.log('[chibi] trees:', placed, 'placed,', skipped, 'skipped (blocked)');
         },
         undefined,
         (err) => {
