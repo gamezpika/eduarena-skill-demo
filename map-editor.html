@@ -264,13 +264,31 @@
         .obj-row-name { flex: 1; }
         .obj-row-coords { font-size: 10px; color: #888; font-family: monospace; }
         .obj-row.selected .obj-row-coords { color: #1a1f2e; }
+        /* Phase 4: Three.js 真 3D 預覽 canvas — 跟 mapImg 同層 */
+        .objects-3d-canvas {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
     </style>
+    <!-- Phase 4: Three.js importmap -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 <body>
 
 <div class="map-area" id="mapArea">
     <div class="map-frame" id="mapFrame">
         <img id="map-img" src="" alt="map" style="display:none">
+        <!-- Phase 4: Three.js 真 3D 預覽 canvas（在 emoji 底下）-->
+        <canvas class="objects-3d-canvas" id="objects3DCanvas"></canvas>
         <!-- 物件 emoji overlay（5/25 派派 3D 物件擺放工具）-->
         <div class="objects-emoji-overlay" id="objectsOverlay" style="
             position:absolute; inset:0; pointer-events:none; z-index:6;
@@ -383,6 +401,9 @@ let mapConfig = null;
 let selectedBuildingId = null;
 let mode = 'bbox';  // 'bbox' | 'path' | 'objects'
 
+// Phase 4: 給 ES module 端讀 mapConfig（避免 module / inline scope 衝突）
+window.getMapConfig = () => mapConfig;
+
 // 5/25 派派 3D 物件擺放工具
 const AVAILABLE_GLBS = [
     { file: 'tree.glb',                emoji: '🌲', name: '樹' },
@@ -391,11 +412,19 @@ const AVAILABLE_GLBS = [
     { file: 'naughty_boy_chibi_draco.glb', emoji: '🧑', name: 'boy' },
 ];
 let pendingGlbFile = null;     // 點 GLB picker 後待放
-let selectedObjectId = null;
+let selectedObjectIds = new Set();  // 5/25 派派 Phase 3: multi-select
 let __objectIdCounter = 0;
 function nextObjectId() {
     __objectIdCounter++;
     return 'obj_' + String(__objectIdCounter).padStart(3, '0');
+}
+function getPrimarySelectedObjectId() {
+    return selectedObjectIds.size > 0 ? [...selectedObjectIds][0] : null;
+}
+function notifyObjects3DChanged() {
+    if (window.__objects3D && typeof window.__objects3D.rerender === 'function') {
+        window.__objects3D.rerender();
+    }
 }
 
 const mapImg = document.getElementById('map-img');
@@ -945,8 +974,9 @@ mapFrame.addEventListener('click', e => {
             rotation: parseFloat((Math.random() * Math.PI * 2).toFixed(3)),
         };
         mapConfig.objects.push(obj);
-        selectedObjectId = obj.id;
+        selectedObjectIds = new Set([obj.id]);
         renderAll();
+        notifyObjects3DChanged();
     }
 });
 
@@ -996,17 +1026,23 @@ function renderObjects() {
         const meta = AVAILABLE_GLBS.find(g => g.file === obj.glb);
         const emoji = meta ? meta.emoji : '📦';
         const el = document.createElement('div');
-        el.className = 'obj-emoji' + (obj.id === selectedObjectId ? ' selected' : '');
+        el.className = 'obj-emoji' + (selectedObjectIds.has(obj.id) ? ' selected' : '');
         el.textContent = emoji;
         el.style.left = (obj.x * mw) + 'px';
         el.style.top = (obj.y * mh) + 'px';
         el.style.fontSize = (22 * (obj.scale || 1)) + 'px';
         el.dataset.id = obj.id;
-        // 點選
+        // 點選（Shift/Cmd/Ctrl 多選）
         el.addEventListener('mousedown', ev => {
             if (mode !== 'objects') return;
             ev.stopPropagation();
-            selectedObjectId = obj.id;
+            const isMulti = ev.shiftKey || ev.metaKey || ev.ctrlKey;
+            if (isMulti) {
+                if (selectedObjectIds.has(obj.id)) selectedObjectIds.delete(obj.id);
+                else selectedObjectIds.add(obj.id);
+            } else if (!selectedObjectIds.has(obj.id)) {
+                selectedObjectIds = new Set([obj.id]);
+            }
             startObjectDrag(obj, ev);
         });
         objectsOverlay.appendChild(el);
@@ -1015,7 +1051,16 @@ function renderObjects() {
 
 let _objDragging = null;
 function startObjectDrag(obj, e) {
-    _objDragging = { obj, startX: e.clientX, startY: e.clientY, baseX: obj.x, baseY: obj.y, moved: false };
+    // 拖動時，所有選中的物件一起 group move（5/25 派派 Phase 3）
+    const movingIds = new Set(selectedObjectIds);
+    if (movingIds.size === 0) movingIds.add(obj.id);
+    const movingObjs = mapConfig.objects.filter(o => movingIds.has(o.id))
+        .map(o => ({ obj: o, baseX: o.x, baseY: o.y }));
+    _objDragging = {
+        startX: e.clientX, startY: e.clientY,
+        movingObjs,
+        moved: false,
+    };
     document.addEventListener('mousemove', objDragMove);
     document.addEventListener('mouseup', objDragEnd);
     renderAll();
@@ -1026,13 +1071,16 @@ function objDragMove(e) {
     const dx = (e.clientX - _objDragging.startX) / rect.width;
     const dy = (e.clientY - _objDragging.startY) / rect.height;
     if (Math.abs(dx) + Math.abs(dy) > 0.003) _objDragging.moved = true;
-    _objDragging.obj.x = Math.max(0, Math.min(1, _objDragging.baseX + dx));
-    _objDragging.obj.y = Math.max(0, Math.min(1, _objDragging.baseY + dy));
-    _objDragging.obj.x = parseFloat(_objDragging.obj.x.toFixed(4));
-    _objDragging.obj.y = parseFloat(_objDragging.obj.y.toFixed(4));
+    _objDragging.movingObjs.forEach(item => {
+        let nx = Math.max(0, Math.min(1, item.baseX + dx));
+        let ny = Math.max(0, Math.min(1, item.baseY + dy));
+        item.obj.x = parseFloat(nx.toFixed(4));
+        item.obj.y = parseFloat(ny.toFixed(4));
+    });
     renderObjects();
     renderObjectsList();
     renderObjectDetail();
+    notifyObjects3DChanged();
 }
 function objDragEnd() {
     document.removeEventListener('mousemove', objDragMove);
@@ -1055,14 +1103,20 @@ function renderObjectsList() {
         const emoji = meta ? meta.emoji : '📦';
         const name = meta ? meta.name : obj.glb;
         const row = document.createElement('div');
-        row.className = 'obj-row' + (obj.id === selectedObjectId ? ' selected' : '');
+        row.className = 'obj-row' + (selectedObjectIds.has(obj.id) ? ' selected' : '');
         row.innerHTML = `
             <span class="obj-row-emoji">${emoji}</span>
             <span class="obj-row-name">${name}</span>
             <span class="obj-row-coords">${obj.x.toFixed(2)},${obj.y.toFixed(2)}</span>
         `;
-        row.addEventListener('click', () => {
-            selectedObjectId = obj.id;
+        row.addEventListener('click', (ev) => {
+            const isMulti = ev.shiftKey || ev.metaKey || ev.ctrlKey;
+            if (isMulti) {
+                if (selectedObjectIds.has(obj.id)) selectedObjectIds.delete(obj.id);
+                else selectedObjectIds.add(obj.id);
+            } else {
+                selectedObjectIds = new Set([obj.id]);
+            }
             renderAll();
         });
         list.appendChild(row);
@@ -1072,11 +1126,55 @@ function renderObjectsList() {
 function renderObjectDetail() {
     const detail = document.getElementById('objectDetail');
     if (!detail) return;
-    if (!selectedObjectId || !mapConfig || !mapConfig.objects) {
-        detail.innerHTML = '<div style="text-align:center;color:#888;padding:14px 0;font-size:12px;">點地圖物件或上方清單編輯</div>';
+    if (selectedObjectIds.size === 0 || !mapConfig || !mapConfig.objects) {
+        detail.innerHTML = '<div style="text-align:center;color:#888;padding:14px 0;font-size:12px;">點地圖物件或上方清單編輯<br><br>Shift/Cmd 點 = 多選</div>';
         return;
     }
-    const obj = mapConfig.objects.find(o => o.id === selectedObjectId);
+    // 5/25 派派 Phase 3：多選 view — 群 move（拖任一）+ 群改 scale/rotation + 群刪
+    if (selectedObjectIds.size > 1) {
+        detail.innerHTML = `
+            <h3 style="font-size:13px;color:#fdc500;margin-bottom:8px;border-bottom:1px solid #444;padding-bottom:4px;">
+                ✨ 多選：${selectedObjectIds.size} 個物件
+            </h3>
+            <div style="font-size:11px;color:#aaa;margin-bottom:8px;line-height:1.6;">
+                拖任一個 = 群組一起 move<br>
+                下方輸入 + 套用 = 全部一起改
+            </div>
+            <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;font-size:11px;margin-bottom:8px;align-items:center;">
+                <div style="color:#888;">大小</div>
+                <input type="number" id="multiScale" step="0.05" min="0.1" max="5" placeholder="新 scale (空=不改)">
+                <div style="color:#888;">轉向</div>
+                <input type="number" id="multiRotation" step="0.1" min="0" max="6.3" placeholder="新 rotation (空=不改)">
+            </div>
+            <button class="btn-secondary" id="btnApplyMulti" style="width:100%;padding:6px;font-size:12px;font-weight:700;background:#fdc500;color:#1a1f2e;border:none;border-radius:4px;cursor:pointer;margin-bottom:6px;">套用到全部 ${selectedObjectIds.size} 個</button>
+            <button class="btn-danger" id="btnDeleteMulti" style="width:100%;padding:6px;font-size:12px;font-weight:700;background:#ff5050;color:#fff;border:none;border-radius:4px;cursor:pointer;">🗑 刪除全部 ${selectedObjectIds.size} 個</button>
+        `;
+        detail.querySelector('#btnApplyMulti').addEventListener('click', () => {
+            const scaleStr = detail.querySelector('#multiScale').value;
+            const rotStr = detail.querySelector('#multiRotation').value;
+            const scale = scaleStr === '' ? null : parseFloat(scaleStr);
+            const rotation = rotStr === '' ? null : parseFloat(rotStr);
+            mapConfig.objects.forEach(o => {
+                if (selectedObjectIds.has(o.id)) {
+                    if (scale !== null && !isNaN(scale)) o.scale = parseFloat(scale.toFixed(2));
+                    if (rotation !== null && !isNaN(rotation)) o.rotation = parseFloat(rotation.toFixed(3));
+                }
+            });
+            renderAll();
+            notifyObjects3DChanged();
+        });
+        detail.querySelector('#btnDeleteMulti').addEventListener('click', () => {
+            if (!confirm(`刪除 ${selectedObjectIds.size} 個物件？`)) return;
+            mapConfig.objects = mapConfig.objects.filter(o => !selectedObjectIds.has(o.id));
+            selectedObjectIds = new Set();
+            renderAll();
+            notifyObjects3DChanged();
+        });
+        return;
+    }
+    // 單選 view
+    const primaryId = getPrimarySelectedObjectId();
+    const obj = mapConfig.objects.find(o => o.id === primaryId);
     if (!obj) {
         detail.innerHTML = '';
         return;
@@ -1109,16 +1207,18 @@ function renderObjectDetail() {
         renderObjects();
         renderObjectsList();
         autoSave();
+        notifyObjects3DChanged();
     };
     ['objX', 'objY', 'objScale', 'objRotation'].forEach(id => {
         detail.querySelector('#' + id).addEventListener('input', sync);
     });
     detail.querySelector('#btnDeleteObject').addEventListener('click', () => {
         if (!confirm('刪除這個物件？')) return;
-        const idx = mapConfig.objects.findIndex(o => o.id === selectedObjectId);
+        const idx = mapConfig.objects.findIndex(o => o.id === primaryId);
         if (idx >= 0) mapConfig.objects.splice(idx, 1);
-        selectedObjectId = null;
+        selectedObjectIds.delete(primaryId);
         renderAll();
+        notifyObjects3DChanged();
     });
 }
 
@@ -1397,6 +1497,145 @@ buildingList.addEventListener('dblclick', e => {
     selectedBuildingId = b.id;
     renderAll();
 });
+</script>
+
+<!-- Phase 4: Three.js 真 3D 預覽 — 嵌 map-editor 內 mini scene，跟 world.html 同 setup -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const canvas = document.getElementById('objects3DCanvas');
+if (canvas) (function() {
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+
+    // 跟 world-chibi.js 同 camera setup（OrthographicCamera 53° 俯瞰）
+    const SCENE_W = 100, SCENE_H = 100;
+    const camera = new THREE.OrthographicCamera(
+        -SCENE_W / 2, SCENE_W / 2,
+        SCENE_H / 2, -SCENE_H / 2,
+        -500, 500
+    );
+    camera.position.set(0, 80, 60);
+    camera.lookAt(0, 0, 0);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    dirLight.position.set(20, 50, 30);
+    scene.add(dirLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+    // mapImg normalized 0..1 → scene coord（與 world-chibi 一致）
+    const _unprojVec = new THREE.Vector3();
+    const _camDir = new THREE.Vector3();
+    function mapNormToScene(nx, ny) {
+        const ndcX = nx * 2 - 1;
+        const ndcY = 1 - ny * 2;
+        _unprojVec.set(ndcX, ndcY, 0);
+        _unprojVec.unproject(camera);
+        camera.getWorldDirection(_camDir);
+        if (Math.abs(_camDir.y) > 1e-6) {
+            const t = -_unprojVec.y / _camDir.y;
+            _unprojVec.add(_camDir.clone().multiplyScalar(t));
+        }
+        return { x: _unprojVec.x, z: _unprojVec.z };
+    }
+
+    // GLB cache（跨物件共用）
+    const gltfLoader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+    gltfLoader.setDRACOLoader(dracoLoader);
+    const glbCache = new Map();
+    function loadGLBOnce(file) {
+        if (glbCache.has(file)) return Promise.resolve(glbCache.get(file));
+        return new Promise((res, rej) => {
+            gltfLoader.load(
+                'assets/3d/character/' + file,
+                gltf => { glbCache.set(file, gltf); res(gltf); },
+                undefined, err => rej(err)
+            );
+        });
+    }
+
+    // 場景內現有物件：obj.id → Object3D
+    const sceneObjs = new Map();
+
+    async function rerender() {
+        const cfg = window.getMapConfig && window.getMapConfig();
+        if (!cfg || !Array.isArray(cfg.objects)) {
+            // 沒 config → 砍光 scene
+            for (const [id, m] of sceneObjs) { scene.remove(m); }
+            sceneObjs.clear();
+            return;
+        }
+        const configIds = new Set(cfg.objects.map(o => o.id));
+        // 砍掉 config 內已不存在的
+        for (const [id, m] of sceneObjs) {
+            if (!configIds.has(id)) {
+                scene.remove(m);
+                sceneObjs.delete(id);
+            }
+        }
+        // 加 / 更新
+        for (const obj of cfg.objects) {
+            let model = sceneObjs.get(obj.id);
+            if (!model) {
+                try {
+                    const gltf = await loadGLBOnce(obj.glb);
+                    model = gltf.scene.clone();
+                    sceneObjs.set(obj.id, model);
+                    scene.add(model);
+                } catch (e) {
+                    console.warn('[3d-preview] GLB load fail:', obj.glb, e);
+                    continue;
+                }
+            }
+            // 套用 transform
+            const bbox = new THREE.Box3().setFromObject(model);
+            const h = bbox.max.y - bbox.min.y;
+            if (h > 0) {
+                const baseScale = 8 / h * (obj.scale || 1);
+                model.scale.setScalar(baseScale);
+            }
+            const { x, z } = mapNormToScene(obj.x, obj.y);
+            const bbox2 = new THREE.Box3().setFromObject(model);
+            model.position.set(x, -bbox2.min.y, z);
+            model.rotation.y = obj.rotation || 0;
+        }
+    }
+
+    function resize() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        if (w === 0 || h === 0) return;
+        renderer.setSize(w, h, false);
+    }
+    resize();
+    new ResizeObserver(resize).observe(canvas);
+    window.addEventListener('resize', resize);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // expose 給 inline JS 通知用
+    window.__objects3D = { rerender };
+
+    // 首次載入 mapConfig 可能還沒好 → poll 等到有 objects 才 render
+    let __initInterval = setInterval(() => {
+        const cfg = window.getMapConfig && window.getMapConfig();
+        if (cfg && Array.isArray(cfg.objects)) {
+            rerender();
+            // 持續 poll，每 1s 確保場景跟 config 同步（fallback）
+        }
+    }, 1000);
+
+    console.log('[3d-preview] Three.js scene init');
+})();
 </script>
 
 </body>
