@@ -72,24 +72,25 @@
     z-index: 2;
 }
 /* 紅色 Lv chip 疊頭像左下 */
+/* 5/25 派派：lv-chip 從 portrait 移到 hero-card 內當 sibling
+   (portrait overflow:hidden 會 clip 子元素，移外面才能突出膠囊底) */
 .hero-lv-chip {
     position: absolute;
-    bottom: -12px;          /* 5/25 派派：往外突出膠囊框，不被金邊框遮住 */
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: -10px;
+    left: 5px;              /* portrait 中心 = portrait 左 + 23px，chip 一半 ~18px → left 5px 視覺對齊 */
     background: linear-gradient(180deg, #ff5040 0%, #b8222a 100%);
     color: #fff;
     font-size: 10px;
     font-weight: 800;
-    padding: 2px 7px;
+    padding: 2px 8px;
     border-radius: 10px;
-    border: 1.5px solid rgba(255, 255, 255, 0.65);   /* 白邊 chip，跟金邊膠囊區隔更明顯 */
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 0, 0, 0.5);
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
     letter-spacing: 0.5px;
     line-height: 1.2;
     white-space: nowrap;
-    z-index: 10;            /* 蓋過膠囊邊框 */
+    z-index: 10;
 }
 /* 名字 — 純文字疊在 hero-card 膠囊內（背景由 hero-card 統一提供）*/
 .hero-name-chip {
