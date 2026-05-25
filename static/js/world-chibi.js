@@ -12,7 +12,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 (function () {
     "use strict";
@@ -179,7 +178,15 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
-    gltfLoader.setMeshoptDecoder(MeshoptDecoder);  // 5/25 派派：fountain.glb gltfpack 壓縮用
+    // 5/25 派派：暫拿掉 MeshoptDecoder（fountain 整合先擱）— 動態 import 失敗會弄壞整段 module
+    (async () => {
+        try {
+            const mod = await import('three/addons/libs/meshopt_decoder.module.js');
+            gltfLoader.setMeshoptDecoder(mod.MeshoptDecoder);
+        } catch (e) {
+            console.warn('[chibi] MeshoptDecoder load fail, fountain.glb 無法載入');
+        }
+    })();
     let gltfModel = null;
     let gltfBaseY = 0;
     let gltfMixer = null;
