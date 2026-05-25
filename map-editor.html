@@ -281,6 +281,16 @@
         .obj-row-name { flex: 1; }
         .obj-row-coords { font-size: 10px; color: #888; font-family: monospace; }
         .obj-row.selected .obj-row-coords { color: #1a1f2e; }
+        .obj-row-del {
+            width: 22px; height: 22px;
+            background: #ff5050; color: #fff;
+            border: none; border-radius: 50%;
+            font-size: 12px; font-weight: 700;
+            display: none; align-items: center; justify-content: center;
+            cursor: pointer; line-height: 1;
+            margin-left: 4px;
+        }
+        .obj-row:hover .obj-row-del { display: flex; }
         /* Phase 4: Three.js 真 3D 預覽 canvas — 跟 mapImg 同層 */
         .objects-3d-canvas {
             position: absolute; inset: 0;
@@ -1191,8 +1201,10 @@ function renderObjectsList() {
             <span class="obj-row-emoji">${emoji}</span>
             <span class="obj-row-name">${name}</span>
             <span class="obj-row-coords">${obj.x.toFixed(2)},${obj.y.toFixed(2)}</span>
+            <button class="obj-row-del" title="刪除這個物件">×</button>
         `;
         row.addEventListener('click', (ev) => {
+            if (ev.target.classList.contains('obj-row-del')) return;
             const isMulti = ev.shiftKey || ev.metaKey || ev.ctrlKey;
             if (isMulti) {
                 if (selectedObjectIds.has(obj.id)) selectedObjectIds.delete(obj.id);
@@ -1201,6 +1213,16 @@ function renderObjectsList() {
                 selectedObjectIds = new Set([obj.id]);
             }
             renderAll();
+        });
+        // 直接刪除按鈕（不用先選中）
+        row.querySelector('.obj-row-del').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            if (!confirm(`刪除 ${name}（${obj.id}）？`)) return;
+            const idx = mapConfig.objects.findIndex(o => o.id === obj.id);
+            if (idx >= 0) mapConfig.objects.splice(idx, 1);
+            selectedObjectIds.delete(obj.id);
+            renderAll();
+            notifyObjects3DChanged();
         });
         list.appendChild(row);
     });
