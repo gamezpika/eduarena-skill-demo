@@ -540,7 +540,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         if (gltfMixer) gltfMixer.update(gltfClock.getDelta());
         // 5/25 派派：靜止時整個身體後仰 ~20°，給俯瞰鏡頭看到正面/臉
         if (gltfModel) {
-            const targetTiltX = isMoving ? 0 : -0.38;
+            const targetTiltX = isMoving ? 0 : -0.65;
             gltfModel.rotation.x += (targetTiltX - gltfModel.rotation.x) * 0.06;
         }
 
