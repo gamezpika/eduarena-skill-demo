@@ -11,6 +11,7 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 (function () {
     "use strict";
@@ -172,12 +173,15 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     // 先放 primitives 當 placeholder（GLB load 完會替換）
     player.add(chibi.group);
 
-    // 載 naughty_boy_chibi.glb
+    // 載 naughty_boy_chibi_draco.glb（Draco 壓縮 28→5.7MB）
     const gltfLoader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+    gltfLoader.setDRACOLoader(dracoLoader);
     let gltfModel = null;
     let gltfBaseY = 0;
     gltfLoader.load(
-        'assets/3d/character/naughty_boy_chibi.glb',
+        'assets/3d/character/naughty_boy_chibi_draco.glb',
         (gltf) => {
             // GLB 載入成功 → 砍掉 primitives，換 3D 模型
             player.remove(chibi.group);
