@@ -827,14 +827,6 @@
         "y": 0.3351,
         "scale": 1,
         "rotation": 5.351
-      },
-      {
-        "id": "obj_026",
-        "glb": "fountain.glb",
-        "x": 0.3343,
-        "y": 0.3596,
-        "scale": 3.25,
-        "rotation": 6.3
       }
     ]
   }
