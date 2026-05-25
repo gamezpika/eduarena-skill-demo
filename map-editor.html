@@ -345,8 +345,9 @@
 
     <!-- 物件模式：GLB picker + 已放物件清單 -->
     <div class="objects-panel" id="objectsPanel" style="display:none;">
-        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
-            選 GLB → 點地圖放物件
+        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019; display:flex; align-items:center; justify-content:space-between;">
+            <span>選 GLB → 點地圖放物件</span>
+            <button id="btnUploadGlb" style="padding:4px 10px;background:#444;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;">📤 新增</button>
         </div>
         <div class="glb-picker" id="glbPicker" style="
             display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;
@@ -390,6 +391,33 @@
 <div class="path-mode-hint" id="pathHint">🚶 path 編輯模式 — 點地圖加 waypoint</div>
 <div class="object-mode-hint" id="objectHint">📍 物件模式 — 左下選 GLB → 點地圖放</div>
 
+<!-- 5/25 派派：上傳新 GLB modal -->
+<div class="export-modal" id="uploadGlbModal" style="display:none;">
+    <div class="export-modal-card" style="max-width:480px;">
+        <h2 style="font-size:16px;margin-bottom:12px;">📤 上傳新 GLB</h2>
+        <div style="font-size:12px;color:#aaa;line-height:1.6;margin-bottom:14px;">
+            上傳 .glb → 自動推 GitHub → Railway 1 分鐘 redeploy 後可用<br>
+            需要先設定 PAT（透過 ⚙️ PAT 按鈕，跟一鍵推 GitHub 同個）
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+            <label style="font-size:11px;color:#888;">GLB 檔案
+                <input type="file" id="newGlbFile" accept=".glb,model/gltf-binary" style="width:100%;margin-top:4px;color:#fff;">
+            </label>
+            <label style="font-size:11px;color:#888;">圖示 emoji（1 個字元，picker 顯示用）
+                <input type="text" id="newGlbEmoji" placeholder="🌸" maxlength="4" style="width:100%;margin-top:4px;padding:6px;background:#1a1f2e;color:#fff;border:1px solid #444;border-radius:4px;font-size:14px;">
+            </label>
+            <label style="font-size:11px;color:#888;">顯示名稱
+                <input type="text" id="newGlbName" placeholder="例：花" maxlength="20" style="width:100%;margin-top:4px;padding:6px;background:#1a1f2e;color:#fff;border:1px solid #444;border-radius:4px;font-size:12px;">
+            </label>
+        </div>
+        <div style="font-size:11px;color:#888;margin-bottom:12px;" id="uploadGlbStatus"></div>
+        <div class="controls" style="display:flex;gap:8px;">
+            <button class="btn-primary" id="btnConfirmUploadGlb" style="flex:1;padding:8px;background:#fdc500;color:#1a1f2e;border:none;border-radius:4px;font-weight:700;cursor:pointer;">🚀 上傳 + 推 GitHub</button>
+            <button class="btn-danger" id="btnCancelUploadGlb" style="padding:8px 16px;background:#444;color:#fff;border:none;border-radius:4px;cursor:pointer;">取消</button>
+        </div>
+    </div>
+</div>
+
 <div class="export-modal" id="exportModal">
     <div class="export-modal-card">
         <h2>📋 匯出 JSON config</h2>
@@ -410,13 +438,20 @@ let mode = 'bbox';  // 'bbox' | 'path' | 'objects'
 // Phase 4: 給 ES module 端讀 mapConfig（避免 module / inline scope 衝突）
 window.getMapConfig = () => mapConfig;
 
-// 5/25 派派 3D 物件擺放工具
-const AVAILABLE_GLBS = [
-    { file: 'tree.glb',                emoji: '🌲', name: '樹' },
-    { file: 'forest.glb',              emoji: '🌳', name: '森林' },
-    { file: 'mei.glb',                 emoji: '🧙‍♀️', name: 'mei' },
-    { file: 'naughty_boy_chibi_draco.glb', emoji: '🧑', name: 'boy' },
-];
+// 5/25 派派 3D 物件擺放工具 — 從 server glbs.json 動態載入（之後新增不用動 code）
+let AVAILABLE_GLBS = [];
+function loadAvailableGLBs() {
+    return fetch('assets/3d/character/glbs.json?v=' + Date.now())
+        .then(r => r.json())
+        .then(json => {
+            AVAILABLE_GLBS = (json && Array.isArray(json.glbs)) ? json.glbs : [];
+            renderGlbPicker();
+        })
+        .catch(e => {
+            console.warn('glbs.json load failed, fallback to empty:', e);
+            AVAILABLE_GLBS = [];
+        });
+}
 let pendingGlbFile = null;     // 點 GLB picker 後待放
 let selectedObjectIds = new Set();  // 5/25 派派 Phase 3: multi-select
 let __objectIdCounter = 0;
@@ -593,6 +628,7 @@ function attachLoadServerBtn() {
     btn.addEventListener('click', () => loadServerMap());
 }
 attachLoadServerBtn();
+loadAvailableGLBs();  // 5/25 派派：載 GLB 清單 + 上傳功能
 loadInitialConfig();
 
 function renderAll() {
@@ -1370,6 +1406,153 @@ async function pushToGitHub() {
         status.textContent = '❌ 推送失敗，見 alert';
     }
 }
+
+// ─── 5/25 派派：上傳新 GLB（透過 GitHub Contents API 推檔案 + 更新 glbs.json）
+function arrayBufferToBase64(buf) {
+    // chunk encode 避免大檔 stack overflow
+    let binary = '';
+    const bytes = new Uint8Array(buf);
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+}
+
+async function ghGetFileSha(path, pat) {
+    const apiUrl = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${path}?ref=${GH_BRANCH}`;
+    const res = await fetch(apiUrl, {
+        headers: {
+            'Authorization': `Bearer ${pat}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+        },
+    });
+    if (res.status === 404) return null;  // 新檔案不存在
+    if (!res.ok) throw new Error(`取 SHA 失敗 (HTTP ${res.status})`);
+    const data = await res.json();
+    return data.sha;
+}
+
+async function ghPutFile(path, base64Content, message, pat) {
+    const sha = await ghGetFileSha(path, pat);
+    const apiUrl = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${path}`;
+    const body = {
+        message,
+        content: base64Content,
+        branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+    const res = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${pat}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`PUT ${path} 失敗 (HTTP ${res.status}): ${errText.slice(0, 200)}`);
+    }
+    return res.json();
+}
+
+document.getElementById('btnUploadGlb').addEventListener('click', () => {
+    document.getElementById('uploadGlbModal').style.display = 'flex';
+    document.getElementById('uploadGlbStatus').textContent = '';
+});
+document.getElementById('btnCancelUploadGlb').addEventListener('click', () => {
+    document.getElementById('uploadGlbModal').style.display = 'none';
+});
+
+document.getElementById('btnConfirmUploadGlb').addEventListener('click', async () => {
+    const fileInput = document.getElementById('newGlbFile');
+    const emojiInput = document.getElementById('newGlbEmoji');
+    const nameInput = document.getElementById('newGlbName');
+    const statusEl = document.getElementById('uploadGlbStatus');
+    const btn = document.getElementById('btnConfirmUploadGlb');
+
+    const file = fileInput.files[0];
+    const emoji = emojiInput.value.trim();
+    const name = nameInput.value.trim();
+    if (!file) { alert('請選 .glb 檔案'); return; }
+    if (!file.name.toLowerCase().endsWith('.glb')) { alert('檔案必須是 .glb'); return; }
+    if (!emoji) { alert('請填 emoji'); return; }
+    if (!name) { alert('請填名稱'); return; }
+    if (file.size > 30 * 1024 * 1024) {
+        if (!confirm(`檔案 ${(file.size/1024/1024).toFixed(1)}MB > 30MB，GitHub API 可能拒絕，繼續嗎？`)) return;
+    }
+
+    let pat = localStorage.getItem(GH_PAT_KEY);
+    if (!pat) {
+        pat = prompt('還沒設過 PAT — 請貼 GitHub Personal Access Token（Fine-grained，Contents: Read and write）');
+        if (!pat || !pat.trim()) return;
+        pat = pat.trim();
+        localStorage.setItem(GH_PAT_KEY, pat);
+    }
+
+    const origText = btn.textContent;
+    btn.disabled = true;
+
+    try {
+        // 1. 檢查 glbs.json 內檔名沒衝突
+        if (AVAILABLE_GLBS.some(g => g.file === file.name)) {
+            if (!confirm(`已有同名 ${file.name}，覆蓋？`)) {
+                btn.disabled = false; btn.textContent = origText; return;
+            }
+        }
+
+        // 2. 讀 .glb 轉 base64
+        btn.textContent = '⏳ 讀檔...';
+        statusEl.textContent = `讀 ${file.name} (${(file.size/1024).toFixed(0)} KB)...`;
+        const buf = await file.arrayBuffer();
+        const glbB64 = arrayBufferToBase64(buf);
+
+        // 3. PUT .glb 到 GitHub
+        btn.textContent = '⏳ 推 .glb...';
+        statusEl.textContent = `🚀 推送 ${file.name} 到 GitHub...`;
+        await ghPutFile(`assets/3d/character/${file.name}`, glbB64, `feat(world): 上傳 ${file.name}（${name}）via map-editor`, pat);
+
+        // 4. 更新 glbs.json（加進新 entry）
+        btn.textContent = '⏳ 更新 glbs.json...';
+        statusEl.textContent = '更新 GLB 清單...';
+        const newEntry = { file: file.name, emoji, name };
+        const newList = AVAILABLE_GLBS.filter(g => g.file !== file.name).concat([newEntry]);
+        const glbsJsonContent = JSON.stringify({ glbs: newList }, null, 2);
+        const glbsJsonB64 = utf8ToBase64(glbsJsonContent);
+        await ghPutFile('assets/3d/character/glbs.json', glbsJsonB64, `feat(world): GLB 清單加 ${name}`, pat);
+
+        // 5. 更新本地 AVAILABLE_GLBS + render
+        AVAILABLE_GLBS = newList;
+        renderGlbPicker();
+
+        btn.textContent = '✅ 完成';
+        statusEl.textContent = `🎉 ${name} 已推 GitHub，Railway 1 分鐘後上線。可立即在 picker 點選擺放`;
+        setTimeout(() => {
+            document.getElementById('uploadGlbModal').style.display = 'none';
+            btn.textContent = origText;
+            btn.disabled = false;
+            fileInput.value = '';
+            emojiInput.value = '';
+            nameInput.value = '';
+        }, 3500);
+    } catch (e) {
+        console.error('[upload glb] failed:', e);
+        const msg = e.message || String(e);
+        if (msg.includes('401')) {
+            localStorage.removeItem(GH_PAT_KEY);
+            alert('PAT 無效或過期，已清除。請按 ⚙️ PAT 重設後再試');
+        } else {
+            alert('上傳失敗：\n\n' + msg);
+        }
+        btn.textContent = origText;
+        btn.disabled = false;
+        statusEl.textContent = '❌ 上傳失敗，見 alert';
+    }
+});
 
 document.getElementById('btnPushGitHub').addEventListener('click', pushToGitHub);
 
