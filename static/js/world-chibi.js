@@ -228,6 +228,42 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         }
         return { x: _unprojVec.x, z: _unprojVec.z };
     }
+    // 5/25 派派：forest.glb 5 個分散位置（17 mesh 套組，當「一片森林」放）
+    gltfLoader.load(
+        'assets/3d/character/forest.glb',
+        (gltf) => {
+            const forestBase = gltf.scene;
+            const fbbox = new THREE.Box3().setFromObject(forestBase);
+            const forestH = fbbox.max.y - fbbox.min.y;
+            const baseScale = 4 / Math.max(forestH, 0.001);  // 比 tree 小，因為 forest 是一坨
+            const forestPositions = [
+                { mx: 0.13, my: 0.18 },   // 左上一坨
+                { mx: 0.85, my: 0.20 },   // 右上一坨
+                { mx: 0.50, my: 0.90 },   // 下中一坨
+                { mx: 0.20, my: 0.78 },   // 左下一坨
+                { mx: 0.78, my: 0.82 },   // 右下一坨
+            ];
+            let placed = 0;
+            forestPositions.forEach(({ mx, my }) => {
+                const { x, z } = mapNormToSceneCoord(mx, my);
+                if (mapConfig && !isWalkable(x, z)) return;
+                const f = forestBase.clone();
+                const s = baseScale * (0.85 + Math.random() * 0.3);
+                f.scale.setScalar(s);
+                const ffbbox = new THREE.Box3().setFromObject(f);
+                f.position.set(x, -ffbbox.min.y, z);
+                f.rotation.y = Math.random() * Math.PI * 2;
+                scene.add(f);
+                placed++;
+            });
+            console.log('[chibi] forests loaded:', placed);
+        },
+        undefined,
+        (err) => {
+            console.warn('[chibi] forest.glb load failed:', err);
+        }
+    );
+
     gltfLoader.load(
         'assets/3d/character/tree.glb',
         (gltf) => {
