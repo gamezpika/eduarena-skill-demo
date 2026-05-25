@@ -1893,6 +1893,7 @@ if (canvas) (function() {
                 if (__failedObjIds.size > 0) rerender();
             }, 5000);
         }
+        console.log('[3d-preview] rerender done: sceneObjs=', sceneObjs.size, 'scene.children=', scene.children.length, 'failed=', __failedObjIds.size);
     }
 
     function resize() {
