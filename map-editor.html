@@ -1779,13 +1779,28 @@ if (canvas) (function() {
     dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
     const glbCache = new Map();
+    const glbFailCount = new Map();  // file → 失敗次數
     function loadGLBOnce(file) {
         if (glbCache.has(file)) return Promise.resolve(glbCache.get(file));
+        // 失敗過的 GLB 加 bust query 避過瀏覽器 cache 的 404
+        const failCount = glbFailCount.get(file) || 0;
+        const url = failCount > 0
+            ? `assets/3d/character/${file}?bust=${Date.now()}`
+            : `assets/3d/character/${file}`;
         return new Promise((res, rej) => {
             gltfLoader.load(
-                'assets/3d/character/' + file,
-                gltf => { glbCache.set(file, gltf); res(gltf); },
-                undefined, err => rej(err)
+                url,
+                gltf => {
+                    glbCache.set(file, gltf);
+                    glbFailCount.delete(file);
+                    console.log('[3d-preview] GLB loaded:', file);
+                    res(gltf);
+                },
+                undefined,
+                err => {
+                    glbFailCount.set(file, failCount + 1);
+                    rej(err);
+                }
             );
         });
     }
