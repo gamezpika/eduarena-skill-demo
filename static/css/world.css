@@ -758,24 +758,6 @@
     word-break: keep-all;
 }
 
-/* ── 任務指引箭頭（橘色箭頭 pulse 浮在「商店」上方） ─── */
-.quest-arrow {
-    position: absolute;
-    width: 7%;
-    aspect-ratio: 1 / 1;
-    background-image: url('../../assets/images/world/ui_arrow.png?v=1');
-    background-size: contain;
-    background-repeat: no-repeat;
-    pointer-events: none;
-    z-index: 25;
-    animation: wdArrowBounce 1s ease-in-out infinite;
-    filter: drop-shadow(0 4px 8px rgba(255, 154, 60, 0.5));
-}
-@keyframes wdArrowBounce {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50%      { transform: translateY(-10px) scale(1.08); }
-}
-
 /* ── 點建築 zoom-in 過場（透明 hotspot：光暈擴散反饋 0.45s） ─── */
 .wd-sprite.zooming-in {
     z-index: 999 !important;
