@@ -11,7 +11,7 @@
         "attack_sprite": "boss/v2/math/t1/attack.webp",
         "defeat_sprite": "boss/v2/math/t1/death.webp",
         "bg": "boss/v2/math/t1/bg.webp",
-        "hp": 200
+        "hp": 600
       },
       "t2": {
         "name": "數學中級魔王",
@@ -21,7 +21,7 @@
         "attack_sprite": "boss/v2/math/t2/attack.webp",
         "defeat_sprite": "boss/v2/math/t2/death.webp",
         "bg": "boss/v2/math/t2/bg.webp",
-        "hp": 300
+        "hp": 800
       },
       "t3": {
         "name": "數學終極魔王",
@@ -31,7 +31,7 @@
         "attack_sprite": "boss/v2/math/t3/attack.webp",
         "defeat_sprite": "boss/v2/math/t3/death.webp",
         "bg": "boss/v2/math/t3/bg.webp",
-        "hp": 400
+        "hp": 1000
       }
     },
     "questions": [
@@ -159,7 +159,7 @@
         "attack_sprite": "boss/v2/chinese/t1/attack.webp",
         "defeat_sprite": "boss/v2/chinese/t1/death.webp",
         "bg": "boss/v2/chinese/t1/bg.webp",
-        "hp": 200
+        "hp": 600
       },
       "t2": {
         "name": "國語中級魔王",
@@ -169,7 +169,7 @@
         "attack_sprite": "boss/v2/chinese/t2/attack.webp",
         "defeat_sprite": "boss/v2/chinese/t2/death.webp",
         "bg": "boss/v2/chinese/t2/bg.webp",
-        "hp": 300
+        "hp": 800
       },
       "t3": {
         "name": "國語終極魔王",
@@ -179,7 +179,7 @@
         "attack_sprite": "boss/v2/chinese/t3/attack.webp",
         "defeat_sprite": "boss/v2/chinese/t3/death.webp",
         "bg": "boss/v2/chinese/t3/bg.webp",
-        "hp": 400
+        "hp": 1000
       }
     },
     "questions": [
@@ -285,7 +285,7 @@
         "attack_sprite": "boss/v2/english/t1/attack.webp",
         "defeat_sprite": "boss/v2/english/t1/death.webp",
         "bg": "boss/v2/english/t1/bg.webp",
-        "hp": 200
+        "hp": 600
       },
       "t2": {
         "name": "英文中級魔王",
@@ -295,7 +295,7 @@
         "attack_sprite": "boss/v2/english/t2/attack.webp",
         "defeat_sprite": "boss/v2/english/t2/death.webp",
         "bg": "boss/v2/english/t2/bg.webp",
-        "hp": 300
+        "hp": 800
       },
       "t3": {
         "name": "英文終極魔王",
@@ -305,7 +305,7 @@
         "attack_sprite": "boss/v2/english/t3/attack.webp",
         "defeat_sprite": "boss/v2/english/t3/death.webp",
         "bg": "boss/v2/english/t3/bg.webp",
-        "hp": 400
+        "hp": 1000
       }
     },
     "questions": [
@@ -411,7 +411,7 @@
         "attack_sprite": "boss/v2/science/t1/attack.webp",
         "defeat_sprite": "boss/v2/science/t1/death.webp",
         "bg": "boss/v2/science/t1/bg.webp",
-        "hp": 200
+        "hp": 600
       },
       "t2": {
         "name": "自然中級魔王",
@@ -421,7 +421,7 @@
         "attack_sprite": "boss/v2/science/t2/attack.webp",
         "defeat_sprite": "boss/v2/science/t2/death.webp",
         "bg": "boss/v2/science/t2/bg.webp",
-        "hp": 300
+        "hp": 800
       },
       "t3": {
         "name": "自然終極魔王",
@@ -431,7 +431,7 @@
         "attack_sprite": "boss/v2/science/t3/attack.webp",
         "defeat_sprite": "boss/v2/science/t3/death.webp",
         "bg": "boss/v2/science/t3/bg.webp",
-        "hp": 400
+        "hp": 1000
       }
     },
     "questions": [
@@ -537,7 +537,7 @@
         "attack_sprite": "boss/v2/social/t1/attack.webp",
         "defeat_sprite": "boss/v2/social/t1/death.webp",
         "bg": "boss/v2/social/t1/bg.webp",
-        "hp": 200
+        "hp": 600
       },
       "t2": {
         "name": "社會中級魔王",
@@ -547,7 +547,7 @@
         "attack_sprite": "boss/v2/social/t2/attack.webp",
         "defeat_sprite": "boss/v2/social/t2/death.webp",
         "bg": "boss/v2/social/t2/bg.webp",
-        "hp": 300
+        "hp": 800
       },
       "t3": {
         "name": "社會終極魔王",
@@ -557,7 +557,7 @@
         "attack_sprite": "boss/v2/social/t3/attack.webp",
         "defeat_sprite": "boss/v2/social/t3/death.webp",
         "bg": "boss/v2/social/t3/bg.webp",
-        "hp": 400
+        "hp": 1000
       }
     },
     "questions": [

@@ -131,10 +131,11 @@
     white-space: nowrap;
 }
 .boss-floating-hp-bar {
-    height: 7px;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 100, 100, 0.55);
-    border-radius: 4px;
+    position: relative;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1.5px solid rgba(255, 100, 100, 0.6);
+    border-radius: 5px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
@@ -142,7 +143,23 @@
     height: 100%;
     background: linear-gradient(180deg, #ff5050 0%, #b80018 100%);
     box-shadow: inset 0 1px 0 rgba(255, 200, 200, 0.55);
-    transition: width 0.4s ease-out;
+    transition: width 0.45s ease-out, background 0.45s ease-out;
+}
+/* 魔王 HP 5 階段顏色（紅→暗→黑）*/
+.boss-floating-hp[data-hp-level="high"] .boss-floating-hp-fill {
+    background: linear-gradient(180deg, #ff5050 0%, #b80018 100%);
+}
+.boss-floating-hp[data-hp-level="mid"] .boss-floating-hp-fill {
+    background: linear-gradient(180deg, #d04030 0%, #850012 100%);
+}
+.boss-floating-hp[data-hp-level="low"] .boss-floating-hp-fill {
+    background: linear-gradient(180deg, #a02828 0%, #500008 100%);
+}
+.boss-floating-hp[data-hp-level="critical"] .boss-floating-hp-fill {
+    background: linear-gradient(180deg, #602020 0%, #200000 100%);
+}
+.boss-floating-hp[data-hp-level="dying"] .boss-floating-hp-fill {
+    background: linear-gradient(180deg, #2a0a0a 0%, #100000 100%);
 }
 .hero-card {
     display: flex;
@@ -378,19 +395,20 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     display: block;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
 }
-/* 頭頂飄浮 HP 條（5/25 派派 B 方案：菇勇者風小綠條）*/
+/* 頭頂飄浮 HP 條（5/25 派派 ABC：條變高 + 數字 overlay + 5 階段顏色漸變）*/
 .hero-floating-hp {
     position: absolute;
-    top: -8px;
+    top: -16px;
     left: 50%;
     transform: translateX(-50%);
-    width: 65%;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 4px;
+    width: 90%;
+    min-width: 90px;
+    height: 14px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
     z-index: 2;
     pointer-events: none;
 }
@@ -398,7 +416,39 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     height: 100%;
     background: linear-gradient(180deg, #6dff8c 0%, #2ecc71 60%, #1e9c5a 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    transition: width 0.35s ease-out;
+    transition: width 0.4s ease-out, background 0.4s ease-out;
+}
+/* 主角 HP 5 階段顏色 */
+.hero-floating-hp[data-hp-level="high"] .hero-floating-hp-fill {
+    background: linear-gradient(180deg, #6dff8c 0%, #2ecc71 100%);
+}
+.hero-floating-hp[data-hp-level="mid"] .hero-floating-hp-fill {
+    background: linear-gradient(180deg, #ffe54d 0%, #d4a900 100%);
+}
+.hero-floating-hp[data-hp-level="low"] .hero-floating-hp-fill {
+    background: linear-gradient(180deg, #ff8a3c 0%, #c75500 100%);
+}
+.hero-floating-hp[data-hp-level="critical"] .hero-floating-hp-fill {
+    background: linear-gradient(180deg, #ff4040 0%, #900000 100%);
+}
+.hero-floating-hp[data-hp-level="dying"] .hero-floating-hp-fill {
+    background: linear-gradient(180deg, #4a0a0a 0%, #1a0000 100%);
+}
+/* 條中央疊數字（共用 hero / boss） */
+.hp-num-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    text-shadow: 0 0 3px #000, 1px 1px 1px #000, -1px -1px 1px #000;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 3;
+    letter-spacing: 0.3px;
 }
 /* hero 格中心 — 真等距菱形（對稱 col↘ row↗）
    (2,2) center 在 stage 正中央 50/50；z-index 依 bottom 算（畫面下=近=高z） */

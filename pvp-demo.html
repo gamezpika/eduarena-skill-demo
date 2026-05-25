@@ -1314,7 +1314,7 @@ function switchWeapon(key) {
 // ===== Setup 流程 =====
 async function loadData() {
     const [subjResp, jobsResp] = await Promise.all([
-        fetch("assets/data/subjects.json?v=2").then(r => r.json()),
+        fetch("assets/data/subjects.json?v=3").then(r => r.json()),
         fetch("assets/data/jobs.json?v=1").then(r => r.json()),
     ]);
     SUBJECTS_DATA = subjResp;
