@@ -233,24 +233,31 @@
             font-size: 9px; color: #aaa; margin-top: 2px;
             font-weight: 700; line-height: 1;
         }
-        /* 地圖上 emoji 物件 */
+        /* 地圖上 emoji 物件（純位置標記，3D 模型已負責視覺）*/
         .obj-emoji {
             position: absolute;
-            font-size: 26px;
+            font-size: 14px;
             transform: translate(-50%, -50%);
             cursor: grab;
             user-select: none;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            opacity: 0.55;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            width: 22px; height: 22px;
+            line-height: 22px; text-align: center;
             pointer-events: auto;
-            transition: outline 0.1s, filter 0.1s;
+            transition: outline 0.1s, opacity 0.1s, transform 0.1s;
             outline: 0 solid transparent;
         }
+        .obj-emoji:hover { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
         .obj-emoji:active { cursor: grabbing; }
         .obj-emoji.selected {
-            outline: 3px solid #fdc500;
+            opacity: 1;
+            outline: 2px solid #fdc500;
             outline-offset: 2px;
-            border-radius: 50%;
-            filter: drop-shadow(0 0 8px #fdc500) drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            background: rgba(253,197,0,0.4);
+            box-shadow: 0 0 6px #fdc500;
         }
         /* 已放清單 row */
         .obj-row {
@@ -1018,10 +1025,12 @@ function renderObjects() {
     if (!objectsOverlay) return;
     objectsOverlay.innerHTML = '';
     if (!mapConfig || !Array.isArray(mapConfig.objects)) return;
+    // 5/25 派派：emoji 只在 objects mode 才顯示（其他 mode 不擋）
+    objectsOverlay.style.display = mode === 'objects' ? 'block' : 'none';
+    if (mode !== 'objects') return;
     const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
     if (mw < 1 || mh < 1) return;
-    // 物件模式時 overlay 接觸 click，其他模式不擋
-    objectsOverlay.style.pointerEvents = mode === 'objects' ? 'auto' : 'none';
+    objectsOverlay.style.pointerEvents = 'auto';
     mapConfig.objects.forEach(obj => {
         const meta = AVAILABLE_GLBS.find(g => g.file === obj.glb);
         const emoji = meta ? meta.emoji : '📦';
@@ -1030,7 +1039,6 @@ function renderObjects() {
         el.textContent = emoji;
         el.style.left = (obj.x * mw) + 'px';
         el.style.top = (obj.y * mh) + 'px';
-        el.style.fontSize = (22 * (obj.scale || 1)) + 'px';
         el.dataset.id = obj.id;
         // 點選（Shift/Cmd/Ctrl 多選）
         el.addEventListener('mousedown', ev => {
@@ -1625,14 +1633,15 @@ if (canvas) (function() {
     // expose 給 inline JS 通知用
     window.__objects3D = { rerender };
 
-    // 首次載入 mapConfig 可能還沒好 → poll 等到有 objects 才 render
-    let __initInterval = setInterval(() => {
+    // 5/25 派派 bug fix: setInterval 每秒 rerender 造成物件閃爍
+    // 改成 first-sync only — 找到 config 後跑一次就停 poll，之後依賴 notifyObjects3DChanged
+    const __initInterval = setInterval(() => {
         const cfg = window.getMapConfig && window.getMapConfig();
         if (cfg && Array.isArray(cfg.objects)) {
+            clearInterval(__initInterval);
             rerender();
-            // 持續 poll，每 1s 確保場景跟 config 同步（fallback）
         }
-    }, 1000);
+    }, 200);
 
     console.log('[3d-preview] Three.js scene init');
 })();
