@@ -86,19 +86,21 @@
     white-space: nowrap;
     z-index: 3;
 }
-/* 橘色名字膠囊 chip — 從頭像右側延伸 */
+/* 名字 — 5/25 派派：拿掉深褐底色，純文字 + 強化字體陰影保可讀 */
 .hero-name-chip {
-    background: linear-gradient(180deg, #2a1a0a 0%, #1a0f06 100%);
-    color: #ffd58a;
+    background: transparent;
+    color: #ffe2a8;
     font-size: 13px;
     font-weight: 800;
-    padding: 5px 14px 5px 20px;
-    margin-left: -14px;
-    border-radius: 0 14px 14px 0;
-    border: 2px solid #f4d177;
-    border-left: none;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    padding: 5px 10px 5px 14px;
+    margin-left: -6px;
+    border: none;
+    text-shadow:
+        0 0 4px rgba(0, 0, 0, 1),
+        0 2px 4px rgba(0, 0, 0, 0.95),
+        1px 1px 2px #000,
+        -1px -1px 2px #000,
+        0 0 8px rgba(0, 0, 0, 0.7);
     letter-spacing: 1px;
     max-width: 180px;
     overflow: hidden;
@@ -107,26 +109,41 @@
     z-index: 1;
 }
 
-/* 魔王 HP 條（派派 5/24 恢復：absolute overlay 在 arena-stage 上方空白區，不佔 layout）*/
-.boss-hud-overlay {
+/* 5/25 派派 A 方案：魔王 HP 飄頭頂（跟主角綠條對稱），舊 boss-hud-overlay 拿掉 */
+.boss-floating-hp {
     position: absolute;
-    top: 64px;  /* 5/25 派派：下移避開左上角 HUD chip（chip 高 ~50px + 8px gap）*/
+    top: -22px;
     left: 50%;
     transform: translateX(-50%);
-    width: 78%;
-    max-width: 320px;
-    background: transparent;
-    z-index: 4;
+    width: 130%;
+    min-width: 140px;
+    max-width: 180px;
     pointer-events: none;
+    z-index: 2;
 }
-.boss-hud-overlay .boss-name {
+.boss-name-mini {
     text-align: center;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     color: #ff8a4c;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.95), 1px 1px 3px #000, 0 0 10px rgba(255, 100, 0, 0.6);
-    margin-bottom: 4px;
-    letter-spacing: 2px;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 1), 1px 1px 2px #000, 0 0 6px rgba(255, 80, 0, 0.7);
+    margin-bottom: 2px;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+}
+.boss-floating-hp-bar {
+    height: 7px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 100, 100, 0.55);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.boss-floating-hp-fill {
+    height: 100%;
+    background: linear-gradient(180deg, #ff5050 0%, #b80018 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 200, 200, 0.55);
+    transition: width 0.4s ease-out;
 }
 .hero-card {
     display: flex;
@@ -505,18 +522,23 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     100% { transform: translateX(-50%) translateY(-12px) scale(1.1); filter: drop-shadow(0 0 22px #ffd54d) brightness(1.25); }
 }
 
-/* 魔王站位 — 真等距菱形 (4,4) center = stage (74%, 50%) 最右中央 */
+/* 魔王站位 — 真等距菱形 (4,4) center = stage (74%, 50%) 最右中央
+   5/25 派派 A 方案：改 wrapper div 包 img + 頭頂 HP 條 */
 .fighter-boss {
     position: absolute;
     left: 66.8%;
     bottom: 39%;        /* 派派 5/24：下移 18% (57→39) 跟著棋盤平衡 */
     width: 150px;
-    height: auto;
     transform: translateX(-50%);
     transform-origin: 50% 100%;
-    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
     animation: bossIdle 3s ease-in-out infinite;
     z-index: 10;   /* (4,4) Y-sort = 10，主角任意位置 z 都 >= 10 */
+}
+.fighter-boss-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
 }
 .fighter-boss.hit { animation: bossHit 0.5s; }
 .fighter-boss.defeated {
@@ -746,22 +768,7 @@ body[data-theme="ice"] .grid-wall-front { fill: rgba(110, 134, 156, 0.96); }
     margin-bottom: 4px;
     letter-spacing: 2px;
 }
-.boss-hp-track {
-    height: 12px;
-    background: #2a0a0a;
-    border: 2px solid #4a1a08;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow:
-        inset 0 1px 2px rgba(0, 0, 0, 0.7),
-        0 2px 6px rgba(0, 0, 0, 0.6);
-}
-.boss-hp-fill {
-    height: 100%;
-    background: linear-gradient(180deg, #ff5050 0%, #a00010 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 200, 200, 0.6);
-    transition: width 0.5s ease-out;
-}
+/* 舊 .boss-hp-track / .boss-hp-fill 已搬到 .boss-floating-hp-* 頭頂版 */
 
 /* 飄字傷害數字 */
 .dmg-pop {

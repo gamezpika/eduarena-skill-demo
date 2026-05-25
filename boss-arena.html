@@ -12,7 +12,7 @@
 
     <title>魔王戰 · EduArena Demo</title>
     <link rel="stylesheet" href="static/css/demo.css?v=4">
-    <link rel="stylesheet" href="static/css/boss-arena.css?v=58">
+    <link rel="stylesheet" href="static/css/boss-arena.css?v=59">
     <script src="static/js/combat-engine.js?v=1"></script>
 </head>
 <body>
@@ -97,10 +97,8 @@
                 <div class="torch-glow right"></div>
 
                 <!-- 魔王 HP 條（派派 5/24 恢復：absolute 疊在上方空白區，不佔 layout）-->
-                <div class="boss-hud-overlay">
-                    <div class="boss-name" id="boss-name-display"></div>
-                    <div class="boss-hp-track"><div class="boss-hp-fill" id="boss-hp-fill" style="width: 100%"></div></div>
-                </div>
+                <!-- 5/25 派派 A 方案：boss HP 飄頭頂，舊 boss-hud-overlay 拿掉 -->
+                <span id="boss-name-display" style="display:none"></span>
 
                 <!-- 武器切換列（派派 5/23 砍 fist + pencil 留 4） -->
                 <div class="weapon-bar" id="weapon-bar">
@@ -193,7 +191,15 @@
                     </div>
                     <img src="assets/images/arena/hero_iso.png?v=3" class="fighter-hero-img" id="fighter-hero" alt="hero">
                 </div>
-                <img src="assets/images/arena/boss_iso.png?v=3" class="fighter-boss" id="fighter-boss" alt="boss">
+                <div class="fighter-boss" id="fighter-boss-wrap">
+                    <div class="boss-floating-hp">
+                        <div class="boss-name-mini" id="boss-name-mini">★ 終極魔王 ★</div>
+                        <div class="boss-floating-hp-bar">
+                            <div class="boss-floating-hp-fill" id="boss-hp-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <img src="assets/images/arena/boss_iso.png?v=3" class="fighter-boss-img" id="fighter-boss" alt="boss">
+                </div>
             </div>
 
             <!-- 題目卡 -->
@@ -301,6 +307,7 @@ const stage = $("arena-stage");
 const hero  = $("fighter-hero");
 const heroWrap = $("fighter-hero-wrap");
 const boss  = $("fighter-boss");
+const bossWrap = $("fighter-boss-wrap");
 
 function updateBars() {
     $("hero-hp-num").textContent = `${state.heroHP} / ${state.heroMaxHP}`;
@@ -620,7 +627,7 @@ async function attackBoss() {
 
     // 衝刺中段（接觸時）觸發特效
     await sleep(state.weapon === "pencil" ? 220 : 320);
-    boss.classList.add("hit");
+    bossWrap.classList.add("hit");
     // 切到 tier 的 hit sprite
     if (state.bossData && state.bossData.hit_sprite) {
         boss.src = `assets/images/${state.bossData.hit_sprite}?v=3`;
@@ -635,7 +642,7 @@ async function attackBoss() {
     updateBars();
 
     await sleep(400);
-    boss.classList.remove("hit");
+    bossWrap.classList.remove("hit");
     // 還原成 idle
     if (state.bossHP > 0 && state.bossData) {
         boss.src = `assets/images/${state.bossData.sprite}?v=3`;
@@ -703,10 +710,10 @@ async function getHitByBoss() {
     const releaseSp = deriveBossFramePath(attackSp, "release");
 
     // B2 蓄力前搖 0.45s（魔王發光、scale 變大 + 切 charge.png）
-    boss.classList.add("charging");
+    bossWrap.classList.add("charging");
     swapBossSprite(chargeSp, attackSp);  // charge 圖；不存在 fallback attack
     await sleep(450);
-    boss.classList.remove("charging");
+    bossWrap.classList.remove("charging");
 
     // B1 切到 attack sprite (peak attack pose) — 維持 0.45s 讓肉眼看得到
     if (attackSp) {
@@ -1031,7 +1038,7 @@ function endGame(outcome) {
 
     if (outcome === "win") {
         // H. 勝利 cinematic（拿掉光柱、拿掉 combo 顯示）
-        boss.classList.add("defeated");
+        bossWrap.classList.add("defeated");
         // 切到 tier 的 death sprite
         if (state.bossData && state.bossData.defeat_sprite) {
             boss.src = `assets/images/${state.bossData.defeat_sprite}?v=3`;
@@ -1242,6 +1249,7 @@ async function startArena() {
     state.bossHP = tierData.hp;
     boss.src = `assets/images/${tierData.sprite}?v=3`;
     document.getElementById("boss-name-display").textContent = `★ ${tierData.name} ★`;
+    document.getElementById("boss-name-mini").textContent = `★ ${tierData.name} ★`;
 
     // 預載連續動作幀 + 楓之谷 VFX 圖 — await 等載入完成（派派 5/24：戰鬥內絕對流暢）
     const tierKey = playerSetup.tier;  // "t1"/"t2"/"t3"
