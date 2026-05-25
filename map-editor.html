@@ -316,7 +316,6 @@
 
     <div class="mode-tabs">
         <button id="tab-bbox" class="active">📦 bbox</button>
-        <button id="tab-path">🚶 path</button>
         <button id="tab-objects">📍 物件</button>
     </div>
 
@@ -347,10 +346,9 @@
     </div>
 
     <div class="help">
-        <b>bbox 模式</b>：拖拉 bbox 框中間移動、4 角拖拉縮放<br>
-        <b>path 模式</b>：點地圖任一處新增 waypoint；點 waypoint 刪除<br>
+        <b>bbox 模式</b>：拖拉 bbox 框中間移動、4 角拖拉縮放（編建築擋區）<br>
         <b>物件模式</b>：左下選 GLB → 點地圖放；拖物件移動；點選右側調 scale/rotation<br>
-        <b>右側欄</b>：手動輸入 bbox 4 值或 path 座標
+        <b>右側欄</b>：手動輸入 bbox 4 值
     </div>
 
     <div class="autosave-row">
@@ -406,7 +404,6 @@ const pathSvg = document.getElementById('pathSvg');
 const buildingList = document.getElementById('buildingList');
 const buildingDetail = document.getElementById('buildingDetail');
 const tabBbox = document.getElementById('tab-bbox');
-const tabPath = document.getElementById('tab-path');
 const tabObjects = document.getElementById('tab-objects');
 const objectHint = document.getElementById('objectHint');
 const objectsPanel = document.getElementById('objectsPanel');
@@ -933,16 +930,7 @@ mapFrame.addEventListener('click', e => {
     if (e.target.classList.contains('path-waypoint')) return;
     if (e.target.classList.contains('bbox') || e.target.classList.contains('bbox-handle')) return;
     if (e.target.classList.contains('obj-emoji')) return;  // 點 emoji 走 emoji handler
-    if (mode === 'path') {
-        if (!selectedBuildingId) return;
-        const rect = mapImg.getBoundingClientRect();
-        const nx = (e.clientX - rect.left) / rect.width;
-        const ny = (e.clientY - rect.top) / rect.height;
-        const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
-        if (!b) return;
-        b.path.push({ x: parseFloat(nx.toFixed(3)), y: parseFloat(ny.toFixed(3)) });
-        renderAll();
-    } else if (mode === 'objects') {
+    if (mode === 'objects') {
         if (!pendingGlbFile) return;  // 沒選 GLB → 不加
         const rect = mapImg.getBoundingClientRect();
         const nx = (e.clientX - rect.left) / rect.width;
@@ -962,13 +950,12 @@ mapFrame.addEventListener('click', e => {
     }
 });
 
-// Tab 切換
+// Tab 切換（5/25 派派：砍 path tab，玩家可自己走不需要 hotspot 自動走 path）
 function setMode(newMode) {
     mode = newMode;
     tabBbox.classList.toggle('active', newMode === 'bbox');
-    tabPath.classList.toggle('active', newMode === 'path');
     tabObjects.classList.toggle('active', newMode === 'objects');
-    pathHint.classList.toggle('show', newMode === 'path');
+    pathHint.classList.remove('show');  // path mode 已拿掉
     objectHint.classList.toggle('show', newMode === 'objects');
     // 切 mode 時：右側 panel 顯示對應內容
     objectsPanel.style.display = newMode === 'objects' ? 'block' : 'none';
@@ -977,7 +964,6 @@ function setMode(newMode) {
     renderAll();
 }
 tabBbox.addEventListener('click', () => setMode('bbox'));
-tabPath.addEventListener('click', () => setMode('path'));
 tabObjects.addEventListener('click', () => setMode('objects'));
 
 // ─── 物件渲染 + 拖拉 + UI（5/25 派派 3D 物件擺放工具）─────
