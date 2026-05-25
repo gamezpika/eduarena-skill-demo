@@ -1039,6 +1039,7 @@ mapFrame.addEventListener('click', e => {
         mapConfig.objects.push(obj);
         selectedObjectIds = new Set([obj.id]);
         renderAll();
+        console.log('[click-handler] added', obj.id, obj.glb, 'calling notify');
         notifyObjects3DChanged();
     }
 });
