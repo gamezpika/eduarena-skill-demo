@@ -1893,12 +1893,6 @@ if (canvas) (function() {
                 if (__failedObjIds.size > 0) rerender();
             }, 5000);
         }
-        console.log('[3d-preview] rerender done: sceneObjs=', sceneObjs.size, 'scene.children=', scene.children.length, 'failed=', __failedObjIds.size);
-        let i = 0;
-        for (const [id, m] of sceneObjs) {
-            if (i < 5) console.log('[3d-preview]', id, 'pos=', m.position.toArray().map(v=>v.toFixed(2)), 'scale=', m.scale.x.toFixed(3));
-            i++;
-        }
     }
 
     function resize() {
