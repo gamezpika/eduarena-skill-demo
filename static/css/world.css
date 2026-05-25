@@ -12,14 +12,18 @@
 }
 
 /* ── 頂部 HUD：場景名 + 任務進度 ──────────────── */
+/* 5/25 派派：拿掉 flex flow，改 absolute pill 浮在地圖上方，地圖延伸到頂 */
 .wd-top {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    flex-shrink: 0;
+    padding: 0;
     z-index: 50;
-    position: relative;
+    pointer-events: none;
 }
 .wd-scene {
     text-align: center;
