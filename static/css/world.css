@@ -172,16 +172,22 @@
     will-change: transform;
 }
 
-/* ── 底部寵物欄（純擺飾） ───────────────────── */
+/* ── 底部寵物欄（純擺飾，5/25 派派：改 absolute pill 浮底部，地圖延伸滿版）─── */
 .wd-bottom {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    padding: 8px 10px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.75));
+    padding: 4px 10px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.55));
     backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(255,255,255,0.15);
-    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     z-index: 50;
 }
 .wd-pet {
