@@ -1814,29 +1814,32 @@ if (canvas) (function() {
     const glbFailCount = new Map();
     function loadGLBOnce(file) {
         if (glbCache.has(file)) return Promise.resolve(glbCache.get(file));
-        if (glbPromiseCache.has(file)) return glbPromiseCache.get(file);  // 重用 pending
+        if (glbPromiseCache.has(file)) return glbPromiseCache.get(file);
         const failCount = glbFailCount.get(file) || 0;
         const url = failCount > 0
             ? `assets/3d/character/${file}?bust=${Date.now()}`
             : `assets/3d/character/${file}`;
-        const p = new Promise((res, rej) => {
-            gltfLoader.load(
-                url,
-                gltf => {
+        // 5/25 派派：用 fetch + parse 取代 gltfLoader.load 解 GLTFLoader 內部 hang
+        const p = fetch(url)
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.arrayBuffer();
+            })
+            .then(buf => new Promise((res, rej) => {
+                gltfLoader.parse(buf, '', gltf => {
                     glbCache.set(file, gltf);
-                    glbPromiseCache.delete(file);
                     glbFailCount.delete(file);
                     console.log('[3d-preview] GLB loaded:', file);
                     res(gltf);
-                },
-                undefined,
-                err => {
-                    glbPromiseCache.delete(file);
-                    glbFailCount.set(file, failCount + 1);
-                    rej(err);
-                }
-            );
-        });
+                }, err => rej(err));
+            }))
+            .catch(err => {
+                glbFailCount.set(file, failCount + 1);
+                throw err;
+            })
+            .finally(() => {
+                glbPromiseCache.delete(file);
+            });
         glbPromiseCache.set(file, p);
         return p;
     }
@@ -1845,11 +1848,8 @@ if (canvas) (function() {
     const sceneObjs = new Map();
     const __failedObjIds = new Set();  // 5/25 派派：上傳剛完 Railway 未 deploy 的 GLB → retry 用
 
-    let __callId = 0;
     async function rerender() {
-        const cid = ++__callId;
         const cfg = window.getMapConfig && window.getMapConfig();
-        console.log(`[rerender#${cid}] start cfg.objects=`, cfg?.objects?.length, 'glbCache=', [...glbCache.keys()], 'glbPromise=', [...glbPromiseCache.keys()]);
         if (!cfg || !Array.isArray(cfg.objects)) {
             for (const [id, m] of sceneObjs) { scene.remove(m); }
             sceneObjs.clear();
@@ -1868,16 +1868,14 @@ if (canvas) (function() {
         for (const obj of cfg.objects) {
             let model = sceneObjs.get(obj.id);
             if (!model) {
-                console.log(`[rerender#${cid}] -> loadGLBOnce(${obj.glb}) for ${obj.id}`);
                 try {
                     const gltf = await loadGLBOnce(obj.glb);
-                    console.log(`[rerender#${cid}] OK ${obj.id} ${obj.glb}`);
                     model = gltf.scene.clone();
                     sceneObjs.set(obj.id, model);
                     scene.add(model);
                     __failedObjIds.delete(obj.id);
                 } catch (e) {
-                    console.error(`[rerender#${cid}] FAIL ${obj.id} ${obj.glb}:`, e?.message || e);
+                    console.warn('[3d-preview] GLB load fail:', obj.glb, e?.message || e);
                     __failedObjIds.add(obj.id);
                     anyFailed = true;
                     continue;
