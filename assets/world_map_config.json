@@ -751,10 +751,10 @@
       {
         "id": "obj_007",
         "glb": "tree.glb",
-        "x": 0.06,
-        "y": 0.96,
-        "scale": 0.81,
-        "rotation": 1.249
+        "x": 0.0584,
+        "y": 0.9978,
+        "scale": 1.7,
+        "rotation": 1.25
       },
       {
         "id": "obj_008",
@@ -829,12 +829,12 @@
         "rotation": 5.351
       },
       {
-        "id": "obj_017",
-        "glb": "tree.glb",
-        "x": 0.3294,
-        "y": 0.9819,
-        "scale": 1.65,
-        "rotation": 2.1
+        "id": "obj_026",
+        "glb": "fountain.glb",
+        "x": 0.3343,
+        "y": 0.3596,
+        "scale": 3.25,
+        "rotation": 6.3
       }
     ]
   }
