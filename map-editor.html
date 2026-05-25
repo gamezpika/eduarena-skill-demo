@@ -1826,12 +1826,16 @@ if (canvas) (function() {
                 return r.arrayBuffer();
             })
             .then(buf => new Promise((res, rej) => {
+                console.log('[3d-preview] parsing', file, 'buf=', buf.byteLength);
                 gltfLoader.parse(buf, '', gltf => {
                     glbCache.set(file, gltf);
                     glbFailCount.delete(file);
                     console.log('[3d-preview] GLB loaded:', file);
                     res(gltf);
-                }, err => rej(err));
+                }, err => {
+                    console.error('[3d-preview] parse fail', file, err);
+                    rej(err);
+                });
             }))
             .catch(err => {
                 glbFailCount.set(file, failCount + 1);
