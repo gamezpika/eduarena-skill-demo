@@ -192,7 +192,7 @@ import * as THREE from 'three';
             polygonSvg.appendChild(poly);
         });
     }
-    let DEBUG_POLYGON = true;  // 預設開，派派看完可 console eduChibi.toggleDebug() 關
+    let DEBUG_POLYGON = false;  // 預設關，console eduChibi.toggleDebug() 可開
 
     // ─── 載入 world_map_config.json
     let mapConfig = null;
