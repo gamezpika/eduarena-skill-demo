@@ -534,11 +534,15 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             chibi.leftLeg.rotation.x *= 0.85;
             chibi.rightLeg.rotation.x *= 0.85;
             chibi.group.position.y = -0.05 + Math.sin(Date.now() * 0.003) * 0.03;
-            // 停下時動畫減速 = idle
             if (gltfAction) gltfAction.timeScale = 0.6;
         }
         // 5/25 派派：跑 GLB 自帶骨骼動畫
         if (gltfMixer) gltfMixer.update(gltfClock.getDelta());
+        // 5/25 派派：靜止時整個身體後仰 ~20°，給俯瞰鏡頭看到正面/臉
+        if (gltfModel) {
+            const targetTiltX = isMoving ? 0 : -0.38;
+            gltfModel.rotation.x += (targetTiltX - gltfModel.rotation.x) * 0.06;
+        }
 
         player.position.x = px;
         player.position.z = py;
