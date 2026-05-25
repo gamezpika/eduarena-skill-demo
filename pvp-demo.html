@@ -1294,8 +1294,9 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 state.weapon = "sword";
 
 function setHeroSpriteFromJob(job) {
-    // 預設沒選職業 → 用 hero_iso_sword 當基底
-    let src = "assets/images/arena/hero_iso_sword.png?v=1";
+    // 預設沒選職業 → 用 hero_iso_sword 當基底（5/25 加女版 _f 變體）
+    const defaultSuffix = playerSetup.gender === "f" ? "_f" : "";
+    let src = `assets/images/arena/hero_iso_sword${defaultSuffix}.png?v=2`;
     if (job && job.key) {
         // 派派 5/24：女角加 _f suffix
         const suffix = playerSetup.gender === "f" ? "_f" : "";
