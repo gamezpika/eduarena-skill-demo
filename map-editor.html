@@ -1816,9 +1816,8 @@ if (canvas) (function() {
         if (glbCache.has(file)) return Promise.resolve(glbCache.get(file));
         if (glbPromiseCache.has(file)) return glbPromiseCache.get(file);
         const failCount = glbFailCount.get(file) || 0;
-        const url = failCount > 0
-            ? `assets/3d/character/${file}?bust=${Date.now()}`
-            : `assets/3d/character/${file}`;
+        // 永遠加 bust 避免瀏覽器 cache lock 問題
+        const url = `assets/3d/character/${file}?t=${Date.now()}`;
         // 5/25 派派：用 XHR + parse 取代 fetch 跟 gltfLoader.load（後兩者對連續 GLB 載入會卡）
         const p = new Promise((res, rej) => {
             const xhr = new XMLHttpRequest();
