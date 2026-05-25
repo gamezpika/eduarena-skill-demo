@@ -703,34 +703,34 @@
       {
         "id": "obj_001",
         "glb": "tree.glb",
-        "x": 0.06,
-        "y": 0.04,
-        "scale": 1.06,
-        "rotation": 0.157
+        "x": 0.0715,
+        "y": 0.1024,
+        "scale": 1.9,
+        "rotation": 0.16
       },
       {
         "id": "obj_002",
         "glb": "tree.glb",
-        "x": 0.35,
-        "y": 0.025,
-        "scale": 0.91,
-        "rotation": 1.402
+        "x": 0.3746,
+        "y": 0.1284,
+        "scale": 2.3,
+        "rotation": 1.4
       },
       {
         "id": "obj_003",
         "glb": "tree.glb",
-        "x": 0.6381,
-        "y": 0.0316,
-        "scale": 1.09,
-        "rotation": 4.25
+        "x": 0.6397,
+        "y": 0.1169,
+        "scale": 2.25,
+        "rotation": 6
       },
       {
         "id": "obj_004",
         "glb": "tree.glb",
-        "x": 0.94,
-        "y": 0.04,
-        "scale": 1.16,
-        "rotation": 0.546
+        "x": 0.9466,
+        "y": 0.0728,
+        "scale": 1.7,
+        "rotation": 0.55
       },
       {
         "id": "obj_005",
@@ -744,7 +744,7 @@
         "id": "obj_006",
         "glb": "tree.glb",
         "x": 0.97,
-        "y": 0.5,
+        "y": 0.5525,
         "scale": 0.89,
         "rotation": 3.174
       },
@@ -759,7 +759,7 @@
       {
         "id": "obj_008",
         "glb": "tree.glb",
-        "x": 0.35,
+        "x": 0.7111,
         "y": 0.975,
         "scale": 1.06,
         "rotation": 3.422
@@ -795,6 +795,46 @@
         "y": 0.72,
         "scale": 0.94,
         "rotation": 0.976
+      },
+      {
+        "id": "obj_013",
+        "glb": "tree.glb",
+        "x": 0.9644,
+        "y": 0.7667,
+        "scale": 1.9,
+        "rotation": 5.43
+      },
+      {
+        "id": "obj_014",
+        "glb": "tree.glb",
+        "x": 0.9595,
+        "y": 0.2842,
+        "scale": 1,
+        "rotation": 0.543
+      },
+      {
+        "id": "obj_015",
+        "glb": "tree.glb",
+        "x": 0.0208,
+        "y": 0.788,
+        "scale": 1.9,
+        "rotation": 3.1
+      },
+      {
+        "id": "obj_016",
+        "glb": "tree.glb",
+        "x": 0.0339,
+        "y": 0.3351,
+        "scale": 1,
+        "rotation": 5.351
+      },
+      {
+        "id": "obj_017",
+        "glb": "tree.glb",
+        "x": 0.3294,
+        "y": 0.9819,
+        "scale": 1.65,
+        "rotation": 2.1
       }
     ]
   }
