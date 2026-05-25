@@ -176,7 +176,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
     // 載 mei.glb（派派 5/25：1.2MB 含 1 animation + skin 骨架）
     const gltfLoader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
     // 5/25 派派：暫拿掉 MeshoptDecoder（fountain 整合先擱）— 動態 import 失敗會弄壞整段 module
     (async () => {
