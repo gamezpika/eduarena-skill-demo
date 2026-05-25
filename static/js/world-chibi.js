@@ -175,27 +175,25 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     // 載 naughty_boy_chibi.glb
     const gltfLoader = new GLTFLoader();
     let gltfModel = null;
+    let gltfBaseY = 0;
     gltfLoader.load(
         'assets/3d/character/naughty_boy_chibi.glb',
         (gltf) => {
             // GLB 載入成功 → 砍掉 primitives，換 3D 模型
             player.remove(chibi.group);
             gltfModel = gltf.scene;
-            // 計算 bbox 自動 scale 到合適大小（目標高度 ≈ 3.5 跟原 primitives 一致）
             const bbox = new THREE.Box3().setFromObject(gltfModel);
             const height = bbox.max.y - bbox.min.y;
             const targetHeight = 3.5;
             const scale = targetHeight / Math.max(height, 0.001);
             gltfModel.scale.setScalar(scale);
-            // 把模型對齊地面（y=0 = 腳底）
             const bbox2 = new THREE.Box3().setFromObject(gltfModel);
             gltfModel.position.y = -bbox2.min.y;
-            // sprite 預設可能面向 -Z，旋轉讓它面向 +Z（跟玩家移動方向一致）
-            // 後續 game loop 會用 player.rotation.y 控方向
+            gltfBaseY = gltfModel.position.y;  // 記住基準位置，walk 動畫上下偏移用
             player.add(gltfModel);
             console.log('[chibi] GLB loaded, scale=', scale.toFixed(3), 'height=', height.toFixed(2));
         },
-        undefined,  // progress
+        undefined,
         (err) => {
             console.warn('[chibi] GLB load failed, fallback to primitives:', err);
         }
@@ -507,18 +505,29 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
             player.rotation.y = Math.atan2(dx, dy);
 
             walkPhase += 0.22;
+            // primitives 走路動畫（GLB 載入前 placeholder 用）
             chibi.leftArm.rotation.x = Math.sin(walkPhase) * 0.6;
             chibi.rightArm.rotation.x = -Math.sin(walkPhase) * 0.6;
             chibi.leftLeg.rotation.x = -Math.sin(walkPhase) * 0.55;
             chibi.rightLeg.rotation.x = Math.sin(walkPhase) * 0.55;
             chibi.group.position.y = -0.05 + Math.abs(Math.sin(walkPhase)) * 0.08;
             chibi.head.rotation.z = Math.sin(walkPhase * 0.5) * 0.06;
+            // 5/25 派派 A 方案：GLB fake walk anim — 上下彈跳 + 左右擺動
+            if (gltfModel) {
+                gltfModel.position.y = gltfBaseY + Math.abs(Math.sin(walkPhase * 1.6)) * 0.22;
+                gltfModel.rotation.z = Math.sin(walkPhase) * 0.07;
+            }
         } else {
             chibi.leftArm.rotation.x *= 0.85;
             chibi.rightArm.rotation.x *= 0.85;
             chibi.leftLeg.rotation.x *= 0.85;
             chibi.rightLeg.rotation.x *= 0.85;
             chibi.group.position.y = -0.05 + Math.sin(Date.now() * 0.003) * 0.03;
+            // GLB idle 緩慢呼吸
+            if (gltfModel) {
+                gltfModel.position.y = gltfBaseY + Math.sin(Date.now() * 0.003) * 0.06;
+                gltfModel.rotation.z *= 0.92;
+            }
         }
 
         player.position.x = px;
