@@ -1825,11 +1825,13 @@ if (canvas) (function() {
             xhr.open('GET', url, true);
             xhr.responseType = 'arraybuffer';
             xhr.onload = () => {
+                console.log('[3d-preview] XHR onload', file, xhr.status, xhr.response?.byteLength);
                 if (xhr.status < 200 || xhr.status >= 300) {
                     rej(new Error(`HTTP ${xhr.status}`));
                     return;
                 }
                 const buf = xhr.response;
+                console.log('[3d-preview] parsing', file, buf?.byteLength);
                 gltfLoader.parse(buf, '', gltf => {
                     glbCache.set(file, gltf);
                     glbFailCount.delete(file);
