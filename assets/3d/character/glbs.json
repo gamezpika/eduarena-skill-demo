@@ -9,6 +9,11 @@
       "file": "mei.glb",
       "emoji": "🧙‍♀️",
       "name": "mei"
+    },
+    {
+      "file": "dog.glb",
+      "emoji": "🐶",
+      "name": "狗"
     }
   ]
 }
