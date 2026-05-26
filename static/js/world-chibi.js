@@ -251,6 +251,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             );
         });
     }
+    // 5/26 派派：follow:true 物件跟著玩家走（假 walk 動畫）
+    const followers = [];  // [{model, baseY, phase, facing}]
     async function loadConfigObjects() {
         if (!mapConfig || !Array.isArray(mapConfig.objects) || mapConfig.objects.length === 0) {
             console.log('[chibi] no config objects');
@@ -267,15 +269,19 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
                 model.scale.setScalar(baseScale * (obj.scale || 1));
                 const { x, z } = mapNormToSceneCoord(obj.x, obj.y);
                 const bbox2 = new THREE.Box3().setFromObject(model);
-                model.position.set(x, -bbox2.min.y, z);
+                const baseY = -bbox2.min.y;
+                model.position.set(x, baseY, z);
                 model.rotation.y = obj.rotation || 0;
                 scene.add(model);
+                if (obj.follow) {
+                    followers.push({ model, baseY, phase: 0, facing: obj.rotation || 0 });
+                }
                 placed++;
             } catch (e) {
                 console.warn('[chibi] obj load failed:', obj, e);
             }
         }
-        console.log('[chibi] loaded', placed, '/', mapConfig.objects.length, 'config objects');
+        console.log('[chibi] loaded', placed, '/', mapConfig.objects.length, 'config objects (', followers.length, 'follower(s))');
     }
 
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.0, 24),
@@ -613,8 +619,49 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
         player.position.x = px;
         player.position.z = py;
+
+        // 5/26 派派：followers 跟玩家走 + 假 walk 動畫
+        if (followers.length > 0) updateFollowers();
+
         renderer.render(scene, camera);
     }
+
+    // 5/26 派派：follower 跟玩家邏輯
+    const FOLLOW_DIST = 5.5;        // 距離 < 這個值停下（不要太黏）
+    const FOLLOW_SPEED = SPEED * 0.92;  // 比玩家稍慢一點，自然拖在後
+    function updateFollowers() {
+        for (const f of followers) {
+            const fx = f.model.position.x, fz = f.model.position.z;
+            const ddx = px - fx, ddz = py - fz;
+            const dist = Math.hypot(ddx, ddz);
+            const moving = dist > FOLLOW_DIST;
+            if (moving) {
+                const dirX = ddx / dist, dirZ = ddz / dist;
+                let nx = fx + dirX * FOLLOW_SPEED;
+                let nz = fz + dirZ * FOLLOW_SPEED;
+                // 撞牆滑行
+                if (isWalkable(nx, nz)) { f.model.position.x = nx; f.model.position.z = nz; }
+                else if (isWalkable(nx, fz)) { f.model.position.x = nx; }
+                else if (isWalkable(fx, nz)) { f.model.position.z = nz; }
+                // 朝向（lerp 平滑）
+                const targetFacing = Math.atan2(dirX, dirZ);
+                let diff = targetFacing - f.facing;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                f.facing += diff * 0.18;
+                f.model.rotation.y = f.facing;
+                // 假 walk：上下彈跳 + 左右晃身體
+                f.phase += 0.32;
+                f.model.position.y = f.baseY + Math.abs(Math.sin(f.phase)) * 0.55;
+                f.model.rotation.z = Math.sin(f.phase) * 0.08;
+            } else {
+                // 停下：彈跳衰減、身體擺正、呼吸感
+                f.model.rotation.z *= 0.85;
+                f.model.position.y = f.baseY + Math.sin(Date.now() * 0.003) * 0.08;
+            }
+        }
+    }
+
     loop();
 
     // ─── Debug

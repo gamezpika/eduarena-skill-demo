@@ -834,7 +834,8 @@
         "x": 0.6526,
         "y": 0.3531,
         "scale": 1.25,
-        "rotation": 0
+        "rotation": 0,
+        "follow": true
       }
     ]
   }
