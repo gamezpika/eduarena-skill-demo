@@ -831,11 +831,10 @@
       {
         "id": "obj_017",
         "glb": "dog.glb",
-        "x": 0.6526,
-        "y": 0.3531,
+        "x": 0.4967,
+        "y": 0.5336,
         "scale": 1.25,
-        "rotation": 0,
-        "follow": true
+        "rotation": 0
       }
     ]
   }
