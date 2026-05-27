@@ -17,11 +17,11 @@
         Cross-Origin-Resource-Policy "same-origin"
     }
 
-    # wasm / pck demo 階段頻繁迭代，cache 短到 60s（用 > 強制替換預設 max-age=600）
+    # wasm / pck demo 階段頻繁迭代，no-cache 強制每次重新拉
     @big {
         path *.wasm *.pck
     }
-    header @big >Cache-Control "public, max-age=60"
+    header @big >Cache-Control "no-cache, no-store, must-revalidate"
 
     # 不公開原始檔
     @hidden {
