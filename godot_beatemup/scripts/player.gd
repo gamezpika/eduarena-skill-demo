@@ -114,6 +114,8 @@ func _tick_timers(delta: float) -> void:
 			# 落地復原碰撞 + 觸發震波
 			collision_layer = 1
 			collision_mask = 4
+			sprite.modulate = Color.WHITE
+			print("[JUMP] end pos=", position, " layer=", collision_layer, " mask=", collision_mask)
 			landing_hitbox.monitoring = true
 			# 下一禎關掉
 			await get_tree().process_frame
@@ -157,6 +159,8 @@ func _do_jump() -> void:
 	# 跳躍中完全 passthrough：穿過桶/箱/敵人（layer+mask 都歸 0）
 	collision_layer = 0
 	collision_mask = 0
+	sprite.modulate = Color(1.6, 1.6, 0.4, 1)  # 跳躍中亮黃，視覺確認 logic 跑
+	print("[JUMP] start pos=", position, " layer=", collision_layer, " mask=", collision_mask)
 
 func _do_dash() -> void:
 	dash_timer = DASH_TIME
