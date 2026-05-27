@@ -32,12 +32,17 @@ var dash_timer := 0.0
 var jump_timer := 0.0
 var invuln_timer := 0.0
 var dead := false
+var ground_collision_layer := 1
+var ground_collision_mask := 4
+var was_jump_pressed := false
 
 signal hp_changed(value: int, max_value: int)
 signal died
 
 func _ready() -> void:
 	add_to_group("player")
+	ground_collision_layer = collision_layer
+	ground_collision_mask = collision_mask
 	attack_hitbox.body_entered.connect(_on_attack_hit)
 	landing_hitbox.body_entered.connect(_on_landing_hit)
 	sprite.animation_finished.connect(_on_sprite_anim_finished)
@@ -51,6 +56,7 @@ func _physics_process(delta: float) -> void:
 	if dead:
 		return
 	_tick_timers(delta)
+	_handle_actions()
 
 	var input_vec := _read_move()
 	var moving := input_vec != Vector2.ZERO
@@ -87,7 +93,6 @@ func _physics_process(delta: float) -> void:
 		visual.position.y = 0
 		shadow.scale = Vector2.ONE
 
-	_handle_actions()
 	_update_locomotion_anim(moving)
 
 func _update_locomotion_anim(moving: bool) -> void:
@@ -107,13 +112,13 @@ func _tick_timers(delta: float) -> void:
 		dash_timer = max(0.0, dash_timer - delta)
 		if dash_timer == 0.0:
 			# 衝刺結束復原碰撞 mask
-			collision_mask = 4
+			collision_mask = ground_collision_mask
 	if jump_timer > 0.0:
 		jump_timer = max(0.0, jump_timer - delta)
 		if jump_timer == 0.0:
 			# 落地復原碰撞 + 觸發震波（用 deferred 而非 await 避免 yield _physics_process）
-			collision_layer = 1
-			collision_mask = 4
+			collision_layer = ground_collision_layer
+			collision_mask = ground_collision_mask
 			sprite.modulate = Color.WHITE
 			print("[JUMP] end pos=", position, " layer=", collision_layer, " mask=", collision_mask)
 			landing_hitbox.monitoring = true
@@ -136,14 +141,17 @@ func _read_move() -> Vector2:
 	return v.normalized() if v.length() > 0 else Vector2.ZERO
 
 func _handle_actions() -> void:
+	var jump_pressed := Input.is_physical_key_pressed(KEY_Z) or Input.is_key_pressed(KEY_Z)
+
 	# 攻擊（空白）
-	if Input.is_key_pressed(KEY_SPACE) and attack_timer <= 0.0 and dash_timer <= 0.0:
+	if (Input.is_physical_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_SPACE)) and attack_timer <= 0.0 and dash_timer <= 0.0:
 		_do_attack()
 	# 跳（Z）
-	if Input.is_key_pressed(KEY_Z) and jump_timer <= 0.0 and attack_timer <= 0.0:
+	if jump_pressed and not was_jump_pressed and jump_timer <= 0.0 and attack_timer <= 0.0:
 		_do_jump()
+	was_jump_pressed = jump_pressed
 	# 衝刺（C）
-	if Input.is_key_pressed(KEY_C) and dash_timer <= 0.0 and attack_timer <= 0.0:
+	if (Input.is_physical_key_pressed(KEY_C) or Input.is_key_pressed(KEY_C)) and dash_timer <= 0.0 and attack_timer <= 0.0:
 		_do_dash()
 
 func _do_attack() -> void:
