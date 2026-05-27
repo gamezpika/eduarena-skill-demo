@@ -4,12 +4,28 @@
     file_server
     encode gzip zstd
 
-    # 靜態資源 cache 短期（10 分鐘），方便派派改檔 cache-bust ?v=N 強刷
+    # 預設靜態資源 cache 短期（10 分鐘），方便派派改檔 cache-bust ?v=N 強刷
     header Cache-Control "public, max-age=600"
 
-    # 不公開 git / dockerfile / caddyfile 自己
+    # Godot Web build 需要 SharedArrayBuffer → 必須回 cross-origin isolation headers
+    @godot {
+        path /godot-beatemup/*
+    }
+    header @godot {
+        Cross-Origin-Opener-Policy "same-origin"
+        Cross-Origin-Embedder-Policy "require-corp"
+        Cross-Origin-Resource-Policy "same-origin"
+    }
+
+    # wasm / pck 拉長 cache（這些是 build artifact 不會常改）
+    @big {
+        path *.wasm *.pck
+    }
+    header @big Cache-Control "public, max-age=2592000, immutable"
+
+    # 不公開原始檔
     @hidden {
-        path /.git/* /Dockerfile /Caddyfile /.dockerignore
+        path /.git/* /Dockerfile /Caddyfile /.dockerignore /godot_beatemup/*
     }
     respond @hidden 404
 }

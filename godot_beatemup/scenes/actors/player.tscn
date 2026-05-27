@@ -1,0 +1,100 @@
+[gd_scene load_steps=6 format=3 uid="uid://bplayer001"]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="rs_body"]
+size = Vector2(56, 110)
+
+[sub_resource type="RectangleShape2D" id="rs_hit"]
+size = Vector2(80, 80)
+
+[sub_resource type="CircleShape2D" id="rs_special"]
+radius = 150.0
+
+[sub_resource type="RectangleShape2D" id="rs_landing"]
+size = Vector2(200, 100)
+
+[node name="Player" type="CharacterBody2D"]
+motion_mode = 1
+collision_layer = 1
+collision_mask = 4
+script = ExtResource("1_script")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Body" type="ColorRect" parent="Visual"]
+offset_left = -32.0
+offset_top = -128.0
+offset_right = 32.0
+offset_bottom = 0.0
+color = Color(0.231, 0.51, 0.965, 1)
+
+[node name="Facing" type="ColorRect" parent="Visual"]
+offset_left = 16.0
+offset_top = -90.0
+offset_right = 32.0
+offset_bottom = -70.0
+color = Color(1, 1, 1, 0.7)
+
+[node name="Label" type="Label" parent="Visual"]
+offset_left = -32.0
+offset_top = -148.0
+offset_right = 32.0
+offset_bottom = -130.0
+horizontal_alignment = 1
+text = "P"
+
+[node name="AttackHitbox" type="Area2D" parent="Visual"]
+collision_layer = 0
+collision_mask = 4
+monitoring = false
+
+[node name="HitShape" type="CollisionShape2D" parent="Visual/AttackHitbox"]
+position = Vector2(60, -55)
+shape = SubResource("rs_hit")
+
+[node name="SpecialHitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+monitoring = false
+
+[node name="SpecialShape" type="CollisionShape2D" parent="SpecialHitbox"]
+position = Vector2(0, -55)
+shape = SubResource("rs_special")
+
+[node name="LandingHitbox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+monitoring = false
+
+[node name="LandingShape" type="CollisionShape2D" parent="LandingHitbox"]
+position = Vector2(0, -10)
+shape = SubResource("rs_landing")
+
+[node name="SpecialFx" type="ColorRect" parent="."]
+visible = false
+offset_left = -100.0
+offset_top = -150.0
+offset_right = 100.0
+offset_bottom = 50.0
+color = Color(1, 0.9, 0.2, 0.55)
+
+[node name="Shadow" type="ColorRect" parent="."]
+offset_left = -34.0
+offset_top = -8.0
+offset_right = 34.0
+offset_bottom = 4.0
+color = Color(0, 0, 0, 0.45)
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+position = Vector2(0, -55)
+shape = SubResource("rs_body")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -100)
+limit_left = 0
+limit_top = 0
+limit_right = 4000
+limit_bottom = 720
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
