@@ -11,6 +11,7 @@ const ATTACK_DAMAGE := 1
 const SPECIAL_DAMAGE := 5
 const LANDING_DAMAGE := 2
 const JUMP_TIME := 0.7  # sprite 動畫 41 frames @ 60fps = 0.683s
+const JUMP_HEIGHT := 90.0  # 視覺上抬 px（sprite 內動作小，需額外 lift 明顯離地）
 const SPECIAL_COST := 1
 const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
@@ -70,8 +71,14 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# 跳躍視覺：sprite 動畫自帶離地弧度（不再用 visual.position.y 疊加）
-	# 落地震波由 _tick_timers 內 jump_timer 結束時觸發
+	# 跳躍視覺：visual.position.y 拋物線（sprite 內動作小，加 lift 才看得出離地）
+	if jump_timer > 0.0:
+		var t: float = 1.0 - (jump_timer / JUMP_TIME)
+		visual.position.y = -JUMP_HEIGHT * 4.0 * t * (1.0 - t)
+		shadow.scale = Vector2(1.0 - 0.4 * (-visual.position.y / JUMP_HEIGHT), 1.0)
+	else:
+		visual.position.y = 0
+		shadow.scale = Vector2.ONE
 
 	_handle_actions()
 	_update_locomotion_anim(moving)
