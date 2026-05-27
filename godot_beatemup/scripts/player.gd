@@ -56,11 +56,17 @@ func _physics_process(delta: float) -> void:
 	var input_vec := _read_move()
 	var moving := input_vec != Vector2.ZERO
 
-	# 動作 lock：攻擊 / 衝刺 / 跳躍時鎖移動
-	if attack_timer > 0.0 or jump_timer > 0.0:
+	# 動作 lock：攻擊期間鎖、衝刺恆定速度、跳躍中空中可控、其餘地面 SPEED
+	if attack_timer > 0.0:
 		velocity = Vector2.ZERO
 	elif dash_timer > 0.0:
 		velocity = Vector2(DASH_SPEED * facing, 0)
+	elif jump_timer > 0.0:
+		# 空中：X 軸可控（80% 地面速度），Y 不動（垂直拋物線靠 visual.position.y）
+		velocity = Vector2(input_vec.x * SPEED * 0.8, 0)
+		if input_vec.x != 0:
+			facing = sign(input_vec.x)
+			visual.scale.x = facing
 	else:
 		velocity = input_vec * SPEED
 		if moving:
