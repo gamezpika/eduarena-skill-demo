@@ -74,6 +74,15 @@ func _physics_process(delta: float) -> void:
 	# 落地震波由 _tick_timers 內 jump_timer 結束時觸發
 
 	_handle_actions()
+	_update_locomotion_anim(moving)
+
+func _update_locomotion_anim(moving: bool) -> void:
+	# 動作期間（攻擊/跳躍/衝刺）sprite 由各自動作管，這裡不覆寫
+	if attack_timer > 0.0 or jump_timer > 0.0 or dash_timer > 0.0:
+		return
+	var target := &"walk" if moving else &"idle"
+	if sprite.animation != target:
+		sprite.play(target)
 
 func _tick_timers(delta: float) -> void:
 	if attack_timer > 0.0:

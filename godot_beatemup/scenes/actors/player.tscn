@@ -1,4 +1,4 @@
-[gd_scene load_steps=82 format=3 uid="uid://bplayer001"]
+[gd_scene load_steps=108 format=3 uid="uid://bplayer001"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_processed/0001.png" id="t01"]
@@ -77,6 +77,32 @@
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0138.png" id="j38"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0139.png" id="j39"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0140.png" id="j40"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0038.png" id="w00"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0039.png" id="w01"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0040.png" id="w02"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0041.png" id="w03"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0042.png" id="w04"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0043.png" id="w05"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0044.png" id="w06"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0045.png" id="w07"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0046.png" id="w08"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0047.png" id="w09"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0048.png" id="w10"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0049.png" id="w11"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0050.png" id="w12"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0051.png" id="w13"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0052.png" id="w14"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0053.png" id="w15"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0054.png" id="w16"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0055.png" id="w17"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0056.png" id="w18"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0057.png" id="w19"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0058.png" id="w20"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0059.png" id="w21"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0060.png" id="w22"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0061.png" id="w23"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0062.png" id="w24"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_walk_processed/0063.png" id="w25"]
 
 [sub_resource type="SpriteFrames" id="sf"]
 animations = [{
@@ -94,6 +120,11 @@ animations = [{
 "loop": false,
 "name": &"jump",
 "speed": 60.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("w00")}, {"duration": 1.0, "texture": ExtResource("w01")}, {"duration": 1.0, "texture": ExtResource("w02")}, {"duration": 1.0, "texture": ExtResource("w03")}, {"duration": 1.0, "texture": ExtResource("w04")}, {"duration": 1.0, "texture": ExtResource("w05")}, {"duration": 1.0, "texture": ExtResource("w06")}, {"duration": 1.0, "texture": ExtResource("w07")}, {"duration": 1.0, "texture": ExtResource("w08")}, {"duration": 1.0, "texture": ExtResource("w09")}, {"duration": 1.0, "texture": ExtResource("w10")}, {"duration": 1.0, "texture": ExtResource("w11")}, {"duration": 1.0, "texture": ExtResource("w12")}, {"duration": 1.0, "texture": ExtResource("w13")}, {"duration": 1.0, "texture": ExtResource("w14")}, {"duration": 1.0, "texture": ExtResource("w15")}, {"duration": 1.0, "texture": ExtResource("w16")}, {"duration": 1.0, "texture": ExtResource("w17")}, {"duration": 1.0, "texture": ExtResource("w18")}, {"duration": 1.0, "texture": ExtResource("w19")}, {"duration": 1.0, "texture": ExtResource("w20")}, {"duration": 1.0, "texture": ExtResource("w21")}, {"duration": 1.0, "texture": ExtResource("w22")}, {"duration": 1.0, "texture": ExtResource("w23")}, {"duration": 1.0, "texture": ExtResource("w24")}, {"duration": 1.0, "texture": ExtResource("w25")}],
+"loop": true,
+"name": &"walk",
+"speed": 24.0
 }]
 
 [sub_resource type="RectangleShape2D" id="rs_body"]
