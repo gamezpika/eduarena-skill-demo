@@ -17,6 +17,7 @@ const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
 
 @onready var visual: Node2D = $Visual
+@onready var sprite: AnimatedSprite2D = $Visual/Sprite
 @onready var attack_hitbox: Area2D = $Visual/AttackHitbox
 @onready var special_hitbox: Area2D = $SpecialHitbox
 @onready var landing_hitbox: Area2D = $LandingHitbox
@@ -41,7 +42,12 @@ func _ready() -> void:
 	attack_hitbox.body_entered.connect(_on_attack_hit)
 	special_hitbox.body_entered.connect(_on_special_hit)
 	landing_hitbox.body_entered.connect(_on_landing_hit)
+	sprite.animation_finished.connect(_on_sprite_anim_finished)
 	hp_changed.emit(hp, max_hp)
+
+func _on_sprite_anim_finished() -> void:
+	if sprite.animation == &"attack":
+		sprite.play(&"idle")
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -133,6 +139,7 @@ func _handle_actions() -> void:
 func _do_attack() -> void:
 	attack_timer = ATTACK_TIME
 	attack_hitbox.monitoring = true
+	sprite.play(&"attack")
 
 func _do_jump() -> void:
 	jump_timer = JUMP_TIME
