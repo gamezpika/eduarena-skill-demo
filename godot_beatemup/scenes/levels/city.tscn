@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bcity001"]
+[gd_scene load_steps=11 format=3 uid="uid://bcity001"]
 
 [ext_resource type="PackedScene" uid="uid://bplayer001" path="res://scenes/actors/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://bgoon001" path="res://scenes/actors/goon.tscn" id="2_goon"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" uid="uid://bbarrel001" path="res://scenes/props/barrel.tscn" id="6_barrel"]
 [ext_resource type="PackedScene" uid="uid://bcrate001" path="res://scenes/props/crate.tscn" id="7_crate"]
 [ext_resource type="PackedScene" uid="uid://bhud001" path="res://scenes/ui/hud.tscn" id="8_hud"]
+[ext_resource type="Texture2D" path="res://assets/bg/night_city_bg.png" id="9_bg"]
+[ext_resource type="Texture2D" path="res://assets/bg/street_ground.png" id="10_ground"]
 
 [node name="City" type="Node2D"]
 
@@ -15,35 +17,26 @@
 
 [node name="World" type="Node2D" parent="."]
 
-; ── 背景層（深夜都市色階：天空 → 遠景 → 近景）────────────────
-[node name="Sky" type="ColorRect" parent="World"]
+; ── 背景（夜晚街景，1 張拉伸 4000×720）────────────────────────
+[node name="BgSky" type="ColorRect" parent="World"]
 offset_left = 0.0
 offset_top = 0.0
 offset_right = 4000.0
 offset_bottom = 720.0
 color = Color(0.114, 0.133, 0.208, 1)
 
-[node name="BuildingsFar" type="ColorRect" parent="World"]
-offset_left = 0.0
-offset_top = 180.0
-offset_right = 4000.0
-offset_bottom = 520.0
-color = Color(0.165, 0.176, 0.227, 1)
+[node name="BgCity" type="Sprite2D" parent="World"]
+texture = ExtResource("9_bg")
+centered = true
+position = Vector2(2000, 360)
+scale = Vector2(2.255, 0.811)
 
-[node name="BuildingsNear" type="ColorRect" parent="World"]
-offset_left = 0.0
-offset_top = 300.0
-offset_right = 4000.0
-offset_bottom = 540.0
-color = Color(0.086, 0.102, 0.157, 1)
-
-; ── 地面（柏油路）+ 路面中線 ──────────────────────────────────
-[node name="Ground" type="ColorRect" parent="World"]
-offset_left = 0.0
-offset_top = 540.0
-offset_right = 4000.0
-offset_bottom = 720.0
-color = Color(0.102, 0.102, 0.118, 1)
+; ── 地面（柏油路）4000×180 ─────────────────────────────────────
+[node name="GroundTexture" type="Sprite2D" parent="World"]
+texture = ExtResource("10_ground")
+centered = true
+position = Vector2(2000, 630)
+scale = Vector2(2.255, 0.203)
 
 [node name="GroundEdge" type="ColorRect" parent="World"]
 offset_left = 0.0

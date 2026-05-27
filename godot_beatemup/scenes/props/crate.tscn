@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bcrate001"]
+[gd_scene load_steps=4 format=3 uid="uid://bcrate001"]
 
 [ext_resource type="Script" path="res://scripts/breakable.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/props/props_processed/crate_0.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="rs"]
 size = Vector2(56, 50)
@@ -11,12 +12,9 @@ collision_layer = 4
 collision_mask = 0
 script = ExtResource("1_script")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -28.0
-offset_top = -56.0
-offset_right = 28.0
-offset_bottom = 0.0
-color = Color(0.706, 0.325, 0.035, 1)
+[node name="Sprite" type="Sprite2D" parent="."]
+position = Vector2(0, -44)
+texture = ExtResource("2_tex")
 
 [node name="Collider" type="CollisionShape2D" parent="."]
 position = Vector2(0, -28)
