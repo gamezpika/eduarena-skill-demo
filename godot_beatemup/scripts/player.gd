@@ -111,7 +111,9 @@ func _tick_timers(delta: float) -> void:
 	if jump_timer > 0.0:
 		jump_timer = max(0.0, jump_timer - delta)
 		if jump_timer == 0.0:
-			# 落地震波
+			# 落地復原碰撞 + 觸發震波
+			collision_layer = 1
+			collision_mask = 4
 			landing_hitbox.monitoring = true
 			# 下一禎關掉
 			await get_tree().process_frame
@@ -152,6 +154,9 @@ func _do_attack() -> void:
 func _do_jump() -> void:
 	jump_timer = JUMP_TIME
 	sprite.play(&"jump")
+	# 跳躍中完全 passthrough：穿過桶/箱/敵人（layer+mask 都歸 0）
+	collision_layer = 0
+	collision_mask = 0
 
 func _do_dash() -> void:
 	dash_timer = DASH_TIME
