@@ -6,8 +6,7 @@
 [sub_resource type="RectangleShape2D" id="rs"]
 size = Vector2(56, 50)
 
-[node name="Crate" type="CharacterBody2D"]
-motion_mode = 1
+[node name="Crate" type="StaticBody2D"]
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("1_script")

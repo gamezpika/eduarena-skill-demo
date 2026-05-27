@@ -1,4 +1,4 @@
-extends CharacterBody2D
+extends StaticBody2D
 
 var hp := 1
 var dead := false
