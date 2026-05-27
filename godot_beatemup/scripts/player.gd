@@ -12,6 +12,10 @@ const SPECIAL_DAMAGE := 5
 const LANDING_DAMAGE := 2
 const JUMP_TIME := 0.7  # sprite 動畫 41 frames @ 60fps = 0.683s
 const JUMP_HEIGHT := 150.0  # 視覺上抬 px
+
+# 地面深度範圍（Y 軸 = beat'em up 深度）：腳底只能在黃線下到視窗底之間
+const GROUND_MIN_Y := 560.0
+const GROUND_MAX_Y := 700.0
 const SPECIAL_COST := 1
 const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
@@ -76,6 +80,8 @@ func _physics_process(delta: float) -> void:
 				visual.scale.x = facing
 
 	move_and_slide()
+	# clamp Y：玩家只能在地面帶內走（黃線下方到視窗底），不能走到牆/塗鴉
+	position.y = clamp(position.y, GROUND_MIN_Y, GROUND_MAX_Y)
 
 	# 跳躍視覺：visual.position.y 拋物線（sprite 內動作小，加 lift 才看得出離地）
 	if jump_timer > 0.0:
