@@ -168,59 +168,59 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         return { group: root, leftArm, rightArm, leftLeg, rightLeg, head };
     }
 
-    // 5/25 派派 B 方案：載 GLB 3D 模型取代 primitives
-    const chibi = makeChibiStudent();
-    // 先放 primitives 當 placeholder（GLB load 完會替換）
-    player.add(chibi.group);
+    // 5/27 派派：hero_walk.png sprite billboard 取代 mei.glb
+    // sprite sheet 5×5 grid，25 幀 walk cycle，每幀 694×1154
+    const HERO_FRAMES = 25;
+    const HERO_COLS = 5;
+    const HERO_ROWS = 5;
+    const HERO_FPS = 12;             // walk 動畫每秒 12 幀
+    const FRAME_W = 1 / HERO_COLS;   // 0.2
+    const FRAME_H = 1 / HERO_ROWS;   // 0.2
 
-    // 載 mei.glb（派派 5/25：1.2MB 含 1 animation + skin 骨架）
+    const heroTexture = new THREE.TextureLoader().load('assets/images/arena/hero_walk.png');
+    heroTexture.colorSpace = THREE.SRGBColorSpace;
+    heroTexture.magFilter = THREE.LinearFilter;
+    heroTexture.minFilter = THREE.LinearFilter;
+    heroTexture.repeat.set(FRAME_W, FRAME_H);
+    heroTexture.offset.set(0, 1 - FRAME_H);  // 從左上角第 1 幀開始（UV y 倒轉）
+
+    const heroMaterial = new THREE.SpriteMaterial({
+        map: heroTexture,
+        transparent: true,
+        depthTest: true,
+        alphaTest: 0.05,
+    });
+    const heroSprite = new THREE.Sprite(heroMaterial);
+    // 比例 694:1154 ≈ 0.6:1；player 還會 scale ×4，所以這裡用 sprite 高 4
+    heroSprite.scale.set(2.4, 4.0, 1);
+    heroSprite.position.y = 2.0;  // 中心對齊 chibi 視覺中心位置
+    player.add(heroSprite);
+
+    // 動畫狀態（update loop 用）
+    let heroFrame = 0;
+    let heroFrameAcc = 0;
+
+    // 保留 primitives 物件（解構需要，但不加入 player）
+    const chibi = makeChibiStudent();
+    // 不 player.add(chibi.group) — sprite 取代
+
+    // mei.glb 取代為 sprite，以下 GLB loader 變數保留為 null 避免 update loop 報錯
     const gltfLoader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
     gltfLoader.setDRACOLoader(dracoLoader);
-    // 5/25 派派：暫拿掉 MeshoptDecoder（fountain 整合先擱）— 動態 import 失敗會弄壞整段 module
     (async () => {
         try {
             const mod = await import('three/addons/libs/meshopt_decoder.module.js');
             gltfLoader.setMeshoptDecoder(mod.MeshoptDecoder);
         } catch (e) {
-            console.warn('[chibi] MeshoptDecoder load fail, fountain.glb 無法載入');
+            console.warn('[chibi] MeshoptDecoder load fail');
         }
     })();
-    let gltfModel = null;
-    let gltfBaseY = 0;
-    let gltfMixer = null;
-    let gltfAction = null;
+    const gltfModel = null;
+    const gltfMixer = null;
+    const gltfAction = null;
     const gltfClock = new THREE.Clock();
-    gltfLoader.load(
-        'assets/3d/character/mei.glb',
-        (gltf) => {
-            player.remove(chibi.group);
-            gltfModel = gltf.scene;
-            const bbox = new THREE.Box3().setFromObject(gltfModel);
-            const height = bbox.max.y - bbox.min.y;
-            const targetHeight = 3.5;
-            const scale = targetHeight / Math.max(height, 0.001);
-            gltfModel.scale.setScalar(scale);
-            const bbox2 = new THREE.Box3().setFromObject(gltfModel);
-            gltfModel.position.y = -bbox2.min.y;
-            gltfBaseY = gltfModel.position.y;
-            player.add(gltfModel);
-            // 接動畫
-            if (gltf.animations && gltf.animations.length > 0) {
-                gltfMixer = new THREE.AnimationMixer(gltfModel);
-                gltfAction = gltfMixer.clipAction(gltf.animations[0]);
-                gltfAction.play();
-                console.log('[chibi] GLB loaded with', gltf.animations.length, 'anim:', gltf.animations[0].name);
-            } else {
-                console.log('[chibi] GLB loaded (no animation), scale=', scale.toFixed(3));
-            }
-        },
-        undefined,
-        (err) => {
-            console.warn('[chibi] GLB load failed, fallback to primitives:', err);
-        }
-    );
 
     // 5/25 派派：載 tree.glb 在 mapImg 各空地放分散樹（避開 polygon 建築）
     const _unprojVec = new THREE.Vector3();
@@ -589,25 +589,27 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
             }
             px = Math.max(-HALF_W + 3, Math.min(HALF_W - 3, px));
             py = Math.max(-HALF_H + 5, Math.min(HALF_H - 5, py));
+            // sprite billboard 永遠面對相機，不需要 player.rotation.y（但保留給 chibi/glb fallback）
             player.rotation.y = Math.atan2(dx, dy);
 
             walkPhase += 0.22;
-            // primitives 走路動畫（GLB 載入前 placeholder 用）
-            chibi.leftArm.rotation.x = Math.sin(walkPhase) * 0.6;
-            chibi.rightArm.rotation.x = -Math.sin(walkPhase) * 0.6;
-            chibi.leftLeg.rotation.x = -Math.sin(walkPhase) * 0.55;
-            chibi.rightLeg.rotation.x = Math.sin(walkPhase) * 0.55;
-            chibi.group.position.y = -0.05 + Math.abs(Math.sin(walkPhase)) * 0.08;
-            chibi.head.rotation.z = Math.sin(walkPhase * 0.5) * 0.06;
-            // mei.glb 用 GLB 自帶 animation，走動時稍微加速
-            if (gltfAction) gltfAction.timeScale = 1.6;
+            // 5/27 派派：hero sprite walk cycle 25 幀 — 按 wall clock 推進，跟移動速度脫鉤
+            heroFrameAcc += 1 / 60;  // 估算每禎 ~16ms（用 requestAnimationFrame 平均）
+            const FRAME_DUR = 1 / HERO_FPS;
+            while (heroFrameAcc >= FRAME_DUR) {
+                heroFrameAcc -= FRAME_DUR;
+                heroFrame = (heroFrame + 1) % HERO_FRAMES;
+            }
+            const col = heroFrame % HERO_COLS;
+            const row = Math.floor(heroFrame / HERO_COLS);
+            heroTexture.offset.x = col * FRAME_W;
+            heroTexture.offset.y = 1 - (row + 1) * FRAME_H;  // UV y 倒轉
         } else {
-            chibi.leftArm.rotation.x *= 0.85;
-            chibi.rightArm.rotation.x *= 0.85;
-            chibi.leftLeg.rotation.x *= 0.85;
-            chibi.rightLeg.rotation.x *= 0.85;
-            chibi.group.position.y = -0.05 + Math.sin(Date.now() * 0.003) * 0.03;
-            if (gltfAction) gltfAction.timeScale = 0.6;
+            // 5/27 派派：靜止 → idle 幀（frame 0）
+            heroFrame = 0;
+            heroFrameAcc = 0;
+            heroTexture.offset.x = 0;
+            heroTexture.offset.y = 1 - FRAME_H;
         }
         // 5/25 派派：跑 GLB 自帶骨骼動畫
         if (gltfMixer) gltfMixer.update(gltfClock.getDelta());
