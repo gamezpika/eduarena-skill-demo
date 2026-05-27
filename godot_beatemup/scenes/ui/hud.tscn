@@ -39,7 +39,7 @@ offset_left = 24.0
 offset_top = 670.0
 offset_right = 1260.0
 offset_bottom = 700.0
-text = "↑↓←→ 移動  空白 攻擊  Z 跳  C 衝刺  X 絕招"
+text = "↑↓←→ 移動  空白 攻擊  Z 跳  C 衝刺"
 
 [node name="CenterMsg" type="Label" parent="."]
 visible = false

@@ -8,7 +8,6 @@ const DASH_SPEED := 900.0
 const DASH_TIME := 0.3
 const ATTACK_TIME := 0.28
 const ATTACK_DAMAGE := 1
-const SPECIAL_DAMAGE := 5
 const LANDING_DAMAGE := 2
 const JUMP_TIME := 0.7  # sprite 動畫 41 frames @ 60fps = 0.683s
 const JUMP_HEIGHT := 150.0  # 視覺上抬 px
@@ -16,16 +15,13 @@ const JUMP_HEIGHT := 150.0  # 視覺上抬 px
 # 地面深度範圍（Y 軸 = beat'em up 深度）：腳底只能在黃線下到視窗底之間
 const GROUND_MIN_Y := 560.0
 const GROUND_MAX_Y := 700.0
-const SPECIAL_COST := 1
 const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
 
 @onready var visual: Node2D = $Visual
 @onready var sprite: AnimatedSprite2D = $Visual/Sprite
 @onready var attack_hitbox: Area2D = $Visual/AttackHitbox
-@onready var special_hitbox: Area2D = $SpecialHitbox
 @onready var landing_hitbox: Area2D = $LandingHitbox
-@onready var special_fx: ColorRect = $SpecialFx
 @onready var shadow: ColorRect = $Shadow
 
 var max_hp := 10
@@ -43,7 +39,6 @@ signal died
 func _ready() -> void:
 	add_to_group("player")
 	attack_hitbox.body_entered.connect(_on_attack_hit)
-	special_hitbox.body_entered.connect(_on_special_hit)
 	landing_hitbox.body_entered.connect(_on_landing_hit)
 	sprite.animation_finished.connect(_on_sprite_anim_finished)
 	hp_changed.emit(hp, max_hp)
@@ -148,9 +143,6 @@ func _handle_actions() -> void:
 	# 衝刺（C）
 	if Input.is_key_pressed(KEY_C) and dash_timer <= 0.0 and attack_timer <= 0.0:
 		_do_dash()
-	# 絕招（X）
-	if Input.is_key_pressed(KEY_X) and attack_timer <= 0.0 and dash_timer <= 0.0:
-		_do_special()
 
 func _do_attack() -> void:
 	attack_timer = ATTACK_TIME
@@ -166,22 +158,8 @@ func _do_dash() -> void:
 	# 衝刺無敵：清碰撞 mask
 	collision_mask = 0
 
-func _do_special() -> void:
-	if hp <= SPECIAL_COST:
-		return  # 不能殺自己
-	_take_self_damage(SPECIAL_COST)
-	special_fx.visible = true
-	special_hitbox.monitoring = true
-	await get_tree().create_timer(0.05).timeout
-	special_hitbox.monitoring = false
-	await get_tree().create_timer(0.35).timeout
-	special_fx.visible = false
-
 func _on_attack_hit(body: Node) -> void:
 	_apply_damage(body, ATTACK_DAMAGE, KNOCKBACK)
-
-func _on_special_hit(body: Node) -> void:
-	_apply_damage(body, SPECIAL_DAMAGE, KNOCKBACK * 2.0)
 
 func _on_landing_hit(body: Node) -> void:
 	_apply_damage(body, LANDING_DAMAGE, KNOCKBACK * 1.5)
@@ -206,10 +184,6 @@ func take_damage(amount: int, knockback: Vector2 = Vector2.ZERO) -> void:
 	hp_changed.emit(hp, max_hp)
 	if hp <= 0:
 		_die()
-
-func _take_self_damage(amount: int) -> void:
-	hp = max(0, hp - amount)
-	hp_changed.emit(hp, max_hp)
 
 func _die() -> void:
 	dead = true
