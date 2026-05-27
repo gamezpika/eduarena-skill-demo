@@ -10,8 +10,7 @@ const ATTACK_TIME := 0.28
 const ATTACK_DAMAGE := 1
 const SPECIAL_DAMAGE := 5
 const LANDING_DAMAGE := 2
-const JUMP_HEIGHT := 80.0
-const JUMP_TIME := 0.5
+const JUMP_TIME := 0.7  # sprite 動畫 41 frames @ 60fps = 0.683s
 const SPECIAL_COST := 1
 const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
@@ -32,7 +31,6 @@ var dash_timer := 0.0
 var jump_timer := 0.0
 var invuln_timer := 0.0
 var dead := false
-var jump_height_current := 0.0  # 視覺上抬位移（負值）
 
 signal hp_changed(value: int, max_value: int)
 signal died
@@ -46,7 +44,7 @@ func _ready() -> void:
 	hp_changed.emit(hp, max_hp)
 
 func _on_sprite_anim_finished() -> void:
-	if sprite.animation == &"attack":
+	if sprite.animation == &"attack" or sprite.animation == &"jump":
 		sprite.play(&"idle")
 
 func _physics_process(delta: float) -> void:
@@ -57,11 +55,10 @@ func _physics_process(delta: float) -> void:
 	var input_vec := _read_move()
 	var moving := input_vec != Vector2.ZERO
 
-	# 攻擊鎖定移動（攻擊時不動）
-	if attack_timer > 0.0:
+	# 動作 lock：攻擊 / 衝刺 / 跳躍時鎖移動
+	if attack_timer > 0.0 or jump_timer > 0.0:
 		velocity = Vector2.ZERO
 	elif dash_timer > 0.0:
-		# 衝刺中 — 速度恆定，無敵
 		velocity = Vector2(DASH_SPEED * facing, 0)
 	else:
 		velocity = input_vec * SPEED
@@ -73,18 +70,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# 跳躍視覺：visual 上抬（拋物線）
-	if jump_timer > 0.0:
-		var t := 1.0 - (jump_timer / JUMP_TIME)
-		# 拋物線 4*t*(1-t) 峰值在 t=0.5
-		jump_height_current = -JUMP_HEIGHT * 4.0 * t * (1.0 - t)
-		visual.position.y = jump_height_current
-		shadow.scale = Vector2(1.0 - 0.4 * (-jump_height_current / JUMP_HEIGHT), 1.0)
-	else:
-		visual.position.y = 0
-		shadow.scale = Vector2.ONE
+	# 跳躍視覺：sprite 動畫自帶離地弧度（不再用 visual.position.y 疊加）
+	# 落地震波由 _tick_timers 內 jump_timer 結束時觸發
 
-	# 攻擊/衝刺/絕招的鍵入
 	_handle_actions()
 
 func _tick_timers(delta: float) -> void:
@@ -143,6 +131,7 @@ func _do_attack() -> void:
 
 func _do_jump() -> void:
 	jump_timer = JUMP_TIME
+	sprite.play(&"jump")
 
 func _do_dash() -> void:
 	dash_timer = DASH_TIME

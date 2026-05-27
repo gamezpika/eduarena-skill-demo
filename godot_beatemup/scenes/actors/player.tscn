@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://bplayer001"]
+[gd_scene load_steps=82 format=3 uid="uid://bplayer001"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_processed/0001.png" id="t01"]
@@ -36,6 +36,47 @@
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_processed/0033.png" id="t33"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_processed/0034.png" id="t34"]
 [ext_resource type="Texture2D" path="res://assets/characters/player_hero_processed/0035.png" id="t35"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0100.png" id="j00"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0101.png" id="j01"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0102.png" id="j02"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0103.png" id="j03"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0104.png" id="j04"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0105.png" id="j05"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0106.png" id="j06"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0107.png" id="j07"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0108.png" id="j08"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0109.png" id="j09"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0110.png" id="j10"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0111.png" id="j11"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0112.png" id="j12"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0113.png" id="j13"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0114.png" id="j14"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0115.png" id="j15"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0116.png" id="j16"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0117.png" id="j17"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0118.png" id="j18"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0119.png" id="j19"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0120.png" id="j20"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0121.png" id="j21"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0122.png" id="j22"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0123.png" id="j23"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0124.png" id="j24"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0125.png" id="j25"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0126.png" id="j26"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0127.png" id="j27"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0128.png" id="j28"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0129.png" id="j29"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0130.png" id="j30"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0131.png" id="j31"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0132.png" id="j32"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0133.png" id="j33"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0134.png" id="j34"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0135.png" id="j35"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0136.png" id="j36"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0137.png" id="j37"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0138.png" id="j38"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0139.png" id="j39"]
+[ext_resource type="Texture2D" path="res://assets/characters/player_hero_jump_processed/0140.png" id="j40"]
 
 [sub_resource type="SpriteFrames" id="sf"]
 animations = [{
@@ -47,6 +88,11 @@ animations = [{
 "frames": [{"duration": 1.0, "texture": ExtResource("t01")}, {"duration": 1.0, "texture": ExtResource("t02")}, {"duration": 1.0, "texture": ExtResource("t03")}, {"duration": 1.0, "texture": ExtResource("t04")}, {"duration": 1.0, "texture": ExtResource("t05")}, {"duration": 1.0, "texture": ExtResource("t06")}, {"duration": 1.0, "texture": ExtResource("t07")}, {"duration": 1.0, "texture": ExtResource("t08")}, {"duration": 1.0, "texture": ExtResource("t09")}, {"duration": 1.0, "texture": ExtResource("t10")}, {"duration": 1.0, "texture": ExtResource("t11")}, {"duration": 1.0, "texture": ExtResource("t12")}, {"duration": 1.0, "texture": ExtResource("t13")}, {"duration": 1.0, "texture": ExtResource("t14")}, {"duration": 1.0, "texture": ExtResource("t15")}, {"duration": 1.0, "texture": ExtResource("t16")}, {"duration": 1.0, "texture": ExtResource("t17")}, {"duration": 1.0, "texture": ExtResource("t18")}, {"duration": 1.0, "texture": ExtResource("t19")}, {"duration": 1.0, "texture": ExtResource("t20")}, {"duration": 1.0, "texture": ExtResource("t21")}, {"duration": 1.0, "texture": ExtResource("t22")}, {"duration": 1.0, "texture": ExtResource("t23")}, {"duration": 1.0, "texture": ExtResource("t24")}, {"duration": 1.0, "texture": ExtResource("t25")}, {"duration": 1.0, "texture": ExtResource("t26")}, {"duration": 1.0, "texture": ExtResource("t27")}, {"duration": 1.0, "texture": ExtResource("t28")}, {"duration": 1.0, "texture": ExtResource("t29")}, {"duration": 1.0, "texture": ExtResource("t30")}, {"duration": 1.0, "texture": ExtResource("t31")}, {"duration": 1.0, "texture": ExtResource("t32")}, {"duration": 1.0, "texture": ExtResource("t33")}, {"duration": 1.0, "texture": ExtResource("t34")}, {"duration": 1.0, "texture": ExtResource("t35")}],
 "loop": false,
 "name": &"attack",
+"speed": 60.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("j00")}, {"duration": 1.0, "texture": ExtResource("j01")}, {"duration": 1.0, "texture": ExtResource("j02")}, {"duration": 1.0, "texture": ExtResource("j03")}, {"duration": 1.0, "texture": ExtResource("j04")}, {"duration": 1.0, "texture": ExtResource("j05")}, {"duration": 1.0, "texture": ExtResource("j06")}, {"duration": 1.0, "texture": ExtResource("j07")}, {"duration": 1.0, "texture": ExtResource("j08")}, {"duration": 1.0, "texture": ExtResource("j09")}, {"duration": 1.0, "texture": ExtResource("j10")}, {"duration": 1.0, "texture": ExtResource("j11")}, {"duration": 1.0, "texture": ExtResource("j12")}, {"duration": 1.0, "texture": ExtResource("j13")}, {"duration": 1.0, "texture": ExtResource("j14")}, {"duration": 1.0, "texture": ExtResource("j15")}, {"duration": 1.0, "texture": ExtResource("j16")}, {"duration": 1.0, "texture": ExtResource("j17")}, {"duration": 1.0, "texture": ExtResource("j18")}, {"duration": 1.0, "texture": ExtResource("j19")}, {"duration": 1.0, "texture": ExtResource("j20")}, {"duration": 1.0, "texture": ExtResource("j21")}, {"duration": 1.0, "texture": ExtResource("j22")}, {"duration": 1.0, "texture": ExtResource("j23")}, {"duration": 1.0, "texture": ExtResource("j24")}, {"duration": 1.0, "texture": ExtResource("j25")}, {"duration": 1.0, "texture": ExtResource("j26")}, {"duration": 1.0, "texture": ExtResource("j27")}, {"duration": 1.0, "texture": ExtResource("j28")}, {"duration": 1.0, "texture": ExtResource("j29")}, {"duration": 1.0, "texture": ExtResource("j30")}, {"duration": 1.0, "texture": ExtResource("j31")}, {"duration": 1.0, "texture": ExtResource("j32")}, {"duration": 1.0, "texture": ExtResource("j33")}, {"duration": 1.0, "texture": ExtResource("j34")}, {"duration": 1.0, "texture": ExtResource("j35")}, {"duration": 1.0, "texture": ExtResource("j36")}, {"duration": 1.0, "texture": ExtResource("j37")}, {"duration": 1.0, "texture": ExtResource("j38")}, {"duration": 1.0, "texture": ExtResource("j39")}, {"duration": 1.0, "texture": ExtResource("j40")}],
+"loop": false,
+"name": &"jump",
 "speed": 60.0
 }]
 
