@@ -11,7 +11,7 @@ const ATTACK_DAMAGE := 1
 const SPECIAL_DAMAGE := 5
 const LANDING_DAMAGE := 2
 const JUMP_TIME := 0.7  # sprite 動畫 41 frames @ 60fps = 0.683s
-const JUMP_HEIGHT := 90.0  # 視覺上抬 px（sprite 內動作小，需額外 lift 明顯離地）
+const JUMP_HEIGHT := 150.0  # 視覺上抬 px
 const SPECIAL_COST := 1
 const HIT_INVULN := 0.5
 const KNOCKBACK := 220.0
