@@ -9,7 +9,7 @@
 
     # Godot Web build 需要 SharedArrayBuffer → 必須回 cross-origin isolation headers
     @godot {
-        path /godot-beatemup/*
+        path /godot-beatemup/* /godot-demo2/*
     }
     header @godot {
         Cross-Origin-Opener-Policy "same-origin"
@@ -25,7 +25,7 @@
 
     # 不公開原始檔
     @hidden {
-        path /.git/* /Dockerfile /Caddyfile /.dockerignore /godot_beatemup/*
+        path /.git/* /Dockerfile /Caddyfile /.dockerignore /godot_beatemup/* /godot_demo2/*
     }
     respond @hidden 404
 }
