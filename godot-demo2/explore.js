@@ -82,8 +82,8 @@ class ExploreScene extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "hero_idle",
-      frames: [{ key: "hero", frame: 0 }],
+      key: "hero_idle",         // 停止：正面靜止（hero_walk.png frame 0）
+      frames: [{ key: "hero_down", frame: 0 }],
       frameRate: 1,
     });
     this.playerSprite.play("hero_idle");
