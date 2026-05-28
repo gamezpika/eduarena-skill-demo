@@ -35,6 +35,8 @@ class ExploreScene extends Phaser.Scene {
     this.load.spritesheet("hero", "hero_walk2.png?v=1", { frameWidth: 758, frameHeight: 1032 });
     // hero_down (正面/朝下 walk): 5x5 grid 25 幀（每幀 694x1154）
     this.load.spritesheet("hero_down", "hero_walk.png?v=1", { frameWidth: 694, frameHeight: 1154 });
+    // hero_up (背面/朝上 walk): 4x4 grid 16 幀（每幀 480x864）
+    this.load.spritesheet("hero_up", "hero_walk3.png?v=1", { frameWidth: 480, frameHeight: 864 });
   }
 
   create() {
@@ -68,8 +70,14 @@ class ExploreScene extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "hero_walk_down",    // 正面（朝下/上）
+      key: "hero_walk_down",    // 正面（朝下）
       frames: this.anims.generateFrameNumbers("hero_down", { start: 0, end: 24 }),
+      frameRate: 14,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "hero_walk_up",      // 背面（朝上）
+      frames: this.anims.generateFrameNumbers("hero_up", { start: 0, end: 15 }),
       frameRate: 14,
       repeat: -1,
     });
@@ -194,12 +202,14 @@ class ExploreScene extends Phaser.Scene {
     this.playerShadow.x = this.player.x;
     this.playerShadow.y = this.player.y + 18;
 
-    // 動畫 + 翻轉：主要方向 |dx| 大 → 側面 walk；|dy| 大 → 正面 walk_down
+    // 動畫 + 翻轉：主要方向 |dx| 大 → 側面 walk；|dy| 大 → 上/下 walk
     const moving = Math.hypot(dx, dy) > 0.1;
     const horizMore = Math.abs(dx) > Math.abs(dy);
     let wantAnim = "hero_idle";
     if (moving) {
-      wantAnim = horizMore ? "hero_walk" : "hero_walk_down";
+      if (horizMore) wantAnim = "hero_walk";
+      else if (dy > 0) wantAnim = "hero_walk_down";
+      else wantAnim = "hero_walk_up";
     }
     const cur = this.playerSprite.anims.currentAnim;
     if (!cur || cur.key !== wantAnim) {
