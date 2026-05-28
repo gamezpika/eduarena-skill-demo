@@ -28,7 +28,8 @@ func _ready() -> void:
 	hp = _hp_max()
 	if attack_hitbox != null:
 		attack_hitbox.body_entered.connect(_on_attack_hit)
-	# 玩家延遲 spawn 也撈得到（在 _physics_process 內補撈）
+	# 永遠朝左面玩家（玩家從左推進）
+	visual.scale.x = -1
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -73,11 +74,9 @@ func _player_is_dead() -> bool:
 	return "dead" in player and player.dead
 
 func _face_player() -> int:
-	if player == null:
-		return 1
-	var f := 1 if player.global_position.x >= global_position.x else -1
-	visual.scale.x = f
-	return f
+	# 一律朝左面玩家（不依玩家實際位置，避免 sprite 反向跳）
+	visual.scale.x = -1
+	return -1
 
 func _do_attack() -> void:
 	if attack_cd > 0.0 or attack_timer > 0.0:
