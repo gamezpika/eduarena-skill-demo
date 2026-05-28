@@ -6,7 +6,13 @@ const MAP_W = 2160;
 const MAP_H = 3840;
 const BG_SCALE = 3;
 const PLAYER_SPEED = 220;
-const VIEW_BASE_WIDTH = 720;  // camera 看到的 world 寬（zoom = canvas / 720）
+// camera 看到的 world 寬：手機 450 (建築/角色看起來夠大)、桌面 900 (看到較廣視野)
+const VIEW_BASE_MOBILE = 450;
+const VIEW_BASE_DESKTOP = 900;
+const MOBILE_CSS_BREAKPOINT = 600;
+
+// device pixel ratio — retina 螢幕讓 canvas 物理像素 = CSS * dpr，sprite 縮放 sharp
+const DPR = Math.max(window.devicePixelRatio || 1, 1);
 
 const BUILDINGS = [
   { key: "shop",   pos: [540, 720],   scale: 0.32, label: "🛍 商店",   tex: "../assets/images/village/village_shop.png" },
@@ -60,7 +66,7 @@ class ExploreScene extends Phaser.Scene {
 
     this.playerSprite = this.add.sprite(1080, 1942, "hero", 0);
     this.playerSprite.setOrigin(0.5, 1);  // 腳底對齊 position
-    this.playerSprite.setScale(0.12);     // 758 * 0.12 ≈ 91px 寬，1032 * 0.12 ≈ 124px 高
+    this.playerSprite.setScale(0.18);     // 758 * 0.18 ≈ 136px 寬，1032 * 0.18 ≈ 186px 高
 
     // 動畫
     this.anims.create({
@@ -103,25 +109,26 @@ class ExploreScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys("W,A,S,D");
 
-    // 虛擬搖桿
-    const baseR = 70;
-    const stickR = 30;
-    const jx = baseR + 30;
-    const jy = this.scale.height - baseR - 30;
-    this.joyBase = this.add.circle(jx, jy, baseR, 0x000000, 0.28).setStrokeStyle(3, 0xffffff, 0.55).setScrollFactor(0).setDepth(10000);
-    this.joyThumb = this.add.circle(jx, jy, stickR, 0xffffff, 0.7).setStrokeStyle(2, 0x101010, 0.7).setScrollFactor(0).setDepth(10001);
+    // 虛擬搖桿（所有尺寸 × DPR，視覺顯示為 CSS px 大小）
+    const baseR = 70 * DPR;
+    const stickR = 30 * DPR;
+    const pad = 30 * DPR;
+    const jx = baseR + pad;
+    const jy = this.scale.height - baseR - pad;
+    this.joyBase = this.add.circle(jx, jy, baseR, 0x000000, 0.28).setStrokeStyle(3 * DPR, 0xffffff, 0.55).setScrollFactor(0).setDepth(10000);
+    this.joyThumb = this.add.circle(jx, jy, stickR, 0xffffff, 0.7).setStrokeStyle(2 * DPR, 0x101010, 0.7).setScrollFactor(0).setDepth(10001);
     this.joystick = this.plugins.get("rexVirtualJoystick").add(this, {
       x: jx, y: jy, radius: baseR,
       base: this.joyBase, thumb: this.joyThumb,
-      dir: "8dir", forceMin: 16,
+      dir: "8dir", forceMin: 16 * DPR,
     });
 
     // 右下 A 鈕（先 stub）
-    const aR = 44;
-    const ax = this.scale.width - aR - 30;
-    const ay = this.scale.height - aR - 30;
-    this.aBtn = this.add.circle(ax, ay, aR, 0xfad440, 0.85).setStrokeStyle(3, 0x101010, 0.85).setScrollFactor(0).setDepth(10000).setInteractive();
-    this.aBtnText = this.add.text(ax, ay, "A", { fontFamily: "sans-serif", fontSize: 26, color: "#1a0d00", fontStyle: "bold" }).setOrigin(0.5).setScrollFactor(0).setDepth(10001);
+    const aR = 44 * DPR;
+    const ax = this.scale.width - aR - pad;
+    const ay = this.scale.height - aR - pad;
+    this.aBtn = this.add.circle(ax, ay, aR, 0xfad440, 0.85).setStrokeStyle(3 * DPR, 0x101010, 0.85).setScrollFactor(0).setDepth(10000).setInteractive();
+    this.aBtnText = this.add.text(ax, ay, "A", { fontFamily: "sans-serif", fontSize: 26 * DPR, color: "#1a0d00", fontStyle: "bold" }).setOrigin(0.5).setScrollFactor(0).setDepth(10001);
     this.aBtn.on("pointerdown", () => this.aBtn.setFillStyle(0xc4a020, 0.85));
     this.aBtn.on("pointerup", () => this.aBtn.setFillStyle(0xfad440, 0.85));
     this.aBtn.on("pointerout", () => this.aBtn.setFillStyle(0xfad440, 0.85));
@@ -146,31 +153,35 @@ class ExploreScene extends Phaser.Scene {
     this.physics.add.existing(zone, true);
     this.statics.add(zone);
 
-    // 浮動 label
+    // 浮動 label（fontSize × DPR 才能在 retina canvas 上顯示為合理 CSS 字大小）
     const lbl = this.add.text(x, y - spr.displayHeight - 6, data.label, {
       fontFamily: "-apple-system, 'PingFang TC', sans-serif",
-      fontSize: 18, color: "#ffffff",
-      stroke: "#000000", strokeThickness: 4,
+      fontSize: 18 * DPR, color: "#ffffff",
+      stroke: "#000000", strokeThickness: 4 * DPR,
     }).setOrigin(0.5, 1);
+    lbl.setScale(1 / DPR);  // 縮回 1x 顯示，但內部字繪是 DPR 倍大小 → sharp
     lbl.setDepth(y + 1);
   }
 
   _adjustZoom() {
-    const z = this.scale.width / VIEW_BASE_WIDTH;
+    const cssW = this.scale.width / DPR;  // 換算回 CSS px 做 break point 判斷
+    const base = cssW < MOBILE_CSS_BREAKPOINT ? VIEW_BASE_MOBILE : VIEW_BASE_DESKTOP;
+    const z = this.scale.width / base;
     this.cameras.main.setZoom(z);
   }
 
   _onResize() {
     this._adjustZoom();
-    const baseR = 70;
-    const aR = 44;
-    const jx = baseR + 30;
-    const jy = this.scale.height - baseR - 30;
+    const baseR = 70 * DPR;
+    const aR = 44 * DPR;
+    const pad = 30 * DPR;
+    const jx = baseR + pad;
+    const jy = this.scale.height - baseR - pad;
     this.joyBase.setPosition(jx, jy);
     this.joyThumb.setPosition(jx, jy);
     this.joystick.setPosition(jx, jy);
-    const ax = this.scale.width - aR - 30;
-    const ay = this.scale.height - aR - 30;
+    const ax = this.scale.width - aR - pad;
+    const ay = this.scale.height - aR - pad;
     this.aBtn.setPosition(ax, ay);
     this.aBtnText.setPosition(ax, ay);
   }
@@ -231,14 +242,17 @@ class ExploreScene extends Phaser.Scene {
   }
 }
 
+// 用 NONE mode + zoom = 1/DPR：canvas 物理像素 = CSS × DPR，視覺顯示 CSS px
+// 結果 = retina 螢幕上 sprite 不被 GPU 拉伸糊化
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: "game",
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.NONE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: window.innerWidth * DPR,
+    height: window.innerHeight * DPR,
+    zoom: 1 / DPR,
   },
   physics: { default: "arcade", arcade: { gravity: { y: 0 }, debug: false } },
   plugins: {
@@ -248,5 +262,10 @@ const game = new Phaser.Game({
   },
   backgroundColor: "#1a2412",
   scene: ExploreScene,
-  render: { pixelArt: false, antialias: true },
+  render: { pixelArt: false, antialias: true, roundPixels: false },
+});
+
+// 視窗變化重設 canvas 解析度
+window.addEventListener("resize", () => {
+  game.scale.resize(window.innerWidth * DPR, window.innerHeight * DPR);
 });
