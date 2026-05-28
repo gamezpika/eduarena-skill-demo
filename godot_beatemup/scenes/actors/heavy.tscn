@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bheavy001"]
+[gd_scene load_steps=5 format=3 uid="uid://bheavy001"]
 
 [ext_resource type="Script" path="res://scripts/heavy.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/characters/enemy_heavy_processed/heavy.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="rs_body"]
 size = Vector2(80, 150)
@@ -16,18 +17,15 @@ script = ExtResource("1_script")
 
 [node name="Visual" type="Node2D" parent="."]
 
-[node name="Body" type="ColorRect" parent="Visual"]
-offset_left = -44.0
-offset_top = -160.0
-offset_right = 44.0
-offset_bottom = 0.0
-color = Color(0.498, 0.114, 0.114, 1)
+[node name="Body" type="Sprite2D" parent="Visual"]
+position = Vector2(0, -128)
+texture = ExtResource("2_tex")
 
 [node name="Label" type="Label" parent="Visual"]
 offset_left = -44.0
-offset_top = -180.0
+offset_top = -276.0
 offset_right = 44.0
-offset_bottom = -162.0
+offset_bottom = -258.0
 horizontal_alignment = 1
 text = "Heavy"
 
