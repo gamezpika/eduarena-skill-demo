@@ -192,8 +192,9 @@ class ExploreScene extends Phaser.Scene {
     if (!cur || cur.key !== wantAnim) {
       this.playerSprite.play(wantAnim);
     }
-    if (dx < -0.1) this.playerSprite.setFlipX(true);
-    else if (dx > 0.1) this.playerSprite.setFlipX(false);
+    // 原圖朝左跑（Ludo 出品），所以朝右走才 flip
+    if (dx > 0.1) this.playerSprite.setFlipX(true);
+    else if (dx < -0.1) this.playerSprite.setFlipX(false);
 
     // y-sort 深度
     const d = this.player.y;
