@@ -61,7 +61,7 @@ class ExploreScene extends Phaser.Scene {
 
     this.playerSprite = this.add.sprite(1080, 1942, "hero", 0);
     this.playerSprite.setOrigin(0.5, 1);  // 腳底對齊 position
-    this.playerSprite.setScale(0.16);     // 758 * 0.16 ≈ 121px 寬，1032 * 0.16 ≈ 165px 高
+    this.playerSprite.setScale(0.22);     // 758 * 0.22 ≈ 167px 寬，1032 * 0.22 ≈ 227px 高（放大讓手機看起來相對清）
 
     // 動畫
     this.anims.create({
