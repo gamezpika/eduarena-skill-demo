@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bgoon001"]
 
 [ext_resource type="Script" path="res://scripts/goon.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/characters/enemy_heavy_processed/heavy.png" id="2_tex"]
+[ext_resource type="SpriteFrames" uid="uid://benemyfr01" path="res://scenes/actors/enemy_heavy_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="rs_body"]
 size = Vector2(50, 110)
@@ -17,9 +17,11 @@ script = ExtResource("1_script")
 
 [node name="Visual" type="Node2D" parent="."]
 
-[node name="Body" type="Sprite2D" parent="Visual"]
+[node name="Body" type="AnimatedSprite2D" parent="Visual"]
 position = Vector2(0, -128)
-texture = ExtResource("2_tex")
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+autoplay = "idle"
 
 [node name="Label" type="Label" parent="Visual"]
 offset_left = -32.0

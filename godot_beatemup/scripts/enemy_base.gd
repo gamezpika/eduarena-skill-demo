@@ -11,6 +11,7 @@ const ATTACK_ANIM_TIME := 0.35
 const KNOCKBACK_TO_PLAYER := 180.0
 
 @onready var visual: Node2D = $Visual
+@onready var sprite: AnimatedSprite2D = $Visual/Body if has_node("Visual/Body") else null
 @onready var attack_hitbox: Area2D = $Visual/AttackHitbox if has_node("Visual/AttackHitbox") else null
 
 var hp := 1
@@ -56,6 +57,14 @@ func _physics_process(delta: float) -> void:
 
 	_ai(delta)
 	move_and_slide()
+	_update_anim()
+
+func _update_anim() -> void:
+	if sprite == null:
+		return
+	var target: StringName = &"walk" if velocity.length() > 5.0 else &"idle"
+	if sprite.animation != target:
+		sprite.play(target)
 
 func _ai(_delta: float) -> void:
 	pass  # override
