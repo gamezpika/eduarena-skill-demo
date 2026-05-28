@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://demo2world001"]
+[gd_scene load_steps=5 format=3 uid="uid://demo2world001"]
 
 [ext_resource type="Script" path="res://scripts/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://demo2player001" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/virtual_joystick.gd" id="3_joystick"]
+[ext_resource type="Script" path="res://scripts/touch_action_button.gd" id="4_action"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -22,9 +24,38 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 700.0
 offset_bottom = 60.0
-text = "WASD / 方向鍵 走動 — Phase 1.5：村莊建築 + 5 科目島"
+text = "WASD / 方向鍵 或 左下搖桿 走動 — Phase 2：手機觸控"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 18
+
+[node name="TouchLayer" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+
+[node name="Joystick" type="Control" parent="HUD/TouchLayer" groups=["joystick"]]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -220.0
+offset_right = 220.0
+offset_bottom = -40.0
+script = ExtResource("3_joystick")
+
+[node name="ActionA" type="Control" parent="HUD/TouchLayer"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152.0
+offset_top = -152.0
+offset_right = -40.0
+offset_bottom = -40.0
+script = ExtResource("4_action")
