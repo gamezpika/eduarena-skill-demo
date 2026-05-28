@@ -1,36 +1,15 @@
-// godot-demo2 Phaser 版 — top-down 探索 demo
-// 背景：world_bg.jpg scale 3x → 2160 x 3840
-// 5 建築 + 5 科目島 擺到背景圖上指定位置
+// godot-demo2 Phaser 版 — 只剩人物，乾淨畫面
+// 背景 / 5 建築 / 5 科目島 全砍，只保留 Ludo chibi 小男孩走動
 
 const MAP_W = 2160;
 const MAP_H = 3840;
-// BG_SCALE 改成動態（create 時依 texture 大小算）— 新背景 941x1672 (Codex 生)
 const PLAYER_SPEED = 220;
-// camera 看到的 world 寬（zoom = canvas / 900）— 廣一點視野，地圖看起來縮小
 const VIEW_BASE_WIDTH = 900;
-
-const BUILDINGS = [
-  { key: "shop",   pos: [540, 720],   scale: 0.32, label: "🛍 商店",   tex: "../assets/images/village/village_shop.png" },
-  { key: "farm",   pos: [1470, 690],  scale: 0.32, label: "🐮 牧場",   tex: "../assets/images/village/village_farm.png" },
-  { key: "closet", pos: [990, 1260],  scale: 0.32, label: "👗 衣櫥",   tex: "../assets/images/village/village_closet.png" },
-  { key: "pvp",    pos: [1560, 1620], scale: 0.32, label: "⚔ PK 場",   tex: "../assets/images/village/village_pvp.png" },
-  { key: "boss",   pos: [660, 2280],  scale: 0.32, label: "👹 魔王塔", tex: "../assets/images/village/village_boss.png" },
-];
-
-const ISLANDS = [
-  { key: "chinese", pos: [420, 3000],  scale: 0.24, label: "📖 國語島", tex: "../assets/images/island_chinese.png" },
-  { key: "english", pos: [1750, 2820], scale: 0.24, label: "🔤 英文島", tex: "../assets/images/island_english.png" },
-  { key: "math",    pos: [1080, 2980], scale: 0.24, label: "🔢 數學島", tex: "../assets/images/island_math.png" },
-  { key: "science", pos: [420, 3450],  scale: 0.24, label: "🔬 自然島", tex: "../assets/images/island_science.png" },
-  { key: "social",  pos: [1700, 3500], scale: 0.24, label: "🌏 社會島", tex: "../assets/images/island_social.png" },
-];
 
 class ExploreScene extends Phaser.Scene {
   constructor() { super("explore"); }
 
   preload() {
-    this.load.image("world_bg", "world_bg.png?v=2");
-    [...BUILDINGS, ...ISLANDS].forEach(d => this.load.image(d.key, d.tex));
     // Ludo.ai 出品 chibi 小男孩
     // hero (側面 walk): 3x3 grid 9 幀（每幀 758x1032）
     this.load.spritesheet("hero", "hero_walk2.png?v=1", { frameWidth: 758, frameHeight: 1032 });
@@ -41,18 +20,7 @@ class ExploreScene extends Phaser.Scene {
   }
 
   create() {
-    // 背景 — scale 自動 fit MAP_W（依 texture 寬度算）
-    const bg = this.add.image(0, 0, "world_bg")
-      .setOrigin(0, 0)
-      .setDepth(-1000);
-    bg.setScale(MAP_W / bg.width);
-
-    // 5 建築 + 5 科目島
-    this.statics = this.physics.add.staticGroup();
-    [...BUILDINGS, ...ISLANDS].forEach(d => this._spawnObject(d));
-
     // Player — Ludo chibi 小男孩 sprite + 影子
-    // body 用 invisible rectangle（純 collision），visual 用 sprite 跟隨
     this.playerShadow = this.add.ellipse(1080, 1932, 56, 16, 0x000000, 0.4);
     this.player = this.add.rectangle(1080, 1920, 22, 22, 0xffffff, 0).setVisible(false);
     this.physics.add.existing(this.player);
@@ -60,8 +28,8 @@ class ExploreScene extends Phaser.Scene {
     this.player.body.setCollideWorldBounds(true);
 
     this.playerSprite = this.add.sprite(1080, 1942, "hero", 0);
-    this.playerSprite.setOrigin(0.5, 1);  // 腳底對齊 position
-    this.playerSprite.setScale(0.32);     // 758 * 0.32 ≈ 243px 寬，1032 * 0.32 ≈ 330px 高
+    this.playerSprite.setOrigin(0.5, 1);
+    this.playerSprite.setScale(0.32);
 
     // 動畫
     this.anims.create({
@@ -83,14 +51,11 @@ class ExploreScene extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "hero_idle",         // 停止：正面靜止（hero_walk.png frame 0）
+      key: "hero_idle",         // 停止：正面靜止
       frames: [{ key: "hero_down", frame: 0 }],
       frameRate: 1,
     });
     this.playerSprite.play("hero_idle");
-
-    // 跟建築 + 島都不能穿過
-    this.physics.add.collider(this.player, this.statics);
 
     // World bounds（不能走出地圖）
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
@@ -117,7 +82,7 @@ class ExploreScene extends Phaser.Scene {
       dir: "8dir", forceMin: 16,
     });
 
-    // 右下 A 鈕（先 stub）
+    // 右下 A 鈕（stub）
     const aR = 44;
     const ax = this.scale.width - aR - 30;
     const ay = this.scale.height - aR - 30;
@@ -127,33 +92,8 @@ class ExploreScene extends Phaser.Scene {
     this.aBtn.on("pointerup", () => this.aBtn.setFillStyle(0xfad440, 0.85));
     this.aBtn.on("pointerout", () => this.aBtn.setFillStyle(0xfad440, 0.85));
 
-    // Resize 時重排
+    // Resize 重排
     this.scale.on("resize", () => this._onResize());
-  }
-
-  _spawnObject(data) {
-    const [x, y] = data.pos;
-
-    // 視覺 image：origin 底部中央 → pos 對齊建築腳
-    const spr = this.add.image(x, y, data.key)
-      .setOrigin(0.5, 1)
-      .setScale(data.scale);
-    spr.setDepth(y);  // y-sort 用 y 當 depth
-
-    // collision footprint：純 zone（無視覺），擺在建築腳下 16px 偏移
-    const fpW = spr.displayWidth * 0.55;
-    const fpH = 32;
-    const zone = this.add.zone(x, y - fpH / 2, fpW, fpH);
-    this.physics.add.existing(zone, true);
-    this.statics.add(zone);
-
-    // 浮動 label
-    const lbl = this.add.text(x, y - spr.displayHeight - 6, data.label, {
-      fontFamily: "-apple-system, 'PingFang TC', sans-serif",
-      fontSize: 18, color: "#ffffff",
-      stroke: "#000000", strokeThickness: 4,
-    }).setOrigin(0.5, 1);
-    lbl.setDepth(y + 1);
   }
 
   _adjustZoom() {
@@ -179,13 +119,11 @@ class ExploreScene extends Phaser.Scene {
   update() {
     let dx = 0, dy = 0;
 
-    // 鍵盤
     if (this.cursors.left.isDown || this.wasd.A.isDown) dx -= 1;
     if (this.cursors.right.isDown || this.wasd.D.isDown) dx += 1;
     if (this.cursors.up.isDown || this.wasd.W.isDown) dy -= 1;
     if (this.cursors.down.isDown || this.wasd.S.isDown) dy += 1;
 
-    // 搖桿覆蓋鍵盤
     if (this.joystick.force > 0.05) {
       const rad = Phaser.Math.DegToRad(this.joystick.angle);
       dx = Math.cos(rad);
@@ -197,13 +135,11 @@ class ExploreScene extends Phaser.Scene {
 
     this.player.body.setVelocity(dx * PLAYER_SPEED, dy * PLAYER_SPEED);
 
-    // 同步 sprite + 影子位置
     this.playerSprite.x = this.player.x;
-    this.playerSprite.y = this.player.y + 22;  // 腳底對齊 body 底（body 中心 = player.y，half=11，再加 11px sprite 腳尖緩衝）
+    this.playerSprite.y = this.player.y + 22;
     this.playerShadow.x = this.player.x;
     this.playerShadow.y = this.player.y + 18;
 
-    // 動畫 + 翻轉：主要方向 |dx| 大 → 側面 walk；|dy| 大 → 上/下 walk
     const moving = Math.hypot(dx, dy) > 0.1;
     const horizMore = Math.abs(dx) > Math.abs(dy);
     let wantAnim = "hero_idle";
@@ -216,19 +152,12 @@ class ExploreScene extends Phaser.Scene {
     if (!cur || cur.key !== wantAnim) {
       this.playerSprite.play(wantAnim);
     }
-    // 只有側面 walk 才 flip（正面/idle 不 flip）
     if (wantAnim === "hero_walk") {
-      // 原圖朝左跑（Ludo 出品），所以朝右走才 flip
       if (dx > 0.1) this.playerSprite.setFlipX(true);
       else if (dx < -0.1) this.playerSprite.setFlipX(false);
     } else {
       this.playerSprite.setFlipX(false);
     }
-
-    // y-sort 深度
-    const d = this.player.y;
-    this.playerSprite.setDepth(d);
-    this.playerShadow.setDepth(d - 0.5);
   }
 }
 
@@ -247,7 +176,7 @@ const game = new Phaser.Game({
       { key: "rexVirtualJoystick", plugin: rexvirtualjoystickplugin, start: true },
     ],
   },
-  backgroundColor: "#1a2412",
+  backgroundColor: "#3a5d2c",
   scene: ExploreScene,
   render: { pixelArt: false, antialias: true },
 });
