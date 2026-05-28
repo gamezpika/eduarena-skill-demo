@@ -29,7 +29,7 @@ func _ready() -> void:
 	if attack_hitbox != null:
 		attack_hitbox.body_entered.connect(_on_attack_hit)
 	# 永遠朝左面玩家（玩家從左推進）
-	visual.scale.x = -1
+	visual.scale.x = 1
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -74,9 +74,9 @@ func _player_is_dead() -> bool:
 	return "dead" in player and player.dead
 
 func _face_player() -> int:
-	# 一律朝左面玩家（不依玩家實際位置，避免 sprite 反向跳）
-	visual.scale.x = -1
-	return -1
+	# sprite 原圖朝左，不翻轉就面玩家
+	visual.scale.x = 1
+	return 1
 
 func _do_attack() -> void:
 	if attack_cd > 0.0 or attack_timer > 0.0:
