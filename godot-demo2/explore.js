@@ -30,8 +30,11 @@ class ExploreScene extends Phaser.Scene {
   preload() {
     this.load.image("world_bg", "../assets/images/world_bg.jpg");
     [...BUILDINGS, ...ISLANDS].forEach(d => this.load.image(d.key, d.tex));
-    // Ludo.ai 出品 chibi 小男孩 3x3 grid walk cycle 9 幀（每幀 758x1032）
+    // Ludo.ai 出品 chibi 小男孩
+    // hero (側面 walk): 3x3 grid 9 幀（每幀 758x1032）
     this.load.spritesheet("hero", "hero_walk2.png?v=1", { frameWidth: 758, frameHeight: 1032 });
+    // hero_down (正面/朝下 walk): 5x5 grid 25 幀（每幀 694x1154）
+    this.load.spritesheet("hero_down", "hero_walk.png?v=1", { frameWidth: 694, frameHeight: 1154 });
   }
 
   create() {
@@ -59,9 +62,15 @@ class ExploreScene extends Phaser.Scene {
 
     // 動畫
     this.anims.create({
-      key: "hero_walk",
+      key: "hero_walk",         // 側面（朝左/右）
       frames: this.anims.generateFrameNumbers("hero", { start: 0, end: 8 }),
       frameRate: 12,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "hero_walk_down",    // 正面（朝下/上）
+      frames: this.anims.generateFrameNumbers("hero_down", { start: 0, end: 24 }),
+      frameRate: 14,
       repeat: -1,
     });
     this.anims.create({
@@ -185,16 +194,25 @@ class ExploreScene extends Phaser.Scene {
     this.playerShadow.x = this.player.x;
     this.playerShadow.y = this.player.y + 18;
 
-    // 動畫 + 翻轉
+    // 動畫 + 翻轉：主要方向 |dx| 大 → 側面 walk；|dy| 大 → 正面 walk_down
     const moving = Math.hypot(dx, dy) > 0.1;
-    const wantAnim = moving ? "hero_walk" : "hero_idle";
+    const horizMore = Math.abs(dx) > Math.abs(dy);
+    let wantAnim = "hero_idle";
+    if (moving) {
+      wantAnim = horizMore ? "hero_walk" : "hero_walk_down";
+    }
     const cur = this.playerSprite.anims.currentAnim;
     if (!cur || cur.key !== wantAnim) {
       this.playerSprite.play(wantAnim);
     }
-    // 原圖朝左跑（Ludo 出品），所以朝右走才 flip
-    if (dx > 0.1) this.playerSprite.setFlipX(true);
-    else if (dx < -0.1) this.playerSprite.setFlipX(false);
+    // 只有側面 walk 才 flip（正面/idle 不 flip）
+    if (wantAnim === "hero_walk") {
+      // 原圖朝左跑（Ludo 出品），所以朝右走才 flip
+      if (dx > 0.1) this.playerSprite.setFlipX(true);
+      else if (dx < -0.1) this.playerSprite.setFlipX(false);
+    } else {
+      this.playerSprite.setFlipX(false);
+    }
 
     // y-sort 深度
     const d = this.player.y;
