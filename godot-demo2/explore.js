@@ -139,7 +139,20 @@ class ExploreScene extends Phaser.Scene {
   }
 
   _adjustZoom() {
-    const z = this.scale.width / VIEW_BASE_WIDTH;
+    // Aspect-aware zoom：
+    // - 寬螢幕（landscape PC）：用 width-base（VIEW_BASE_WIDTH=1200 鎖視野寬度）
+    // - 高螢幕（portrait 手機）：用 height-base（view.h = world.h 消除上下綠色 padding）
+    // 閾值用 VIEW_BASE_WIDTH/MAP_H = 1.111 保證兩公式在切換點 zoom 連續無跳變
+    const sw = this.scale.width;
+    const sh = this.scale.height;
+    const screenAspect = sw / sh;
+    const aspectThreshold = VIEW_BASE_WIDTH / MAP_H;  // 1200/1080 = 1.111
+    let z;
+    if (screenAspect >= aspectThreshold) {
+      z = sw / VIEW_BASE_WIDTH;
+    } else {
+      z = sh / MAP_H;
+    }
     this.cameras.main.setZoom(z);
   }
 
@@ -219,7 +232,7 @@ const game = new Phaser.Game({
       { key: "rexVirtualJoystick", plugin: rexvirtualjoystickplugin, start: true },
     ],
   },
-  backgroundColor: "#3a5d2c",
+  backgroundColor: "#8cb45a",  // 配合 ground 草地色，sprite y<0 / world 外區域看起來像更多草地，不再像「綠色天空」
   scene: ExploreScene,
   render: { pixelArt: false, antialias: true },
 });

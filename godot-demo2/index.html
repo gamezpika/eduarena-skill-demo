@@ -27,6 +27,10 @@
     padding: 6px 10px; border-radius: 6px;
     background: rgba(0,0,0,0.25);
   }
+  /* 手機 touch device 不顯示 WASD hint（沒鍵盤）*/
+  @media (pointer: coarse) {
+    .hint { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -34,6 +38,6 @@
 <div id="game"></div>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/phaser3-rex-plugins@1.1.84/dist/rexvirtualjoystickplugin.min.js"></script>
-<script src="explore.js?v=13"></script>
+<script src="explore.js?v=14"></script>
 </body>
 </html>
