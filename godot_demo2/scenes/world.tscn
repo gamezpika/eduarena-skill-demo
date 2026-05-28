@@ -9,13 +9,15 @@
 y_sort_enabled = true
 script = ExtResource("1_world")
 
-[node name="Ground" type="TileMapLayer" parent="."]
+[node name="Background" type="Sprite2D" parent="."]
+centered = false
+z_index = -10
 
 [node name="Entities" type="Node2D" parent="."]
 y_sort_enabled = true
 
 [node name="Player" parent="Entities" instance=ExtResource("2_player")]
-position = Vector2(1920, 1440)
+position = Vector2(1080, 1920)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
@@ -24,7 +26,7 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 700.0
 offset_bottom = 60.0
-text = "WASD / 方向鍵 或 左下搖桿 走動 — Phase 2：手機觸控"
+text = "WASD / 方向鍵 或 左下搖桿 — Phase 3：熱帶島嶼背景"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 1

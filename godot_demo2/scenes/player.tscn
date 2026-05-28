@@ -38,6 +38,10 @@ shape = SubResource("rs_body")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(2, 2)
+limit_left = 0
+limit_top = 0
+limit_right = 2160
+limit_bottom = 3840
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 
