@@ -30,6 +30,8 @@ class ExploreScene extends Phaser.Scene {
   preload() {
     this.load.image("world_bg", "../assets/images/world_bg.jpg");
     [...BUILDINGS, ...ISLANDS].forEach(d => this.load.image(d.key, d.tex));
+    // Ludo.ai 出品 chibi 小男孩 3x3 grid walk cycle 9 幀（每幀 758x1032）
+    this.load.spritesheet("hero", "hero_walk2.png?v=1", { frameWidth: 758, frameHeight: 1032 });
   }
 
   create() {
@@ -43,12 +45,31 @@ class ExploreScene extends Phaser.Scene {
     this.statics = this.physics.add.staticGroup();
     [...BUILDINGS, ...ISLANDS].forEach(d => this._spawnObject(d));
 
-    // Player — 黃色方塊 + 黑邊 + 影子
-    this.playerShadow = this.add.ellipse(1080, 1920 + 18, 24, 9, 0x000000, 0.35);
-    this.player = this.add.rectangle(1080, 1920, 24, 32, 0xfad440).setStrokeStyle(2, 0x150c05);
+    // Player — Ludo chibi 小男孩 sprite + 影子
+    // body 用 invisible rectangle（純 collision），visual 用 sprite 跟隨
+    this.playerShadow = this.add.ellipse(1080, 1932, 56, 16, 0x000000, 0.4);
+    this.player = this.add.rectangle(1080, 1920, 22, 22, 0xffffff, 0).setVisible(false);
     this.physics.add.existing(this.player);
     this.player.body.setSize(22, 22);
     this.player.body.setCollideWorldBounds(true);
+
+    this.playerSprite = this.add.sprite(1080, 1942, "hero", 0);
+    this.playerSprite.setOrigin(0.5, 1);  // 腳底對齊 position
+    this.playerSprite.setScale(0.12);     // 758 * 0.12 ≈ 91px 寬，1032 * 0.12 ≈ 124px 高
+
+    // 動畫
+    this.anims.create({
+      key: "hero_walk",
+      frames: this.anims.generateFrameNumbers("hero", { start: 0, end: 8 }),
+      frameRate: 12,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "hero_idle",
+      frames: [{ key: "hero", frame: 0 }],
+      frameRate: 1,
+    });
+    this.playerSprite.play("hero_idle");
 
     // 跟建築 + 島都不能穿過
     this.physics.add.collider(this.player, this.statics);
@@ -158,11 +179,26 @@ class ExploreScene extends Phaser.Scene {
 
     this.player.body.setVelocity(dx * PLAYER_SPEED, dy * PLAYER_SPEED);
 
-    // 同步影子 + y-sort
+    // 同步 sprite + 影子位置
+    this.playerSprite.x = this.player.x;
+    this.playerSprite.y = this.player.y + 22;  // 腳底對齊 body 底（body 中心 = player.y，half=11，再加 11px sprite 腳尖緩衝）
     this.playerShadow.x = this.player.x;
     this.playerShadow.y = this.player.y + 18;
-    this.player.setDepth(this.player.y);
-    this.playerShadow.setDepth(this.player.y - 0.5);
+
+    // 動畫 + 翻轉
+    const moving = Math.hypot(dx, dy) > 0.1;
+    const wantAnim = moving ? "hero_walk" : "hero_idle";
+    const cur = this.playerSprite.anims.currentAnim;
+    if (!cur || cur.key !== wantAnim) {
+      this.playerSprite.play(wantAnim);
+    }
+    if (dx < -0.1) this.playerSprite.setFlipX(true);
+    else if (dx > 0.1) this.playerSprite.setFlipX(false);
+
+    // y-sort 深度
+    const d = this.player.y;
+    this.playerSprite.setDepth(d);
+    this.playerShadow.setDepth(d - 0.5);
   }
 }
 
