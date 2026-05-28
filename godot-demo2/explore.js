@@ -4,7 +4,7 @@
 
 const MAP_W = 2160;
 const MAP_H = 3840;
-const BG_SCALE = 3;
+// BG_SCALE 改成動態（create 時依 texture 大小算）— 新背景 941x1672 (Codex 生)
 const PLAYER_SPEED = 220;
 // camera 看到的 world 寬（zoom = canvas / 900）— 廣一點視野，地圖看起來縮小
 const VIEW_BASE_WIDTH = 900;
@@ -29,7 +29,7 @@ class ExploreScene extends Phaser.Scene {
   constructor() { super("explore"); }
 
   preload() {
-    this.load.image("world_bg", "../assets/images/world_bg.jpg");
+    this.load.image("world_bg", "world_bg.png?v=2");
     [...BUILDINGS, ...ISLANDS].forEach(d => this.load.image(d.key, d.tex));
     // Ludo.ai 出品 chibi 小男孩
     // hero (側面 walk): 3x3 grid 9 幀（每幀 758x1032）
@@ -41,11 +41,11 @@ class ExploreScene extends Phaser.Scene {
   }
 
   create() {
-    // 背景
-    this.add.image(0, 0, "world_bg")
+    // 背景 — scale 自動 fit MAP_W（依 texture 寬度算）
+    const bg = this.add.image(0, 0, "world_bg")
       .setOrigin(0, 0)
-      .setScale(BG_SCALE)
       .setDepth(-1000);
+    bg.setScale(MAP_W / bg.width);
 
     // 5 建築 + 5 科目島
     this.statics = this.physics.add.staticGroup();
