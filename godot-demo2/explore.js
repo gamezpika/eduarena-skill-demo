@@ -7,39 +7,43 @@ const MAP_H = 1080;
 const PLAYER_SPEED = 220;
 const VIEW_BASE_WIDTH = 1200;
 
-// v1 地板 5 個圓圈中心（cv2 偵測 + 視覺微調）+ plaza 中心
+// v1 地板 5 個 plot 底邊座標（cv2 Hough detect 後）+ plaza 中心對齊
+// 派派要求：房子坐落在 plot 內（sprite 底部 = plot 底邊，房子完全蓋住 plot）
+//          噴泉中心對齊 plaza 中心（sprite 幾何中心 = plaza center）
 const VILLAGE_SPRITES = [
-  // 上排 3 棟（zone cy 較高，sprite 延伸到 y<0，靠 camera SKY_PAD 顯示完整屋頂）
-  { key: "house_red",    x: 290,  y: 100, scale: 0.37 },
-  { key: "house_brown",  x: 960,  y: 70,  scale: 0.37 },
-  { key: "house_blue",   x: 1620, y: 100, scale: 0.37 },
+  // 上排 3 棟：sprite cy = plot 底邊（cy_plot + radius）
+  { key: "house_red",    x: 270,  y: 230, scale: 0.37 },   // 上左 plot (270,110) r=120
+  { key: "house_brown",  x: 960,  y: 200, scale: 0.37 },   // 上中 plot (960,70)  r=130
+  { key: "house_blue",   x: 1660, y: 230, scale: 0.37 },   // 上右 plot (1660,110) r=120
   // 中排 2 棟
-  { key: "house_green",  x: 300,  y: 557, scale: 0.37 },
-  { key: "house_yellow", x: 1630, y: 564, scale: 0.37 },
-  // 中央 plaza 噴泉
-  { key: "fountain",     x: 960,  y: 360, scale: 0.27 },
-  // 4 棵樹分散在 zone 之間草地空白
-  { key: "tree_cherry",  x: 600,  y: 230, scale: 0.18 },
-  { key: "tree_cherry",  x: 1300, y: 230, scale: 0.18 },
-  { key: "tree_cherry",  x: 700,  y: 750, scale: 0.18 },
-  { key: "tree_cherry",  x: 1230, y: 760, scale: 0.18 },
+  { key: "house_green",  x: 300,  y: 670, scale: 0.37 },   // 中左 plot (300,560) r=110
+  { key: "house_yellow", x: 1660, y: 680, scale: 0.37 },   // 中右 plot (1660,560) r=120
+  // 中央 plaza 噴泉：sprite 幾何中心 = plaza 中心 (960, 380)
+  // sprite_h = 1024*0.27 ≈ 277 → bottom cy = 380 + 277/2 ≈ 518
+  { key: "fountain",     x: 960,  y: 518, scale: 0.27 },
+  // 4 棵樹分散在 zone 之間草地空白（保留）
+  { key: "tree_cherry",  x: 600,  y: 380, scale: 0.18 },
+  { key: "tree_cherry",  x: 1300, y: 380, scale: 0.18 },
+  { key: "tree_cherry",  x: 700,  y: 850, scale: 0.18 },
+  { key: "tree_cherry",  x: 1230, y: 850, scale: 0.18 },
 ];
 
 // 碰撞 hitbox：物件 footprint（房子底部、噴泉底盤、樹幹）
+// 跟著 sprite cy 一起下移，hitbox cy 比 sprite cy 高 ~20（建築物腳底）
 const OBSTACLES = [
-  // 5 房子：在腳底中心畫 invisible static rectangle
-  { cx: 290,  cy: 80,  w: 280, h: 60 },
-  { cx: 960,  cy: 50,  w: 280, h: 60 },
-  { cx: 1620, cy: 80,  w: 280, h: 60 },
-  { cx: 300,  cy: 537, w: 280, h: 60 },
-  { cx: 1630, cy: 544, w: 280, h: 60 },
-  // 噴泉
-  { cx: 960,  cy: 348, w: 180, h: 50 },
-  // 4 棵樹幹底（小範圍）
-  { cx: 600,  cy: 225, w: 32,  h: 24 },
-  { cx: 1300, cy: 225, w: 32,  h: 24 },
-  { cx: 700,  cy: 745, w: 32,  h: 24 },
-  { cx: 1230, cy: 755, w: 32,  h: 24 },
+  // 5 房子
+  { cx: 270,  cy: 210, w: 280, h: 60 },
+  { cx: 960,  cy: 180, w: 280, h: 60 },
+  { cx: 1660, cy: 210, w: 280, h: 60 },
+  { cx: 300,  cy: 650, w: 280, h: 60 },
+  { cx: 1660, cy: 660, w: 280, h: 60 },
+  // 噴泉（footprint 在 sprite 底盤）
+  { cx: 960,  cy: 506, w: 180, h: 50 },
+  // 4 棵樹幹底
+  { cx: 600,  cy: 375, w: 32,  h: 24 },
+  { cx: 1300, cy: 375, w: 32,  h: 24 },
+  { cx: 700,  cy: 845, w: 32,  h: 24 },
+  { cx: 1230, cy: 845, w: 32,  h: 24 },
 ];
 
 class ExploreScene extends Phaser.Scene {
@@ -102,7 +106,7 @@ class ExploreScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.obstacles);
 
     // 6. World bounds + camera
-    // 上排房子 cy=70-100、sprite_h≈379，top edge 到 y≈-280
+    // 上排房子 cy=200-230、sprite_h≈379，top edge 到 y≈-150~-180
     // physics 仍鎖在 0~1080（玩家走不出去），但 camera 額外多 400 px sky pad
     // 讓 camera 上滾能看到房子屋頂全貌（不裁頂）
     const SKY_PAD = 400;
