@@ -75,7 +75,7 @@
           "image": "fountain_flow.png",
           "name": "⛲ 噴泉",
           "type": "decoration",
-          "scale": 0.54,
+          "scale": 0.9,
           "default_interaction": "fountain_splash",
           "bbox_w_norm": 0.094,
           "bbox_h_norm": 0.047,
