@@ -251,6 +251,12 @@ class ExploreScene extends Phaser.Scene {
           animKeys: { side: dSide.anim, down: dDown.anim, up: dUp.anim },
           bubble: null,
         };
+        // NPC physics body + collider 跟玩家擋的同一組 obstacles（鳥群在天上豁免）
+        this.physics.add.existing(npc.body);
+        npc.body.body.setSize(22, 22);
+        if (typeof npcCfg.depth_override !== 'number') {
+          this.physics.add.collider(npc.body, this.obstacles);
+        }
         npc.sprite = this.add.sprite(npc.body.x, npc.body.y + 22, dSide.tex, 0);
         npc.sprite.setOrigin(0.5, 1);
         npc.sprite.setScale((npcCfg.sprite && npcCfg.sprite.scale) || 0.66);
@@ -502,10 +508,10 @@ class ExploreScene extends Phaser.Scene {
     const dist = Math.hypot(dx, dy);
     if (dist < 8) {
       npc.patrolIdx = (npc.patrolIdx + 1) % npc.cfg.patrol.length;
+      npc.body.body.setVelocity(0, 0);
     } else {
-      const step = ((npc.cfg.speed || 60) * delta) / 1000;
-      npc.body.x += (dx / dist) * step;
-      npc.body.y += (dy / dist) * step;
+      const speed = npc.cfg.speed || 60;
+      npc.body.body.setVelocity((dx / dist) * speed, (dy / dist) * speed);
     }
     npc.sprite.x = npc.body.x;
     npc.sprite.y = npc.body.y + 22;
