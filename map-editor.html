@@ -1877,17 +1877,62 @@ function renderPlacedSpriteList() {
     const el = document.getElementById('placedSpriteList');
     if (!el) return;
     const items = [
-        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name, isNpc: false, icon: '🏠' })),
-        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name, isNpc: true, icon: '👤' })),
+        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name, isNpc: false, icon: '🏠',
+                                          scale: (b.sprite && b.sprite.scale) || 0.74 })),
+        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name, isNpc: true, icon: '👤',
+                                       scale: (n.sprite && n.sprite.scale) || 0.66 })),
     ];
     document.getElementById('spriteCount').textContent = items.length;
     el.innerHTML = items.map(it => `
-        <div class="placed-row" data-id="${it.id}" data-npc="${it.isNpc}">
+        <div class="placed-row" data-id="${it.id}" data-npc="${it.isNpc}" style="white-space:nowrap;">
             <span>${it.icon}</span>
-            <span style="flex:1;">${it.name}</span>
+            <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${it.name}</span>
+            <input type="number" data-action="scale" value="${Number(it.scale).toFixed(2)}"
+                   min="0.05" max="3" step="0.05" title="sprite 大小（房子改大紅框也跟著大）"
+                   style="width:52px;padding:2px 4px;background:#232938;color:#fff;border:1px solid #444;border-radius:3px;font-size:11px;">
             <button data-action="delete">刪</button>
         </div>
     `).join('') || '<div style="padding:10px;color:#666;font-size:11px;">尚未放置</div>';
+
+    // scale 輸入：即時改 sprite.scale，建築物 bbox + polygon 以 anchor 為中心同比例縮放
+    el.querySelectorAll('.placed-row input[data-action="scale"]').forEach(inp => {
+        inp.addEventListener('click', e => e.stopPropagation());
+        inp.addEventListener('input', (e) => {
+            e.stopPropagation();
+            const row = inp.closest('.placed-row');
+            const id = row.dataset.id;
+            const isNpc = row.dataset.npc === 'true';
+            const newScale = parseFloat(inp.value);
+            if (!isFinite(newScale) || newScale <= 0) return;
+            const list = isNpc ? (mapConfig.npcs || []) : (mapConfig.buildings || []);
+            const obj = list.find(x => x.id === id);
+            if (!obj || !obj.sprite) return;
+            const oldScale = obj.sprite.scale || (isNpc ? 0.66 : 0.74);
+            const r = newScale / oldScale;
+            obj.sprite.scale = newScale;
+            // 建築物：bbox + polygon 以 anchor 為中心同比例縮放（NPC 沒有 collision、跳過）
+            if (!isNpc && obj.anchor) {
+                const ax = obj.anchor.x, ay = obj.anchor.y;
+                if (obj.bounding_box) {
+                    const bb = obj.bounding_box;
+                    bb.x_min = ax + (bb.x_min - ax) * r;
+                    bb.x_max = ax + (bb.x_max - ax) * r;
+                    bb.y_min = ay + (bb.y_min - ay) * r;
+                    bb.y_max = ay + (bb.y_max - ay) * r;
+                }
+                if (Array.isArray(obj.polygon)) {
+                    obj.polygon.forEach(p => {
+                        p.x = ax + (p.x - ax) * r;
+                        p.y = ay + (p.y - ay) * r;
+                    });
+                }
+            }
+            autoSave();
+            renderSpriteMarkers();
+            renderPolygons();
+        });
+    });
+
     el.querySelectorAll('.placed-row button[data-action="delete"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
