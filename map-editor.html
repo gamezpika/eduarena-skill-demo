@@ -432,8 +432,8 @@
         <input type="file" id="fileInput" accept="image/*" style="display:none">
         <button class="btn-secondary" id="btnLoadLocal">📂 上傳本地圖</button>
         <button class="btn-secondary" id="btnLoadUrl">🔗 從 URL</button>
-        <button class="btn-secondary" id="btnNewBuilding">➕ 新 building</button>
-        <button class="btn-secondary" id="btnNewObstacle" title="加新障礙物 polygon（河流/不規則阻擋）">➕ 新障礙物</button>
+        <button class="btn-secondary" id="btnNewBuilding" title="新建 collision shape（六邊形 polygon 預設，可拖點調形狀）">➕ 新 collision</button>
+        <button class="btn-secondary" id="btnNewObstacle" title="新建純 polygon 擋區（不規則形狀如河流，沒 sprite 沒互動）">➕ 純 polygon</button>
     </div>
 
     <div class="mode-tabs">
@@ -1142,42 +1142,33 @@ function bboxFromPolygon(poly) {
 
 function renderBuildingList() {
     buildingList.innerHTML = '';
-    mapConfig.buildings.forEach(b => {
+    // 5/29 派派：buildings + obstacle_areas 統一顯示成「collision items」一個列表
+    // 不分種類（派派覺得分類沒道理），用圖示區分有/沒 sprite
+    const all = [
+        ...mapConfig.buildings.map(b => ({ item: b, isArea: false })),
+        ...(mapConfig.obstacle_areas || []).map(a => ({ item: a, isArea: true })),
+    ];
+    all.forEach(({ item, isArea }) => {
+        const hasSprite = item.sprite && item.sprite.image;
+        const hasInteract = item.interaction && item.interaction.type;
+        const icon = hasSprite ? '🏠' : '📐';
+        const ptsLabel = isArea
+            ? `${(item.polygon || []).length} 點`
+            : `${(item.polygon || []).length} 點`;
+        const tag = hasInteract ? '⚡' : '';
         const row = document.createElement('div');
-        row.className = 'building-row' + (b.id === selectedBuildingId ? ' selected' : '');
+        row.className = 'building-row' + (item.id === selectedBuildingId ? ' selected' : '');
         row.innerHTML = `
-            <div class="building-color" style="background:${b.mask_color}"></div>
-            <div class="building-name">${b.name}</div>
-            <div class="building-count">${b.path ? b.path.length : 0} pts</div>
+            <div class="building-color" style="background:${item.mask_color}"></div>
+            <div class="building-name">${icon} ${item.name} ${tag}</div>
+            <div class="building-count">${ptsLabel}</div>
         `;
         row.addEventListener('click', () => {
-            selectedBuildingId = b.id;
+            selectedBuildingId = item.id;
             renderAll();
         });
         buildingList.appendChild(row);
     });
-    // 5/29 派派：obstacle_areas（河流之類）也列出來可選+編
-    const areas = mapConfig.obstacle_areas || [];
-    if (areas.length > 0) {
-        const sep = document.createElement('div');
-        sep.style.cssText = 'padding:6px 12px;background:#1a2030;font-size:10px;color:#fdc500;font-weight:700;border-top:1px solid #0d1019;border-bottom:1px solid #0d1019;';
-        sep.textContent = '🌊 障礙物 polygons';
-        buildingList.appendChild(sep);
-        areas.forEach(a => {
-            const row = document.createElement('div');
-            row.className = 'building-row' + (a.id === selectedBuildingId ? ' selected' : '');
-            row.innerHTML = `
-                <div class="building-color" style="background:${a.mask_color}"></div>
-                <div class="building-name">${a.name}</div>
-                <div class="building-count">${(a.polygon || []).length} vertices</div>
-            `;
-            row.addEventListener('click', () => {
-                selectedBuildingId = a.id;
-                renderAll();
-            });
-            buildingList.appendChild(row);
-        });
-    }
 }
 
 // 5/29 找 selectedBuildingId 屬於哪 array（buildings or obstacle_areas）
