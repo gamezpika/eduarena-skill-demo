@@ -1394,6 +1394,35 @@
         "mask_color": "#FF3B30",
         "render_order": 500,
         "interaction_type": "open_modal"
+      },
+      {
+        "id": "bird_01",
+        "name": "鳥群",
+        "category": "decoration",
+        "sprite": {
+          "image": "bird.png",
+          "scale": 0.5,
+          "anchor_x": 0.5,
+          "anchor_y": 0.5,
+          "frame_width": 864,
+          "frame_height": 416,
+          "grid_cols": 3,
+          "grid_rows": 3,
+          "frames": 9,
+          "frame_rate": 8
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.12
+        },
+        "center": {
+          "x": 0.5,
+          "y": 0.12
+        },
+        "path": [],
+        "polygon": [],
+        "mask_color": "#A0E0FF",
+        "render_order": 200
       }
     ],
     "obstacle_areas": [
