@@ -23,6 +23,13 @@
     }
     header @big >Cache-Control "no-cache, no-store, must-revalidate"
 
+    # HTML entry pages（含內嵌 JS）每次重整都拿新版，避免黏舊 logic
+    # JSON 配置（編輯器存的） 也要 no-cache，否則編輯器拿舊 frame size
+    @htmlAndJson {
+        path *.html *.json
+    }
+    header @htmlAndJson >Cache-Control "no-cache, must-revalidate"
+
     # 不公開原始檔
     @hidden {
         path /.git/* /Dockerfile /Caddyfile /.dockerignore /godot_beatemup/* /godot_demo2/*
