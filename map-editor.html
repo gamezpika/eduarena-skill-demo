@@ -1832,6 +1832,39 @@ function renderSpriteMarkers() {
         if (!isReference) attachSpriteDrag(el, n, w, h, true);
         mf.appendChild(el);
     });
+
+    // Player marker（也讓派派看得到主角、可拖、可調 scale）
+    const p = mapConfig.player;
+    if (p && p.sprites && p.spawn) {
+        const pCfg = p.sprites.down || p.sprites.side || p.sprites.up;
+        if (pCfg && pCfg.image) {
+            const spriteScale = p.scale || 0.35;
+            const frameW = pCfg.frame_width  || 300;
+            const frameH = pCfg.frame_height || 600;
+            const gridCols = pCfg.grid_cols || 3;
+            const gridRows = pCfg.grid_rows || 3;
+            const renderW = frameW * spriteScale * displayScale;
+            const renderH = frameH * spriteScale * displayScale;
+            const el = document.createElement('div');
+            el.className = 'placed-sprite npc';
+            if (isReference) {
+                el.classList.add('reference');
+                el.style.opacity = '0.55';
+                el.style.pointerEvents = 'none';
+                el.style.zIndex = 5;
+            }
+            el.style.left   = (p.spawn.x * w) + 'px';
+            el.style.top    = (p.spawn.y * h) + 'px';
+            el.style.width  = renderW + 'px';
+            el.style.height = renderH + 'px';
+            el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${pCfg.image}")`;
+            el.style.backgroundSize = `${renderW * gridCols}px ${renderH * gridRows}px`;
+            if (!isReference) el.appendChild(makeAnchorDot());
+            el.dataset.player = 'true';
+            if (!isReference) attachSpriteDrag(el, p, w, h, true, true);
+            mf.appendChild(el);
+        }
+    }
 }
 
 function makeAnchorDot() {
@@ -1840,7 +1873,7 @@ function makeAnchorDot() {
     return dot;
 }
 
-function attachSpriteDrag(el, obj, w, h, isNpc) {
+function attachSpriteDrag(el, obj, w, h, isNpc, isPlayer) {
     // Listener-leak 修法：mousedown 開始才 add document listener，mouseup 移除
     el.addEventListener('mousedown', startE => {
         startE.stopPropagation();
@@ -1854,7 +1887,9 @@ function attachSpriteDrag(el, obj, w, h, isNpc) {
             const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
             const dx = nx - startAnchor.x;
             const dy = ny - startAnchor.y;
-            if (isNpc) {
+            if (isPlayer) {
+                obj.spawn.x = nx; obj.spawn.y = ny;
+            } else if (isNpc) {
                 obj.spawn.x = nx; obj.spawn.y = ny;
                 // 同步 patrol[0]（如果原本就是 spawn 位置）
                 if (Array.isArray(obj.patrol) && obj.patrol[0]) {
@@ -1890,21 +1925,29 @@ function attachSpriteDrag(el, obj, w, h, isNpc) {
 function renderPlacedSpriteList() {
     const el = document.getElementById('placedSpriteList');
     if (!el) return;
-    const items = [
-        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name || b.id, isNpc: false, icon: '🏠',
+    const items = [];
+    // 主角放最上面（特殊 row、不可刪）
+    if (mapConfig && mapConfig.player) {
+        items.push({
+            id: '__player__', name: '主角', isNpc: false, isPlayer: true, icon: '⭐',
+            scale: mapConfig.player.scale || 0.35,
+        });
+    }
+    items.push(
+        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name || b.id, isNpc: false, isPlayer: false, icon: '🏠',
                                           scale: (b.sprite && b.sprite.scale) || 0.74 })),
-        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name || n.id, isNpc: true, icon: '👤',
+        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name || n.id, isNpc: true, isPlayer: false, icon: '👤',
                                        scale: (n.sprite && n.sprite.scale) || 0.66 })),
-    ];
+    );
     document.getElementById('spriteCount').textContent = items.length;
     el.innerHTML = items.map(it => `
-        <div class="placed-row" data-id="${it.id}" data-npc="${it.isNpc}" style="white-space:nowrap;">
+        <div class="placed-row" data-id="${it.id}" data-npc="${it.isNpc}" data-player="${it.isPlayer}" style="white-space:nowrap;">
             <span>${it.icon}</span>
             <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${it.name}</span>
             <input type="number" data-action="scale" value="${Number(it.scale).toFixed(2)}"
                    min="0.05" max="3" step="0.05" title="sprite 大小（房子改大紅框也跟著大）"
                    style="width:52px;padding:2px 4px;background:#232938;color:#fff;border:1px solid #444;border-radius:3px;font-size:11px;">
-            <button data-action="delete">刪</button>
+            ${it.isPlayer ? '<span style="width:34px;text-align:center;color:#666;font-size:10px;">主角</span>' : '<button data-action="delete">刪</button>'}
         </div>
     `).join('') || '<div style="padding:10px;color:#666;font-size:11px;">尚未放置</div>';
 
@@ -1916,8 +1959,16 @@ function renderPlacedSpriteList() {
             const row = inp.closest('.placed-row');
             const id = row.dataset.id;
             const isNpc = row.dataset.npc === 'true';
+            const isPlayer = row.dataset.player === 'true';
             const newScale = parseFloat(inp.value);
             if (!isFinite(newScale) || newScale <= 0) return;
+            if (isPlayer) {
+                if (!mapConfig.player) return;
+                mapConfig.player.scale = newScale;
+                autoSave();
+                renderSpriteMarkers();
+                return;
+            }
             const list = isNpc ? (mapConfig.npcs || []) : (mapConfig.buildings || []);
             const obj = list.find(x => x.id === id);
             if (!obj || !obj.sprite) return;
