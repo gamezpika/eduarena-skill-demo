@@ -1,0 +1,634 @@
+{
+  "map_config": {
+    "version": 1,
+    "dimensions": {
+      "image_width": 1920,
+      "image_height": 1480,
+      "world_width": 1920,
+      "world_height": 1080,
+      "world_offset_y": -400
+    },
+    "background": "godot-demo2/village_ground.jpg",
+    "asset_base": "godot-demo2/",
+    "player": {
+      "spawn": {
+        "x": 0.5,
+        "y": 0.763514
+      },
+      "scale": 0.66,
+      "speed": 220,
+      "sprites": {
+        "side": {
+          "image": "hero_walk2.png",
+          "frame_width": 252,
+          "frame_height": 344,
+          "frames": 9,
+          "frame_rate": 12
+        },
+        "down": {
+          "image": "hero_walk.png",
+          "frame_width": 231,
+          "frame_height": 384,
+          "frames": 25,
+          "frame_rate": 14
+        },
+        "up": {
+          "image": "hero_walk3.png",
+          "frame_width": 160,
+          "frame_height": 288,
+          "frames": 16,
+          "frame_rate": 14
+        }
+      }
+    },
+    "camera": {
+      "sky_pad": 400,
+      "view_base_width": 1200
+    },
+    "buildings": [
+      {
+        "id": "house_red",
+        "name": "紅屋",
+        "category": "house",
+        "sprite": {
+          "image": "house_red.png",
+          "scale": 0.74,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.15625,
+          "y": 0.472973
+        },
+        "bounding_box": {
+          "x_min": 0.083333,
+          "x_max": 0.229167,
+          "y_min": 0.439189,
+          "y_max": 0.47973
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "紅屋",
+          "body": "歡迎來到紅屋",
+          "radius": 110
+        }
+      },
+      {
+        "id": "house_brown",
+        "name": "棕屋",
+        "category": "house",
+        "sprite": {
+          "image": "house_brown.png",
+          "scale": 0.74,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.439189
+        },
+        "bounding_box": {
+          "x_min": 0.427083,
+          "x_max": 0.572917,
+          "y_min": 0.405405,
+          "y_max": 0.445946
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "棕屋",
+          "body": "歡迎來到棕屋",
+          "radius": 110
+        }
+      },
+      {
+        "id": "house_blue",
+        "name": "藍屋",
+        "category": "house",
+        "sprite": {
+          "image": "house_blue.png",
+          "scale": 0.74,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.78125,
+          "y": 0.472973
+        },
+        "bounding_box": {
+          "x_min": 0.708333,
+          "x_max": 0.854167,
+          "y_min": 0.439189,
+          "y_max": 0.47973
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "藍屋",
+          "body": "歡迎來到藍屋",
+          "radius": 110
+        }
+      },
+      {
+        "id": "house_green",
+        "name": "綠屋",
+        "category": "house",
+        "sprite": {
+          "image": "house_green.png",
+          "scale": 0.74,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.15625,
+          "y": 0.722973
+        },
+        "bounding_box": {
+          "x_min": 0.083333,
+          "x_max": 0.229167,
+          "y_min": 0.689189,
+          "y_max": 0.72973
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "綠屋",
+          "body": "歡迎來到綠屋",
+          "radius": 110
+        }
+      },
+      {
+        "id": "house_yellow",
+        "name": "黃屋",
+        "category": "house",
+        "sprite": {
+          "image": "house_yellow.png",
+          "scale": 0.74,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.864583,
+          "y": 0.72973
+        },
+        "bounding_box": {
+          "x_min": 0.791667,
+          "x_max": 0.9375,
+          "y_min": 0.695946,
+          "y_max": 0.736486
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "黃屋",
+          "body": "歡迎來到黃屋",
+          "radius": 110
+        }
+      },
+      {
+        "id": "fountain",
+        "name": "噴泉",
+        "category": "decoration",
+        "sprite": {
+          "image": "fountain.png",
+          "scale": 0.54,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.675676
+        },
+        "bounding_box": {
+          "x_min": 0.453125,
+          "x_max": 0.546875,
+          "y_min": 0.650676,
+          "y_max": 0.684459
+        },
+        "interaction": {
+          "type": "fountain_splash",
+          "label": "噴泉",
+          "radius": 110
+        }
+      },
+      {
+        "id": "tree_01",
+        "name": "樹1",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.03125,
+          "y": 0.405405
+        },
+        "bounding_box": {
+          "x_min": 0.022917,
+          "x_max": 0.039583,
+          "y_min": 0.393919,
+          "y_max": 0.410135
+        }
+      },
+      {
+        "id": "tree_02",
+        "name": "樹2",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.328125,
+          "y": 0.439189
+        },
+        "bounding_box": {
+          "x_min": 0.319792,
+          "x_max": 0.336458,
+          "y_min": 0.427703,
+          "y_max": 0.443919
+        }
+      },
+      {
+        "id": "tree_03",
+        "name": "樹3",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.640625,
+          "y": 0.439189
+        },
+        "bounding_box": {
+          "x_min": 0.632292,
+          "x_max": 0.648958,
+          "y_min": 0.427703,
+          "y_max": 0.443919
+        }
+      },
+      {
+        "id": "tree_04",
+        "name": "樹4",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.989583,
+          "y": 0.439189
+        },
+        "bounding_box": {
+          "x_min": 0.98125,
+          "x_max": 0.997917,
+          "y_min": 0.427703,
+          "y_max": 0.443919
+        }
+      },
+      {
+        "id": "tree_05",
+        "name": "樹5",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.328125,
+          "y": 0.628378
+        },
+        "bounding_box": {
+          "x_min": 0.319792,
+          "x_max": 0.336458,
+          "y_min": 0.616892,
+          "y_max": 0.633108
+        }
+      },
+      {
+        "id": "tree_06",
+        "name": "樹6",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.640625,
+          "y": 0.628378
+        },
+        "bounding_box": {
+          "x_min": 0.632292,
+          "x_max": 0.648958,
+          "y_min": 0.616892,
+          "y_max": 0.633108
+        }
+      },
+      {
+        "id": "tree_07",
+        "name": "樹7",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.328125,
+          "y": 0.878378
+        },
+        "bounding_box": {
+          "x_min": 0.319792,
+          "x_max": 0.336458,
+          "y_min": 0.866892,
+          "y_max": 0.883108
+        }
+      },
+      {
+        "id": "tree_08",
+        "name": "樹8",
+        "category": "decoration",
+        "sprite": {
+          "image": "tree_green.png",
+          "scale": 0.36,
+          "anchor_x": 0.5,
+          "anchor_y": 1.0
+        },
+        "anchor": {
+          "x": 0.640625,
+          "y": 0.878378
+        },
+        "bounding_box": {
+          "x_min": 0.632292,
+          "x_max": 0.648958,
+          "y_min": 0.866892,
+          "y_max": 0.883108
+        }
+      }
+    ],
+    "obstacle_areas": [
+      {
+        "id": "river_1",
+        "name": "河流",
+        "category": "water",
+        "polygon": [
+          {
+            "x": 0.204167,
+            "y": 0.851351
+          },
+          {
+            "x": 0.204167,
+            "y": 0.864865
+          },
+          {
+            "x": 0.219271,
+            "y": 0.881757
+          },
+          {
+            "x": 0.227604,
+            "y": 0.910135
+          },
+          {
+            "x": 0.251563,
+            "y": 0.909459
+          },
+          {
+            "x": 0.261979,
+            "y": 0.917568
+          },
+          {
+            "x": 0.290104,
+            "y": 0.916892
+          },
+          {
+            "x": 0.3125,
+            "y": 0.925
+          },
+          {
+            "x": 0.322917,
+            "y": 0.941892
+          },
+          {
+            "x": 0.327083,
+            "y": 0.975
+          },
+          {
+            "x": 0.339583,
+            "y": 0.980405
+          },
+          {
+            "x": 0.353125,
+            "y": 0.998649
+          },
+          {
+            "x": 0.435417,
+            "y": 0.999324
+          },
+          {
+            "x": 0.435938,
+            "y": 0.925
+          },
+          {
+            "x": 0.427083,
+            "y": 0.908784
+          },
+          {
+            "x": 0.395312,
+            "y": 0.894595
+          },
+          {
+            "x": 0.354688,
+            "y": 0.847973
+          },
+          {
+            "x": 0.2875,
+            "y": 0.843919
+          },
+          {
+            "x": 0.261979,
+            "y": 0.831757
+          },
+          {
+            "x": 0.258854,
+            "y": 0.824324
+          },
+          {
+            "x": 0.241146,
+            "y": 0.824324
+          }
+        ]
+      },
+      {
+        "id": "river_2",
+        "name": "河流",
+        "category": "water",
+        "polygon": [
+          {
+            "x": 0.0,
+            "y": 0.493919
+          },
+          {
+            "x": 0.0,
+            "y": 0.540541
+          },
+          {
+            "x": 0.020312,
+            "y": 0.556757
+          },
+          {
+            "x": 0.018229,
+            "y": 0.577027
+          },
+          {
+            "x": 0.0,
+            "y": 0.589189
+          },
+          {
+            "x": 0.0,
+            "y": 0.733108
+          },
+          {
+            "x": 0.034896,
+            "y": 0.754054
+          },
+          {
+            "x": 0.042188,
+            "y": 0.803378
+          },
+          {
+            "x": 0.06875,
+            "y": 0.816892
+          },
+          {
+            "x": 0.103125,
+            "y": 0.814189
+          },
+          {
+            "x": 0.168229,
+            "y": 0.827703
+          },
+          {
+            "x": 0.16875,
+            "y": 0.812838
+          },
+          {
+            "x": 0.171354,
+            "y": 0.822297
+          },
+          {
+            "x": 0.182812,
+            "y": 0.822297
+          },
+          {
+            "x": 0.184896,
+            "y": 0.812838
+          },
+          {
+            "x": 0.204167,
+            "y": 0.806081
+          },
+          {
+            "x": 0.213021,
+            "y": 0.777027
+          },
+          {
+            "x": 0.188021,
+            "y": 0.755405
+          },
+          {
+            "x": 0.117188,
+            "y": 0.755405
+          },
+          {
+            "x": 0.054688,
+            "y": 0.706081
+          },
+          {
+            "x": 0.05,
+            "y": 0.667568
+          },
+          {
+            "x": 0.029688,
+            "y": 0.643919
+          },
+          {
+            "x": 0.032292,
+            "y": 0.62973
+          },
+          {
+            "x": 0.097917,
+            "y": 0.589865
+          },
+          {
+            "x": 0.098438,
+            "y": 0.575676
+          },
+          {
+            "x": 0.082812,
+            "y": 0.562162
+          },
+          {
+            "x": 0.076042,
+            "y": 0.520946
+          },
+          {
+            "x": 0.04375,
+            "y": 0.49527
+          }
+        ]
+      }
+    ],
+    "npcs": [
+      {
+        "id": "villager_01",
+        "name": "村民",
+        "sprite": {
+          "image": "hero_walk.png",
+          "tint": "#9a4eff",
+          "scale": 0.66,
+          "frame_width": 231,
+          "frame_height": 384
+        },
+        "spawn": {
+          "x": 0.572917,
+          "y": 0.810811
+        },
+        "patrol": [
+          {
+            "x": 0.572917,
+            "y": 0.810811
+          },
+          {
+            "x": 0.572917,
+            "y": 0.594595
+          },
+          {
+            "x": 0.427083,
+            "y": 0.594595
+          },
+          {
+            "x": 0.427083,
+            "y": 0.810811
+          }
+        ],
+        "speed": 60,
+        "interaction": {
+          "type": "open_modal",
+          "label": "村民",
+          "body": "你好！我是村民",
+          "radius": 110
+        }
+      }
+    ]
+  }
+}

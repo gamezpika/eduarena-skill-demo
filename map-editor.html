@@ -348,7 +348,11 @@
     <div class="panel-header">
         🗺 地圖配置編輯器
         <div style="font-size: 10px; color: #aaa; margin-top: 4px;" id="mapSrc">
-            world_map_v4.png × world_map_config.json
+            載入中...
+        </div>
+        <div style="font-size: 10px; color: #fdc500; margin-top: 2px;">
+            <a href="?map=world" style="color:#fdc500;text-decoration:none;">[world]</a>
+            <a href="?map=village" style="color:#fdc500;text-decoration:none;">[village]</a>
         </div>
     </div>
 
@@ -452,6 +456,24 @@
 </div>
 
 <script>
+// ─── 多地圖支援（?map=village 切換）─────────────────────────────────
+const _qMap = new URLSearchParams(location.search).get('map') || 'world';
+const MAP_PRESETS = {
+    'world': {
+        configPath: 'assets/world_map_config.json',
+        imagePath: 'assets/images/world_map_iso.png',
+        displayName: 'world_map_iso.png × world_map_config.json',
+        commitArea: 'world',
+    },
+    'village': {
+        configPath: 'assets/village_config.json',
+        imagePath: 'godot-demo2/village_ground.jpg',
+        displayName: 'village_ground.jpg × village_config.json',
+        commitArea: 'village',
+    },
+};
+const ACTIVE_MAP = MAP_PRESETS[_qMap] || MAP_PRESETS['world'];
+
 let mapConfig = null;
 let selectedBuildingId = null;
 let mode = 'bbox';  // 'bbox' | 'path' | 'objects'
@@ -564,7 +586,7 @@ function defaultEduArenaConfig(w, h) {
 }
 
 // ─── localStorage 自動儲存
-const LS_KEY = 'eduarena_map_config_draft';
+const LS_KEY = 'eduarena_map_config_draft_' + _qMap;  // 每張地圖獨立 draft，避免跨 map 污染
 let saveTimer = null;
 function autoSave() {
     if (!mapConfig) return;
@@ -588,31 +610,74 @@ function autoSave() {
 function loadServerMap(useCachedConfig) {
     const placeholder = document.getElementById('empty-placeholder');
     const img = document.getElementById('map-img');
-    return fetch('assets/world_map_config.json?v=' + Date.now())
+    return fetch(ACTIVE_MAP.configPath + '?v=' + Date.now())
         .then(r => r.json())
         .then(json => {
             const serverConfig = json.map_config;
-            serverConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            if (!Array.isArray(serverConfig.buildings)) serverConfig.buildings = [];
+            // Schema-normalize：village 模式 building 缺的欄位補 default 不讓 editor 崩
+            serverConfig.buildings.forEach(b => {
+                if (!b.path) b.path = [];
+                if (!b.center && b.anchor) b.center = { x: b.anchor.x, y: b.anchor.y };
+                if (!b.center) b.center = { x: 0.5, y: 0.5 };
+                if (!b.polygon && b.bounding_box) {
+                    const bb = b.bounding_box;
+                    b.polygon = [
+                        { x: bb.x_min, y: bb.y_min },
+                        { x: bb.x_max, y: bb.y_min },
+                        { x: bb.x_max, y: bb.y_max },
+                        { x: bb.x_min, y: bb.y_max },
+                    ];
+                }
+                if (!b.polygon) b.polygon = [];
+                if (!b.mask_color) b.mask_color = '#FF3B30';
+                if (typeof b.render_order !== 'number') b.render_order = 500;
+                if (!b.interaction_type) {
+                    b.interaction_type = (b.interaction && b.interaction.type) || 'open_modal';
+                }
+            });
             if (!Array.isArray(serverConfig.objects)) serverConfig.objects = [];
             mapConfig = useCachedConfig || serverConfig;
-            mapConfig.buildings.forEach(b => { if (!b.path) b.path = []; });
+            // 如果走 cached（localStorage）也要 normalize 一次
+            if (Array.isArray(mapConfig.buildings)) {
+                mapConfig.buildings.forEach(b => {
+                    if (!b.path) b.path = [];
+                    if (!b.center && b.anchor) b.center = { x: b.anchor.x, y: b.anchor.y };
+                    if (!b.center) b.center = { x: 0.5, y: 0.5 };
+                    if (!b.polygon && b.bounding_box) {
+                        const bb = b.bounding_box;
+                        b.polygon = [
+                            { x: bb.x_min, y: bb.y_min },
+                            { x: bb.x_max, y: bb.y_min },
+                            { x: bb.x_max, y: bb.y_max },
+                            { x: bb.x_min, y: bb.y_max },
+                        ];
+                    }
+                    if (!b.polygon) b.polygon = [];
+                    if (!b.mask_color) b.mask_color = '#FF3B30';
+                    if (typeof b.render_order !== 'number') b.render_order = 500;
+                    if (!b.interaction_type) {
+                        b.interaction_type = (b.interaction && b.interaction.type) || 'open_modal';
+                    }
+                });
+            } else {
+                mapConfig.buildings = [];
+            }
             if (!Array.isArray(mapConfig.objects)) mapConfig.objects = [];
-            // 5/26 派派：dog.glb 從未設過 follow → 預設跟玩家走（裝飾用要明確勾掉 checkbox 存 false）
+            // 5/26 派派：dog.glb 從未設過 follow → 預設跟玩家走
             mapConfig.objects.forEach(o => {
                 if (o.glb === 'dog.glb' && o.follow === undefined) o.follow = true;
             });
-            // 5/25 派派：避免 reload 後 nextObjectId() 從 1 開始撞 ID
             const maxId = mapConfig.objects.reduce((m, o) => {
                 const mt = (o.id || '').match(/^obj_(\d+)$/);
                 return mt ? Math.max(m, parseInt(mt[1], 10)) : m;
             }, 0);
             __objectIdCounter = maxId;
-            img.src = 'assets/images/world_map_iso.png?v=' + Date.now();
+            img.src = ACTIVE_MAP.imagePath + '?v=' + Date.now();
             img.style.display = 'block';
             placeholder.style.display = 'none';
             img.onload = () => {
-                document.getElementById('mapSrc').textContent =
-                    'world_map_iso.png × world_map_config.json';
+                document.getElementById('mapSrc').textContent = ACTIVE_MAP.displayName;
                 renderAll();
             };
         })
@@ -1365,13 +1430,13 @@ document.getElementById('btnDownload').addEventListener('click', () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'world_map_config.json';
+    a.download = ACTIVE_MAP.configPath.split('/').pop();
     a.click();
 });
 document.getElementById('btnReset').addEventListener('click', () => {
     if (!confirm('真的要重置嗎？所有未匯出的編輯會失去，重新從 server 載入')) return;
     localStorage.removeItem(LS_KEY);
-    fetch('assets/world_map_config.json?v=' + Date.now())
+    fetch(ACTIVE_MAP.configPath + '?v=' + Date.now())
         .then(r => r.json())
         .then(json => {
             mapConfig = json.map_config;
@@ -1391,7 +1456,7 @@ document.getElementById('btnClearCache').addEventListener('click', () => {
 // ─── 一鍵推 GitHub ────────────────────────────────────────────────
 const GH_REPO_OWNER = 'gamezpika';
 const GH_REPO_NAME = 'eduarena-skill-demo';
-const GH_FILE_PATH = 'assets/world_map_config.json';
+const GH_FILE_PATH = ACTIVE_MAP.configPath;
 const GH_BRANCH = 'main';
 const GH_PAT_KEY = 'wmEditPAT';
 
@@ -1457,7 +1522,7 @@ async function pushToGitHub() {
             method: 'PUT',
             headers: { ...authHeaders, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: `update(world): polygon config 從 map-editor 一鍵推 (${ts})`,
+                message: `update(${ACTIVE_MAP.commitArea}): polygon config 從 map-editor 一鍵推 (${ts})`,
                 content: contentB64,
                 sha: sha,
                 branch: GH_BRANCH,
@@ -1704,7 +1769,7 @@ function loadNewImage(src, displayName) {
     );
     if (choice === null) return;  // 使用者按取消
     mapImg.src = src;
-    document.getElementById('mapSrc').textContent = displayName + ' × world_map_config.json';
+    document.getElementById('mapSrc').textContent = displayName + ' × ' + ACTIVE_MAP.configPath.split('/').pop();
     mapImg.onload = () => {
         const w = mapImg.naturalWidth, h = mapImg.naturalHeight;
         if (choice === '2') {
