@@ -889,7 +889,7 @@
       },
       {
         "id": "tree_green_15",
-        "name": "綠樹",
+        "name": "",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -952,7 +952,7 @@
       },
       {
         "id": "tree_green_16",
-        "name": "綠樹",
+        "name": "",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -1023,7 +1023,7 @@
       },
       {
         "id": "tree_green_17",
-        "name": "綠樹",
+        "name": "",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -1094,7 +1094,7 @@
       },
       {
         "id": "tree_green_18",
-        "name": "綠樹",
+        "name": "",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -1403,7 +1403,7 @@
         "sprite": {
           "image": "hero_walk.png",
           "tint": "#9a4eff",
-          "scale": 0.66,
+          "scale": 0.45,
           "frame_width": 231,
           "frame_height": 384
         },
@@ -1442,10 +1442,10 @@
         }
       },
       {
-        "id": "npc_02",
-        "name": "",
+        "id": "npc_03",
+        "name": "走路牛",
         "sprite": {
-          "scale": 0.45,
+          "scale": 0.25,
           "sprites": {
             "side": {
               "image": "cowwalk.png",
@@ -1459,35 +1459,39 @@
           }
         },
         "spawn": {
-          "x": 0.8251363959832372,
-          "y": 0.9127708680600077
+          "x": 0.80869,
+          "y": 0.940672
         },
         "patrol": [
           {
-            "x": 0.8251363959832372,
-            "y": 0.9127708680600077
+            "x": 0.80869,
+            "y": 0.940672
           },
           {
-            "x": 0.640429,
-            "y": 0.920977
+            "x": 0.611457,
+            "y": 0.897179
           },
           {
-            "x": 0.573377,
-            "y": 0.7388
+            "x": 0.522646,
+            "y": 0.684475
           },
           {
-            "x": 0.734048,
-            "y": 0.701051
+            "x": 0.397399,
+            "y": 0.55892
           },
           {
-            "x": 0.927611,
-            "y": 0.768342
+            "x": 0.587546,
+            "y": 0.538241
+          },
+          {
+            "x": 0.729873,
+            "y": 0.774579
           }
         ],
         "speed": 60,
         "interaction": {
           "type": "open_modal",
-          "label": "",
+          "label": "走路牛",
           "body": "你好！",
           "radius": 110
         }
