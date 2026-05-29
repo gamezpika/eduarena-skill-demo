@@ -110,17 +110,40 @@
             background: rgba(0,0,0,0.2); border-radius: 3px;
         }
         .sprite-card-name { font-size: 9px; color: #ccc; margin-top: 4px; line-height: 1.2; }
-        /* Placed sprite marker overlay */
-        .placed-marker {
-            position: absolute; width: 28px; height: 28px;
-            border-radius: 50%; background: rgba(253,197,0,0.85);
-            border: 2px solid #fff; transform: translate(-50%, -50%);
+        /* Placed sprite — 真實圖片+腳底 anchor 點 */
+        .placed-sprite {
+            position: absolute;
             cursor: move; z-index: 22; pointer-events: auto;
+            transform: translate(-50%, -100%);  /* 底部中心對齊 anchor */
+        }
+        .placed-sprite img {
+            width: 100%; height: 100%; object-fit: contain; display: block;
+            pointer-events: none;
+            -webkit-user-drag: none; user-select: none;
+        }
+        .placed-sprite.npc {
+            /* NPC 用 background-image 顯示 sprite sheet 第一格 */
+            background-repeat: no-repeat; background-position: 0 0;
+        }
+        .placed-sprite .anchor-dot {
+            position: absolute; bottom: -6px; left: 50%;
+            transform: translateX(-50%);
+            width: 12px; height: 12px;
+            border-radius: 50%; border: 2px solid #fff;
+            background: #fdc500;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            z-index: 23;
+        }
+        .placed-sprite.npc .anchor-dot { background: #9a4eff; }
+        .placed-sprite:hover { outline: 2px dashed rgba(253,197,0,0.7); }
+        .placed-sprite.selected { outline: 2px solid #fdc500; }
+        .placed-sprite .fallback {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: rgba(253,197,0,0.9);
+            border: 2px solid #fff;
             display: flex; align-items: center; justify-content: center;
             font-size: 14px;
         }
-        .placed-marker.selected { background: #f0a020; box-shadow: 0 0 8px #fdc500; }
-        .placed-marker.npc { background: rgba(154,78,255,0.9); }
         /* Patrol waypoint */
         .waypoint-marker {
             position: absolute; width: 20px; height: 20px;
@@ -1479,31 +1502,78 @@ function placeSpriteAt(libIdx, normX, normY) {
 }
 
 function renderSpriteMarkers() {
-    document.querySelectorAll('#mapFrame .placed-marker').forEach(el => el.remove());
+    document.querySelectorAll('#mapFrame .placed-sprite').forEach(el => el.remove());
     if (!mapConfig || mode !== 'sprite') return;
+    if (!ACTIVE_PROJECT) return;
     const mf = document.getElementById('mapFrame');
     const w = mapImg.clientWidth, h = mapImg.clientHeight;
-    // Buildings (sprite-based)
+    const imgW = mapImg.naturalWidth || 1920;
+    const displayScale = w / imgW;
+    const lib = ACTIVE_PROJECT.sprite_library || [];
+
+    function libMeta(image) {
+        return lib.find(s => s.image === image) || {};
+    }
+
+    // Buildings — 真實 sprite 圖
     getPlacedSprites().forEach(b => {
-        const m = document.createElement('div');
-        m.className = 'placed-marker';
-        m.style.left = (b.anchor.x * w) + 'px';
-        m.style.top  = (b.anchor.y * h) + 'px';
-        m.textContent = '🏠';
-        m.dataset.bid = b.id;
-        attachSpriteDrag(m, b, w, h, false);
-        mf.appendChild(m);
+        const meta = libMeta(b.sprite.image);
+        const spriteScale = (b.sprite && b.sprite.scale) || meta.scale || 0.74;
+        // 假設 source 512×512（村莊 sprite 統一）— 之後可從 meta.source_size 讀
+        const srcSize = meta.source_size || 512;
+        const renderSize = srcSize * spriteScale * displayScale;
+        const el = document.createElement('div');
+        el.className = 'placed-sprite';
+        el.style.left   = (b.anchor.x * w) + 'px';
+        el.style.top    = (b.anchor.y * h) + 'px';
+        el.style.width  = renderSize + 'px';
+        el.style.height = renderSize + 'px';
+        const img = document.createElement('img');
+        img.src = '../' + ACTIVE_PROJECT.sprite_base + b.sprite.image;
+        img.alt = b.name;
+        img.onerror = () => {
+            el.innerHTML = '';
+            const fb = document.createElement('div');
+            fb.className = 'fallback'; fb.textContent = '❌';
+            el.appendChild(fb);
+            el.appendChild(makeAnchorDot());
+        };
+        el.appendChild(img);
+        el.appendChild(makeAnchorDot());
+        el.dataset.bid = b.id;
+        attachSpriteDrag(el, b, w, h, false);
+        mf.appendChild(el);
     });
+
+    // NPCs — sprite sheet 顯示第一格
     getPlacedNpcs().forEach(n => {
-        const m = document.createElement('div');
-        m.className = 'placed-marker npc';
-        m.style.left = (n.spawn.x * w) + 'px';
-        m.style.top  = (n.spawn.y * h) + 'px';
-        m.textContent = '👤';
-        m.dataset.nid = n.id;
-        attachSpriteDrag(m, n, w, h, true);
-        mf.appendChild(m);
+        const meta = libMeta(n.sprite.image);
+        const spriteScale = (n.sprite && n.sprite.scale) || meta.scale || 0.66;
+        const frameW = (n.sprite && n.sprite.frame_width)  || meta.frame_width  || 231;
+        const frameH = (n.sprite && n.sprite.frame_height) || meta.frame_height || 384;
+        const gridCols = meta.grid_cols || 5;
+        const gridRows = meta.grid_rows || 5;
+        const renderW = frameW * spriteScale * displayScale;
+        const renderH = frameH * spriteScale * displayScale;
+        const el = document.createElement('div');
+        el.className = 'placed-sprite npc';
+        el.style.left   = (n.spawn.x * w) + 'px';
+        el.style.top    = (n.spawn.y * h) + 'px';
+        el.style.width  = renderW + 'px';
+        el.style.height = renderH + 'px';
+        el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${n.sprite.image}")`;
+        el.style.backgroundSize = `${renderW * gridCols}px ${renderH * gridRows}px`;
+        el.appendChild(makeAnchorDot());
+        el.dataset.nid = n.id;
+        attachSpriteDrag(el, n, w, h, true);
+        mf.appendChild(el);
     });
+}
+
+function makeAnchorDot() {
+    const dot = document.createElement('div');
+    dot.className = 'anchor-dot';
+    return dot;
 }
 
 function attachSpriteDrag(el, obj, w, h, isNpc) {
