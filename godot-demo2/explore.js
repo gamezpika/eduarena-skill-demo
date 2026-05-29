@@ -36,7 +36,7 @@ class ExploreScene extends Phaser.Scene {
     config.buildings.forEach(b => {
       if (b.sprite && b.sprite.image) {
         if (!this.textures.exists(b.sprite.image)) {
-          this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=6");
+          this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=7");
         }
       }
     });
