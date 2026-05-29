@@ -857,6 +857,44 @@ function normalizeSpriteFrames(cfg) {
     // 也 normalize buildings 的 sprite（噴泉 spritesheet 用）
     (cfg.buildings || []).forEach(b => fix(b.sprite));
 }
+// 從 image 實際尺寸 + grid_cols/grid_rows 算正確 frame size — 根治草稿黏舊值
+// 比硬編碼 SPRITE_FRAME_SIZE table 可靠：新 sprite 不在 table 也能 normalize
+const _imageDimCache = new Map();
+function _loadImageDim(image) {
+    if (_imageDimCache.has(image)) return _imageDimCache.get(image);
+    const p = new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onerror = () => resolve(null);
+        const base = (ACTIVE_PROJECT && ACTIVE_PROJECT.sprite_base) || 'godot-demo2/';
+        img.src = '../' + base + image + '?dim=' + Date.now();
+    });
+    _imageDimCache.set(image, p);
+    return p;
+}
+async function normalizeSpriteFramesFromImage(cfg) {
+    if (!cfg) return;
+    const tasks = [];
+    const fix = async (d) => {
+        if (!d || !d.image || !d.grid_cols || !d.grid_rows) return;
+        const dim = await _loadImageDim(d.image);
+        if (!dim) return;
+        if (dim.w % d.grid_cols === 0 && dim.h % d.grid_rows === 0) {
+            d.frame_width = dim.w / d.grid_cols;
+            d.frame_height = dim.h / d.grid_rows;
+        }
+    };
+    if (cfg.player && cfg.player.sprites) Object.values(cfg.player.sprites).forEach(d => tasks.push(fix(d)));
+    (cfg.npcs || []).forEach(npc => {
+        const s = npc.sprite;
+        if (!s) return;
+        tasks.push(fix(s));
+        if (s.sprites) Object.values(s.sprites).forEach(d => tasks.push(fix(d)));
+    });
+    (cfg.buildings || []).forEach(b => tasks.push(fix(b.sprite)));
+    await Promise.all(tasks);
+}
+
 // NPC id 撞了會讓 path mode 點哪個都 highlight 第一個 — load 時自動 dedup
 function dedupNpcIds(cfg) {
     if (!cfg || !Array.isArray(cfg.npcs)) return;
@@ -2568,7 +2606,12 @@ async function pushToGitHub() {
         const fileData = await getRes.json();
         const sha = fileData.sha;
 
-        // 2. PUT 新內容
+        // 2. 推之前最後一道防線：從 image 實際尺寸重算 frame size
+        //    避免 localStorage 草稿黏舊值蓋掉 server 正確值
+        btn.textContent = '⏳ 校正 frame size...';
+        await normalizeSpriteFramesFromImage(mapConfig);
+
+        // 3. PUT 新內容
         btn.textContent = '⏳ 推送中...';
         status.textContent = '🚀 推送 config 到 GitHub...';
         const content = JSON.stringify({ map_config: mapConfig }, null, 2);
