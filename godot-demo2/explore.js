@@ -504,10 +504,10 @@ class ExploreScene extends Phaser.Scene {
     if (!npc.cfg.patrol || npc.cfg.patrol.length === 0) return;
     const speed = npc.cfg.speed || 60;
 
-    // 卡住偵測：累計 1 秒位移 < 5px 就跳下一個 patrol 點 + 觸發 detour
+    // 卡住偵測：累計 0.4 秒位移 < 5px 就跳下一個 patrol 點 + 觸發 detour
     if (!npc._stuck) npc._stuck = { lastX: npc.body.x, lastY: npc.body.y, t: 0, retries: 0 };
     npc._stuck.t += delta;
-    if (npc._stuck.t > 1000) {
+    if (npc._stuck.t > 400) {
       const moved = Math.hypot(npc.body.x - npc._stuck.lastX, npc.body.y - npc._stuck.lastY);
       if (moved < 5) {
         npc._stuck.retries += 1;
