@@ -1,0 +1,37 @@
+{
+  "projects": [
+    {
+      "id": "village",
+      "name": "🏘️ 村莊 Demo (godot-demo2)",
+      "engine": "phaser_iso",
+      "config_path": "assets/village_config.json",
+      "background_path": "godot-demo2/village_ground.jpg",
+      "sprite_base": "godot-demo2/",
+      "preview_url": "godot-demo2/",
+      "image_dimensions": { "width": 1920, "height": 1480 },
+      "world_offset_y": -400,
+      "sprite_library": [
+        { "image": "house_red.png",    "name": "🏠 紅屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal" },
+        { "image": "house_brown.png",  "name": "🏠 棕屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal" },
+        { "image": "house_blue.png",   "name": "🏠 藍屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal" },
+        { "image": "house_green.png",  "name": "🏠 綠屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal" },
+        { "image": "house_yellow.png", "name": "🏠 黃屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal" },
+        { "image": "fountain.png",     "name": "⛲ 噴泉", "type": "decoration", "scale": 0.54, "default_interaction": "fountain_splash" },
+        { "image": "tree_green.png",   "name": "🌳 綠樹", "type": "decoration", "scale": 0.36, "default_interaction": null },
+        { "image": "hero_walk.png",    "name": "👤 村民 NPC", "type": "npc",     "scale": 0.66, "tint": "#9a4eff", "default_interaction": "open_modal", "frame_width": 231, "frame_height": 384 }
+      ]
+    },
+    {
+      "id": "world",
+      "name": "🌍 世界地圖 3D (world.html)",
+      "engine": "three_world",
+      "config_path": "assets/world_map_config.json",
+      "background_path": "assets/images/world_map_iso.png",
+      "sprite_base": "assets/3d/character/",
+      "preview_url": "world.html",
+      "image_dimensions": { "width": 1024, "height": 1024 },
+      "world_offset_y": 0,
+      "sprite_library": []
+    }
+  ]
+}

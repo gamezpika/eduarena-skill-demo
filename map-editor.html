@@ -97,6 +97,51 @@
         }
         .mode-tabs button.active { color: #fdc500; border-bottom-color: #fdc500; background: #232938; }
 
+        /* Sprite library cards */
+        .sprite-card {
+            background: #232938; border-radius: 5px; padding: 6px;
+            cursor: pointer; text-align: center; transition: background 0.1s;
+            border: 2px solid transparent;
+        }
+        .sprite-card:hover { background: #2d3142; }
+        .sprite-card.selected { border-color: #fdc500; background: #3a3f55; }
+        .sprite-card img {
+            width: 100%; height: 50px; object-fit: contain;
+            background: rgba(0,0,0,0.2); border-radius: 3px;
+        }
+        .sprite-card-name { font-size: 9px; color: #ccc; margin-top: 4px; line-height: 1.2; }
+        /* Placed sprite marker overlay */
+        .placed-marker {
+            position: absolute; width: 28px; height: 28px;
+            border-radius: 50%; background: rgba(253,197,0,0.85);
+            border: 2px solid #fff; transform: translate(-50%, -50%);
+            cursor: move; z-index: 22; pointer-events: auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .placed-marker.selected { background: #f0a020; box-shadow: 0 0 8px #fdc500; }
+        .placed-marker.npc { background: rgba(154,78,255,0.9); }
+        /* Patrol waypoint */
+        .waypoint-marker {
+            position: absolute; width: 20px; height: 20px;
+            border-radius: 50%; background: rgba(135,212,255,0.9);
+            border: 2px solid #fff; transform: translate(-50%, -50%);
+            cursor: move; z-index: 24; pointer-events: auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: #1a1f2e; font-weight: 700;
+        }
+        /* Placed list rows */
+        .placed-row {
+            padding: 5px 12px; display: flex; align-items: center; gap: 6px;
+            border-bottom: 1px solid #232938; font-size: 11px;
+        }
+        .placed-row:hover { background: #232938; }
+        .placed-row.selected { background: #3a3f55; }
+        .placed-row button {
+            background: #aa3030; color: #fff; border: none; border-radius: 3px;
+            padding: 2px 5px; font-size: 10px; cursor: pointer;
+        }
+
         .upload-row {
             display: flex; gap: 6px; padding: 8px 12px;
             background: #1a1f2e; border-bottom: 1px solid #0d1019;
@@ -347,12 +392,15 @@
 <aside class="panel">
     <div class="panel-header">
         🗺 地圖配置編輯器
-        <div style="font-size: 10px; color: #aaa; margin-top: 4px;" id="mapSrc">
-            載入中...
+        <div style="font-size: 11px; color: #aaa; margin-top: 6px;">
+            專案：
+            <select id="projectPicker" style="background:#2d3142;color:#fdc500;border:1px solid #4d5570;border-radius:4px;padding:3px 6px;font-size:11px;font-weight:700;">
+                <option>載入中...</option>
+            </select>
+            <button id="btnNewProject" title="新增專案" style="background:#444;color:#fdc500;border:1px solid #555;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;margin-left:4px;">➕</button>
         </div>
-        <div style="font-size: 10px; color: #fdc500; margin-top: 2px;">
-            <a href="?map=world" style="color:#fdc500;text-decoration:none;">[world]</a>
-            <a href="?map=village" style="color:#fdc500;text-decoration:none;">[village]</a>
+        <div style="font-size: 10px; color: #888; margin-top: 4px;" id="mapSrc">
+            載入中...
         </div>
     </div>
 
@@ -365,7 +413,39 @@
 
     <div class="mode-tabs">
         <button id="tab-bbox" class="active">📦 bbox</button>
+        <button id="tab-sprite">👤 sprite</button>
+        <button id="tab-path">🛣 路徑</button>
         <button id="tab-objects">📍 物件</button>
+    </div>
+
+    <!-- 👤 Sprite mode 面板 -->
+    <div class="sprite-panel" id="spritePanel" style="display:none;">
+        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
+            🎨 Sprite 庫（點 sprite → 點地圖放）
+        </div>
+        <div id="spriteHint" style="display:none; padding:8px 12px; background:#3a4a20; color:#fdc500; font-size:11px;"></div>
+        <div class="sprite-library" id="spriteLibrary" style="
+            display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;
+            padding:10px 12px; border-bottom:1px solid #0d1019;
+            max-height: 280px; overflow-y: auto;
+        "></div>
+        <div style="padding:8px 12px; font-size:11px; color:#888;">
+            已放置（<span id="spriteCount">0</span>）
+        </div>
+        <div class="placed-list" id="placedSpriteList" style="
+            max-height:200px; overflow-y:auto; border-bottom:1px solid #0d1019;
+        "></div>
+    </div>
+
+    <!-- 🛣 Path mode 面板 -->
+    <div class="path-panel" id="pathPanel" style="display:none;">
+        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
+            🛣 NPC 巡邏路徑
+        </div>
+        <div id="pathNpcList" style="padding:8px 12px;"></div>
+        <div id="pathEditingHint" style="display:none; padding:8px 12px; background:#3a4a20; color:#fdc500; font-size:11px;">
+            點地圖加 waypoint，拖移、右鍵刪
+        </div>
     </div>
 
     <!-- 物件模式：GLB picker + 已放物件清單 -->
@@ -456,23 +536,50 @@
 </div>
 
 <script>
-// ─── 多地圖支援（?map=village 切換）─────────────────────────────────
+// ─── 專案註冊表（從 assets/projects_registry.json 載）─────────────────
 const _qMap = new URLSearchParams(location.search).get('map') || 'world';
-const MAP_PRESETS = {
-    'world': {
-        configPath: 'assets/world_map_config.json',
-        imagePath: 'assets/images/world_map_iso.png',
-        displayName: 'world_map_iso.png × world_map_config.json',
-        commitArea: 'world',
+const REGISTRY_PATH = 'assets/projects_registry.json';
+let PROJECTS_REGISTRY = null;   // 全部專案 array
+let ACTIVE_PROJECT = null;       // 當前選的專案 object
+
+// fallback hardcoded（registry 載失敗時用）
+const FALLBACK_PROJECTS = [
+    {
+        id: 'world',
+        name: '🌍 世界地圖 (fallback)',
+        engine: 'three_world',
+        config_path: 'assets/world_map_config.json',
+        background_path: 'assets/images/world_map_iso.png',
+        sprite_base: 'assets/3d/character/',
+        preview_url: 'world.html',
+        sprite_library: [],
     },
-    'village': {
-        configPath: 'assets/village_config.json',
-        imagePath: 'godot-demo2/village_ground.jpg',
-        displayName: 'village_ground.jpg × village_config.json',
-        commitArea: 'village',
+    {
+        id: 'village',
+        name: '🏘️ 村莊 Demo (fallback)',
+        engine: 'phaser_iso',
+        config_path: 'assets/village_config.json',
+        background_path: 'godot-demo2/village_ground.jpg',
+        sprite_base: 'godot-demo2/',
+        preview_url: 'godot-demo2/',
+        sprite_library: [],
     },
-};
-const ACTIVE_MAP = MAP_PRESETS[_qMap] || MAP_PRESETS['world'];
+];
+
+function pickActiveProject(projects, mapId) {
+    return projects.find(p => p.id === mapId) || projects[0];
+}
+
+// 提供舊 code 用的 ACTIVE_MAP 介面（向後相容）
+function legacyActiveMap(p) {
+    return {
+        configPath: p.config_path,
+        imagePath: p.background_path,
+        displayName: p.background_path.split('/').pop() + ' × ' + p.config_path.split('/').pop(),
+        commitArea: p.id,
+    };
+}
+let ACTIVE_MAP = legacyActiveMap(pickActiveProject(FALLBACK_PROJECTS, _qMap));
 
 let mapConfig = null;
 let selectedBuildingId = null;
@@ -584,6 +691,72 @@ function defaultEduArenaConfig(w, h) {
     });
     return { dimensions: {width: w, height: h}, buildings, connections: [] };
 }
+
+// ─── 載入專案 registry
+function loadProjectsRegistry() {
+    return fetch(REGISTRY_PATH + '?v=' + Date.now())
+        .then(r => r.ok ? r.json() : Promise.reject('registry HTTP ' + r.status))
+        .then(json => {
+            PROJECTS_REGISTRY = Array.isArray(json.projects) ? json.projects : FALLBACK_PROJECTS;
+            ACTIVE_PROJECT = pickActiveProject(PROJECTS_REGISTRY, _qMap);
+            ACTIVE_MAP = legacyActiveMap(ACTIVE_PROJECT);
+            renderProjectPicker();
+            renderSpriteLibrary();
+        })
+        .catch(e => {
+            console.warn('[registry] load failed, using fallback:', e);
+            PROJECTS_REGISTRY = FALLBACK_PROJECTS;
+            ACTIVE_PROJECT = pickActiveProject(PROJECTS_REGISTRY, _qMap);
+            ACTIVE_MAP = legacyActiveMap(ACTIVE_PROJECT);
+            renderProjectPicker();
+        });
+}
+
+function renderProjectPicker() {
+    const el = document.getElementById('projectPicker');
+    if (!el || !PROJECTS_REGISTRY) return;
+    const opts = PROJECTS_REGISTRY.map(p =>
+        `<option value="${p.id}" ${p.id === ACTIVE_PROJECT.id ? 'selected' : ''}>${p.name}</option>`
+    ).join('');
+    el.innerHTML = opts;
+    el.onchange = () => {
+        const newId = el.value;
+        if (newId !== ACTIVE_PROJECT.id) {
+            location.href = location.pathname + '?map=' + encodeURIComponent(newId);
+        }
+    };
+}
+
+function renderSpriteLibrary() {
+    const el = document.getElementById('spriteLibrary');
+    if (!el || !ACTIVE_PROJECT) return;
+    const lib = ACTIVE_PROJECT.sprite_library || [];
+    if (lib.length === 0) {
+        el.innerHTML = '<div style="padding:12px;color:#888;font-size:11px;">這個專案還沒有 sprite library（在 projects_registry.json 編輯）</div>';
+        return;
+    }
+    el.innerHTML = lib.map((s, idx) => `
+        <div class="sprite-card" data-sprite-idx="${idx}" title="點選後到地圖點要放的位置">
+            <img src="../${ACTIVE_PROJECT.sprite_base}${s.image}?v=5" alt="${s.name}">
+            <div class="sprite-card-name">${s.name}</div>
+        </div>
+    `).join('');
+    el.querySelectorAll('.sprite-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const idx = parseInt(card.dataset.spriteIdx, 10);
+            pendingSpriteIdx = idx;
+            el.querySelectorAll('.sprite-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            const hint = document.getElementById('spriteHint');
+            if (hint) {
+                hint.style.display = 'block';
+                hint.textContent = `已選 ${lib[idx].name}：在地圖點要放的位置`;
+            }
+        });
+    });
+}
+
+let pendingSpriteIdx = null;
 
 // ─── localStorage 自動儲存
 const LS_KEY = 'eduarena_map_config_draft_' + _qMap;  // 每張地圖獨立 draft，避免跨 map 污染
@@ -719,7 +892,81 @@ function attachLoadServerBtn() {
 }
 attachLoadServerBtn();
 loadAvailableGLBs();  // 5/25 派派：載 GLB 清單 + 上傳功能
-loadInitialConfig();
+// Registry 跟 initial config 並行（registry 先 render dropdown，initialConfig 之後可能 override ACTIVE_PROJECT）
+loadProjectsRegistry().then(() => loadInitialConfig());
+
+// ─── 新專案 button + form ─────────────────────────────
+document.getElementById('btnNewProject').addEventListener('click', async () => {
+    const id = prompt('新專案 ID（英文小寫，e.g. "jyc_demo"）：');
+    if (!id || !id.trim()) return;
+    const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    if (PROJECTS_REGISTRY.find(p => p.id === cleanId)) {
+        alert(`專案 ${cleanId} 已存在！`); return;
+    }
+    const name = prompt('專案顯示名稱（中文 OK）：', '🗺️ ' + cleanId);
+    if (!name) return;
+    const bg = prompt('背景圖路徑（相對 repo 根，e.g. "godot-demo2/new_map.jpg"）：');
+    if (!bg) return;
+    const configPath = prompt('Config JSON 路徑（會建空白）：', 'assets/' + cleanId + '_config.json');
+    if (!configPath) return;
+    const spriteBase = prompt('Sprite 資料夾路徑（相對 repo 根，可空）：', bg.split('/').slice(0, -1).join('/') + '/');
+    const engine = prompt('引擎類型 (phaser_iso / three_world / 其他)：', 'phaser_iso');
+
+    const newProj = {
+        id: cleanId, name: name.trim(), engine: engine || 'phaser_iso',
+        config_path: configPath, background_path: bg,
+        sprite_base: spriteBase || '', preview_url: '',
+        sprite_library: [],
+    };
+    PROJECTS_REGISTRY.push(newProj);
+    // 建空白 config（先存 localStorage）
+    const blankCfg = { map_config: { version: 1, background: bg, buildings: [], obstacle_areas: [], npcs: [] } };
+    try {
+        await pushFileToGitHub(configPath, JSON.stringify(blankCfg, null, 2), `feat(${cleanId}): 新增專案空白 config via map-editor`);
+        await pushFileToGitHub(REGISTRY_PATH, JSON.stringify({ projects: PROJECTS_REGISTRY }, null, 2), `feat(registry): 加新專案 ${cleanId}`);
+        alert(`新專案 ${cleanId} 已建並推到 GitHub！\n等 Railway 部署後切換到該專案編輯。`);
+        location.href = location.pathname + '?map=' + encodeURIComponent(cleanId);
+    } catch (e) {
+        alert('推送失敗：' + e.message);
+    }
+});
+
+// 通用 GitHub PutFile（給新專案 button 用）
+async function pushFileToGitHub(filePath, content, commitMsg) {
+    let pat = localStorage.getItem(GH_PAT_KEY);
+    if (!pat) {
+        pat = prompt('需要 GitHub PAT 才能推新專案，貼進去：');
+        if (!pat || !pat.trim()) throw new Error('沒給 PAT');
+        pat = pat.trim();
+        localStorage.setItem(GH_PAT_KEY, pat);
+    }
+    const apiBase = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${filePath}`;
+    const authHeaders = {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
+    // 取 SHA（若已存在）
+    let sha = null;
+    const getRes = await fetch(`${apiBase}?ref=${GH_BRANCH}`, { headers: authHeaders });
+    if (getRes.ok) sha = (await getRes.json()).sha;
+    else if (getRes.status !== 404) throw new Error('取 SHA 失敗 HTTP ' + getRes.status);
+    const body = {
+        message: commitMsg,
+        content: utf8ToBase64(content),
+        branch: GH_BRANCH,
+    };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(apiBase, {
+        method: 'PUT',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    if (!putRes.ok) {
+        const txt = await putRes.text();
+        throw new Error(`PUT 失敗 HTTP ${putRes.status}: ${txt.slice(0, 200)}`);
+    }
+}
 
 function renderAll() {
     // 5/25 派派：確保 mapConfig.objects 存在
@@ -732,8 +979,9 @@ function renderAll() {
     renderGlbPicker();
     renderObjectsList();
     renderObjectDetail();
-    autoSave();  // 每次 render 觸發 debounced save
-    // 5/26 派派：mapConfig 整個被換掉時（載入 server/重置/新建）通知 3D canvas 清舊 model 殘留
+    renderSpriteMarkers();    // 5/29 sprite mode markers
+    renderWaypointMarkers();  // 5/29 patrol waypoints
+    autoSave();
     notifyObjects3DChanged();
 }
 
@@ -1088,16 +1336,18 @@ function renderDetail() {
     });
 }
 
-// 點地圖加 waypoint (path 模式) / 物件 (objects 模式)
+// 點地圖加 waypoint (path 模式) / 物件 (objects 模式) / 放 sprite (sprite 模式)
 mapFrame.addEventListener('click', e => {
     if (e.target.classList.contains('path-waypoint')) return;
     if (e.target.classList.contains('bbox') || e.target.classList.contains('bbox-handle')) return;
-    if (e.target.classList.contains('obj-emoji')) return;  // 點 emoji 走 emoji handler
+    if (e.target.classList.contains('obj-emoji')) return;
+    if (e.target.classList.contains('placed-marker') || e.target.classList.contains('waypoint-marker')) return;
+    const rect = mapImg.getBoundingClientRect();
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+
     if (mode === 'objects') {
-        if (!pendingGlbFile) return;  // 沒選 GLB → 不加
-        const rect = mapImg.getBoundingClientRect();
-        const nx = (e.clientX - rect.left) / rect.width;
-        const ny = (e.clientY - rect.top) / rect.height;
+        if (!pendingGlbFile) return;
         if (!mapConfig.objects) mapConfig.objects = [];
         const obj = {
             id: nextObjectId(),
@@ -1110,26 +1360,306 @@ mapFrame.addEventListener('click', e => {
         mapConfig.objects.push(obj);
         selectedObjectIds = new Set([obj.id]);
         renderAll();
-        console.log('[click-handler] added', obj.id, obj.glb, 'calling notify');
         notifyObjects3DChanged();
+    } else if (mode === 'sprite') {
+        if (pendingSpriteIdx === null) return;  // 沒選 sprite → 不放
+        placeSpriteAt(pendingSpriteIdx, parseFloat(nx.toFixed(6)), parseFloat(ny.toFixed(6)));
+    } else if (mode === 'path') {
+        if (!pathEditingNpcId) return;
+        const npc = (mapConfig.npcs || []).find(n => n.id === pathEditingNpcId);
+        if (!npc) return;
+        if (!Array.isArray(npc.patrol)) npc.patrol = [];
+        npc.patrol.push({ x: parseFloat(nx.toFixed(6)), y: parseFloat(ny.toFixed(6)) });
+        autoSave();
+        renderWaypointMarkers();
+        renderPathNpcList();
     }
 });
 
-// Tab 切換（5/25 派派：砍 path tab，玩家可自己走不需要 hotspot 自動走 path）
+// Tab 切換（5/29 派派加 sprite + path mode）
+const tabSprite = document.getElementById('tab-sprite');
+const tabPath = document.getElementById('tab-path');
+const spritePanel = document.getElementById('spritePanel');
+const pathPanel = document.getElementById('pathPanel');
 function setMode(newMode) {
     mode = newMode;
     tabBbox.classList.toggle('active', newMode === 'bbox');
+    tabSprite.classList.toggle('active', newMode === 'sprite');
+    tabPath.classList.toggle('active', newMode === 'path');
     tabObjects.classList.toggle('active', newMode === 'objects');
-    pathHint.classList.remove('show');  // path mode 已拿掉
+    pathHint.classList.remove('show');
     objectHint.classList.toggle('show', newMode === 'objects');
-    // 切 mode 時：右側 panel 顯示對應內容
     objectsPanel.style.display = newMode === 'objects' ? 'block' : 'none';
-    buildingList.style.display = newMode === 'objects' ? 'none' : 'block';
-    buildingDetail.style.display = newMode === 'objects' ? 'none' : 'block';
+    spritePanel.style.display = newMode === 'sprite' ? 'block' : 'none';
+    pathPanel.style.display = newMode === 'path' ? 'block' : 'none';
+    const showBuildingPanel = (newMode === 'bbox');
+    buildingList.style.display = showBuildingPanel ? 'block' : 'none';
+    buildingDetail.style.display = showBuildingPanel ? 'block' : 'none';
+    // 離開 sprite mode 清 pending sprite + selected card
+    if (newMode !== 'sprite') {
+        pendingSpriteIdx = null;
+        const hint = document.getElementById('spriteHint');
+        if (hint) hint.style.display = 'none';
+        document.querySelectorAll('#spriteLibrary .sprite-card.selected').forEach(c => c.classList.remove('selected'));
+    }
+    if (newMode === 'sprite') renderPlacedSpriteList();
+    if (newMode === 'path') renderPathNpcList();
+    renderSpriteMarkers();
+    renderWaypointMarkers();
     renderAll();
 }
 tabBbox.addEventListener('click', () => setMode('bbox'));
+tabSprite.addEventListener('click', () => setMode('sprite'));
+tabPath.addEventListener('click', () => setMode('path'));
 tabObjects.addEventListener('click', () => setMode('objects'));
+
+// ─── Sprite mode helpers ───────────────────────────────
+function getPlacedSprites() {
+    // 在 mapConfig.buildings 跟 npcs 都當「已放 sprite」管
+    if (!mapConfig) return [];
+    return (mapConfig.buildings || []).filter(b => b.sprite && b.anchor);
+}
+function getPlacedNpcs() {
+    if (!mapConfig) return [];
+    return mapConfig.npcs || [];
+}
+
+function placeSpriteAt(libIdx, normX, normY) {
+    if (!ACTIVE_PROJECT || !mapConfig) return;
+    const lib = ACTIVE_PROJECT.sprite_library || [];
+    const item = lib[libIdx];
+    if (!item) return;
+    if (item.type === 'npc') {
+        if (!Array.isArray(mapConfig.npcs)) mapConfig.npcs = [];
+        const id = 'npc_' + String(mapConfig.npcs.length + 1).padStart(2, '0');
+        mapConfig.npcs.push({
+            id, name: item.name.replace(/^\W+\s*/, ''),
+            sprite: { image: item.image, tint: item.tint || '#ffffff', scale: item.scale || 0.66,
+                      frame_width: item.frame_width || 231, frame_height: item.frame_height || 384 },
+            spawn: { x: normX, y: normY },
+            patrol: [{ x: normX, y: normY }],
+            speed: 60,
+            interaction: { type: item.default_interaction || 'open_modal',
+                           label: item.name.replace(/^\W+\s*/, ''),
+                           body: '你好！', radius: 110 },
+        });
+    } else {
+        if (!Array.isArray(mapConfig.buildings)) mapConfig.buildings = [];
+        const id = item.image.replace(/\.png$/, '') + '_' + (mapConfig.buildings.length + 1);
+        const halfSize = 0.02;
+        mapConfig.buildings.push({
+            id, name: item.name.replace(/^\W+\s*/, ''), category: item.type || 'building',
+            sprite: { image: item.image, scale: item.scale || 0.74, anchor_x: 0.5, anchor_y: 1.0 },
+            anchor: { x: normX, y: normY },
+            bounding_box: { x_min: normX - halfSize, x_max: normX + halfSize,
+                            y_min: normY - 0.01, y_max: normY + 0.005 },
+            interaction: item.default_interaction
+                ? { type: item.default_interaction, label: item.name.replace(/^\W+\s*/, ''), body: '', radius: 110 }
+                : undefined,
+            path: [], center: { x: normX, y: normY },
+            polygon: [
+                { x: normX - halfSize, y: normY - 0.01 },
+                { x: normX + halfSize, y: normY - 0.01 },
+                { x: normX + halfSize, y: normY + 0.005 },
+                { x: normX - halfSize, y: normY + 0.005 },
+            ],
+            mask_color: '#FF3B30', render_order: 500,
+            interaction_type: item.default_interaction || 'open_modal',
+        });
+    }
+    // 清掉 pending（單次放單個）
+    pendingSpriteIdx = null;
+    document.querySelectorAll('#spriteLibrary .sprite-card.selected').forEach(c => c.classList.remove('selected'));
+    const hint = document.getElementById('spriteHint');
+    if (hint) hint.style.display = 'none';
+    autoSave();
+    renderAll();
+    renderSpriteMarkers();
+    renderPlacedSpriteList();
+}
+
+function renderSpriteMarkers() {
+    document.querySelectorAll('#mapFrame .placed-marker').forEach(el => el.remove());
+    if (!mapConfig || mode !== 'sprite') return;
+    const mf = document.getElementById('mapFrame');
+    const w = mapImg.clientWidth, h = mapImg.clientHeight;
+    // Buildings (sprite-based)
+    getPlacedSprites().forEach(b => {
+        const m = document.createElement('div');
+        m.className = 'placed-marker';
+        m.style.left = (b.anchor.x * w) + 'px';
+        m.style.top  = (b.anchor.y * h) + 'px';
+        m.textContent = '🏠';
+        m.dataset.bid = b.id;
+        attachSpriteDrag(m, b, w, h, false);
+        mf.appendChild(m);
+    });
+    getPlacedNpcs().forEach(n => {
+        const m = document.createElement('div');
+        m.className = 'placed-marker npc';
+        m.style.left = (n.spawn.x * w) + 'px';
+        m.style.top  = (n.spawn.y * h) + 'px';
+        m.textContent = '👤';
+        m.dataset.nid = n.id;
+        attachSpriteDrag(m, n, w, h, true);
+        mf.appendChild(m);
+    });
+}
+
+function attachSpriteDrag(el, obj, w, h, isNpc) {
+    // Listener-leak 修法：mousedown 開始才 add document listener，mouseup 移除
+    el.addEventListener('mousedown', startE => {
+        startE.stopPropagation();
+        document.body.style.userSelect = 'none';
+        const startAnchor = isNpc
+            ? { x: obj.spawn.x, y: obj.spawn.y }
+            : { x: obj.anchor.x, y: obj.anchor.y };
+        const onMove = e => {
+            const rect = mapImg.getBoundingClientRect();
+            const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            const dx = nx - startAnchor.x;
+            const dy = ny - startAnchor.y;
+            if (isNpc) {
+                obj.spawn.x = nx; obj.spawn.y = ny;
+                // 同步 patrol[0]（如果原本就是 spawn 位置）
+                if (Array.isArray(obj.patrol) && obj.patrol[0]) {
+                    obj.patrol[0].x = nx; obj.patrol[0].y = ny;
+                }
+            } else {
+                obj.anchor.x = nx; obj.anchor.y = ny;
+                obj.center = { x: nx, y: ny };
+                // 同步 bbox 跟 polygon 跟著 delta 移動（避免視覺跟 collision 對不上）
+                if (obj.bounding_box) {
+                    obj.bounding_box.x_min += dx; obj.bounding_box.x_max += dx;
+                    obj.bounding_box.y_min += dy; obj.bounding_box.y_max += dy;
+                }
+                if (Array.isArray(obj.polygon)) {
+                    obj.polygon.forEach(p => { p.x += dx; p.y += dy; });
+                }
+                startAnchor.x = nx; startAnchor.y = ny;  // 累積 delta
+            }
+            el.style.left = (nx * w) + 'px';
+            el.style.top  = (ny * h) + 'px';
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.userSelect = '';
+            autoSave();
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
+}
+
+function renderPlacedSpriteList() {
+    const el = document.getElementById('placedSpriteList');
+    if (!el) return;
+    const items = [
+        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name, isNpc: false, icon: '🏠' })),
+        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name, isNpc: true, icon: '👤' })),
+    ];
+    document.getElementById('spriteCount').textContent = items.length;
+    el.innerHTML = items.map(it => `
+        <div class="placed-row" data-id="${it.id}" data-npc="${it.isNpc}">
+            <span>${it.icon}</span>
+            <span style="flex:1;">${it.name}</span>
+            <button data-action="delete">刪</button>
+        </div>
+    `).join('') || '<div style="padding:10px;color:#666;font-size:11px;">尚未放置</div>';
+    el.querySelectorAll('.placed-row button[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const row = btn.closest('.placed-row');
+            const id = row.dataset.id;
+            const isNpc = row.dataset.npc === 'true';
+            if (!confirm(`真的刪 ${id}？`)) return;
+            if (isNpc) mapConfig.npcs = (mapConfig.npcs || []).filter(n => n.id !== id);
+            else mapConfig.buildings = (mapConfig.buildings || []).filter(b => b.id !== id);
+            autoSave();
+            renderAll();
+            renderSpriteMarkers();
+            renderPlacedSpriteList();
+        });
+    });
+}
+
+// ─── Path mode：NPC 巡邏路徑 ─────────────────────────────
+let pathEditingNpcId = null;
+
+function renderPathNpcList() {
+    const el = document.getElementById('pathNpcList');
+    if (!el) return;
+    const npcs = getPlacedNpcs();
+    if (npcs.length === 0) {
+        el.innerHTML = '<div style="color:#888;font-size:11px;">沒有 NPC（先到 sprite 模式拖一個放）</div>';
+        return;
+    }
+    el.innerHTML = npcs.map(n => `
+        <div style="margin-bottom:8px; padding:8px; background:${pathEditingNpcId === n.id ? '#3a3f55' : '#232938'}; border-radius:4px; cursor:pointer;" data-nid="${n.id}">
+            <div style="font-weight:700; color:#fdc500;">${n.name}</div>
+            <div style="font-size:10px; color:#888; margin-top:3px;">waypoints: ${(n.patrol || []).length}</div>
+        </div>
+    `).join('');
+    el.querySelectorAll('[data-nid]').forEach(row => {
+        row.addEventListener('click', () => {
+            pathEditingNpcId = pathEditingNpcId === row.dataset.nid ? null : row.dataset.nid;
+            renderPathNpcList();
+            renderWaypointMarkers();
+            document.getElementById('pathEditingHint').style.display = pathEditingNpcId ? 'block' : 'none';
+        });
+    });
+}
+
+function renderWaypointMarkers() {
+    document.querySelectorAll('#mapFrame .waypoint-marker').forEach(el => el.remove());
+    if (mode !== 'path' || !pathEditingNpcId) return;
+    const npc = (mapConfig.npcs || []).find(n => n.id === pathEditingNpcId);
+    if (!npc) return;
+    const mf = document.getElementById('mapFrame');
+    const w = mapImg.clientWidth, h = mapImg.clientHeight;
+    (npc.patrol || []).forEach((p, idx) => {
+        const m = document.createElement('div');
+        m.className = 'waypoint-marker';
+        m.style.left = (p.x * w) + 'px';
+        m.style.top  = (p.y * h) + 'px';
+        m.textContent = (idx + 1);
+        attachWaypointHandlers(m, npc, idx, w, h);
+        mf.appendChild(m);
+    });
+}
+
+function attachWaypointHandlers(el, npc, idx, w, h) {
+    el.addEventListener('mousedown', startE => {
+        if (startE.button === 2) return;
+        startE.stopPropagation();
+        document.body.style.userSelect = 'none';
+        const onMove = e => {
+            const rect = mapImg.getBoundingClientRect();
+            const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            npc.patrol[idx].x = nx; npc.patrol[idx].y = ny;
+            el.style.left = (nx * w) + 'px';
+            el.style.top  = (ny * h) + 'px';
+        };
+        const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.userSelect = '';
+            autoSave();
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    });
+    el.addEventListener('contextmenu', e => {
+        e.preventDefault(); e.stopPropagation();
+        npc.patrol.splice(idx, 1);
+        autoSave();
+        renderWaypointMarkers();
+        renderPathNpcList();
+    });
+}
 
 // ─── 物件渲染 + 拖拉 + UI（5/25 派派 3D 物件擺放工具）─────
 function renderGlbPicker() {
@@ -1456,7 +1986,11 @@ document.getElementById('btnClearCache').addEventListener('click', () => {
 // ─── 一鍵推 GitHub ────────────────────────────────────────────────
 const GH_REPO_OWNER = 'gamezpika';
 const GH_REPO_NAME = 'eduarena-skill-demo';
-const GH_FILE_PATH = ACTIVE_MAP.configPath;
+// 5/29 派派：用 getter 每次 push 取最新 ACTIVE_MAP.configPath（registry async 載完後 ACTIVE_MAP 才會 update）
+// const GH_FILE_PATH = ACTIVE_MAP.configPath;  // ← 已換成下面的 getCurrentConfigPath()
+function getCurrentConfigPath() {
+    return (ACTIVE_PROJECT && ACTIVE_PROJECT.config_path) || ACTIVE_MAP.configPath;
+}
 const GH_BRANCH = 'main';
 const GH_PAT_KEY = 'wmEditPAT';
 
@@ -1486,7 +2020,7 @@ async function pushToGitHub() {
     const origText = btn.textContent;
     btn.disabled = true;
 
-    const apiBase = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${GH_FILE_PATH}`;
+    const apiBase = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${getCurrentConfigPath()}`;
     const authHeaders = {
         'Authorization': `Bearer ${pat}`,
         'Accept': 'application/vnd.github+json',
