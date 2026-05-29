@@ -45,7 +45,7 @@ const OBSTACLES = [
   { cx: 1230, cy: 895, w: 32,  h: 24 },
 ];
 
-// 河流碰撞（PIL scan-line 自動產生，橋區域 x=30-330, y=700-820 已排除）
+// 河流碰撞（PIL scan-line 自動產生，橋區域 x=30-330, y=700-820 已排除，4 向 split 補橋下水塊）
 const RIVER_OBSTACLES = [
   { cx: 67,  cy: 350, w: 134, h: 60 },
   { cx: 75,  cy: 410, w: 150, h: 60 },
@@ -53,8 +53,10 @@ const RIVER_OBSTACLES = [
   { cx: 45,  cy: 530, w: 90,  h: 60 },
   { cx: 43,  cy: 590, w: 87,  h: 60 },
   { cx: 68,  cy: 650, w: 137, h: 60 },
-  { cx: 347, cy: 710, w: 34,  h: 60 },
+  { cx: 196, cy: 690, w: 336, h: 20 },
+  { cx: 347, cy: 720, w: 34,  h: 40 },
   { cx: 364, cy: 770, w: 69,  h: 60 },
+  { cx: 274, cy: 840, w: 79,  h: 40 },
   { cx: 490, cy: 830, w: 139, h: 60 },
   { cx: 573, cy: 890, w: 333, h: 60 },
   { cx: 631, cy: 950, w: 394, h: 60 },
@@ -271,25 +273,26 @@ class ExploreScene extends Phaser.Scene {
   }
 
   _fountainSplash() {
-    // 噴泉頂端水花動畫：8 顆水珠四散
-    const fx = 960, fy = 500;  // 噴泉上方水柱頂
-    for (let i = 0; i < 10; i++) {
+    // 噴泉頂端水花動畫：12 顆水珠扇形噴出再落下
+    // depth=9999 強制在所有 sprite 上面（噴泉 sprite depth=600 會擋住，必須蓋過）
+    const fx = 960, fy = 460;  // 噴泉上方水柱頂（fountain 視覺上盆口）
+    for (let i = 0; i < 12; i++) {
       const drop = this.add.circle(
-        fx + Phaser.Math.Between(-12, 12),
-        fy + Phaser.Math.Between(-8, 8),
-        Phaser.Math.Between(4, 7),
-        0x86d4ff, 0.85
-      ).setStrokeStyle(1, 0x4080a0, 0.7).setDepth(fy);
-      const angle = Phaser.Math.DegToRad(Phaser.Math.Between(-100, -80) + (i - 5) * 15);
-      const dist = Phaser.Math.Between(60, 110);
+        fx + Phaser.Math.Between(-10, 10),
+        fy + Phaser.Math.Between(-6, 6),
+        Phaser.Math.Between(5, 8),
+        0x86d4ff, 0.9
+      ).setStrokeStyle(1.5, 0x4080a0, 0.8).setDepth(9999);
+      const angle = Phaser.Math.DegToRad(-90 + (i - 6) * 14);
+      const dist = Phaser.Math.Between(70, 120);
       const targetX = fx + Math.cos(angle) * dist;
-      const targetY = fy + Math.abs(Math.sin(angle)) * 80 + 60;  // 都往下落
+      const targetY = fy + Math.abs(Math.sin(angle)) * 50 + 90;  // 拋物線往下
       this.tweens.add({
         targets: drop,
         x: targetX, y: targetY,
         alpha: 0, scale: 0.3,
-        duration: 700 + Math.random() * 300,
-        ease: "Quad.easeIn",
+        duration: 800 + Math.random() * 300,
+        ease: "Quad.easeOut",
         onComplete: () => drop.destroy(),
       });
     }
