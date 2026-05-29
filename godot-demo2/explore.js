@@ -32,19 +32,19 @@ class ExploreScene extends Phaser.Scene {
     this.assetBase = "../" + (config.asset_base || "");
 
     // Stage 1: 預載所有 asset 後進入第二階段
-    this.load.image("village_ground", "../" + config.background + "?v=1");
+    this.load.image("village_ground", "../" + config.background + "?v=2");
     config.buildings.forEach(b => {
       if (b.sprite && b.sprite.image) {
         if (!this.textures.exists(b.sprite.image)) {
-          this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=5");
+          this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=6");
         }
       }
     });
     // Player sprites（3 方向）
     const ps = config.player.sprites;
-    this.load.spritesheet("hero",      this.assetBase + ps.side.image + "?v=2", { frameWidth: ps.side.frame_width, frameHeight: ps.side.frame_height });
-    this.load.spritesheet("hero_down", this.assetBase + ps.down.image + "?v=2", { frameWidth: ps.down.frame_width, frameHeight: ps.down.frame_height });
-    this.load.spritesheet("hero_up",   this.assetBase + ps.up.image   + "?v=2", { frameWidth: ps.up.frame_width,   frameHeight: ps.up.frame_height });
+    this.load.spritesheet("hero",      this.assetBase + ps.side.image + "?v=3", { frameWidth: ps.side.frame_width, frameHeight: ps.side.frame_height });
+    this.load.spritesheet("hero_down", this.assetBase + ps.down.image + "?v=3", { frameWidth: ps.down.frame_width, frameHeight: ps.down.frame_height });
+    this.load.spritesheet("hero_up",   this.assetBase + ps.up.image   + "?v=3", { frameWidth: ps.up.frame_width,   frameHeight: ps.up.frame_height });
 
     // NPC sprites（每隻 NPC 可帶自己的 side/down/up；沒給就 fallback 用 hero）
     if (Array.isArray(config.npcs)) {
@@ -56,14 +56,26 @@ class ExploreScene extends Phaser.Scene {
           if (!def || !def.image) return;
           const key = `npc_${npcCfg.id}_${dir}`;
           if (!this.textures.exists(key)) {
-            this.load.spritesheet(key, this.assetBase + def.image + "?v=1",
+            this.load.spritesheet(key, this.assetBase + def.image + "?v=2",
               { frameWidth: def.frame_width, frameHeight: def.frame_height });
           }
         });
       });
     }
 
-    this.load.once("complete", () => this._buildScene());
+    // Loading progress UI（圖檔大、手機網路慢時不會看到一片綠）
+    const sw = this.scale.width, sh = this.scale.height;
+    const loadText = this.add.text(sw / 2, sh / 2, "載入中 0%", {
+      fontFamily: '-apple-system, "PingFang TC", sans-serif',
+      fontSize: 24 * DPR, color: "#ffffff",
+      backgroundColor: "#1a2412",
+      padding: { x: 16 * DPR, y: 10 * DPR },
+    }).setOrigin(0.5).setDepth(99999);
+    this.load.on("progress", (p) => loadText.setText(`載入中 ${Math.floor(p * 100)}%`));
+    this.load.on("loaderror", (file) => {
+      loadText.setText(`載入失敗：${file.key || file.src}`).setColor("#ff7070");
+    });
+    this.load.once("complete", () => { loadText.destroy(); this._buildScene(); });
     this.load.start();
   }
 
