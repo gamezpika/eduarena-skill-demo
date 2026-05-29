@@ -298,7 +298,10 @@ class ExploreScene extends Phaser.Scene {
   _adjustZoom() {
     const sw = this.scale.width, sh = this.scale.height;
     const aspectThreshold = this.VIEW_BASE_WIDTH / this.WORLD_H;  // ~1.111
-    const z = (sw / sh) >= aspectThreshold ? sw / this.VIEW_BASE_WIDTH : sh / this.WORLD_H;
+    let z = (sw / sh) >= aspectThreshold ? sw / this.VIEW_BASE_WIDTH : sh / this.WORLD_H;
+    // 手機 portrait（高 > 寬）視野放大，避免世界看起來太小
+    const isPortrait = sh > sw;
+    if (isPortrait) z *= 1.5;
     this.cameras.main.setZoom(z);
   }
 
