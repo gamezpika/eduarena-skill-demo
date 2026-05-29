@@ -551,8 +551,11 @@ const game = new Phaser.Game({
 });
 
 // Retina：backbuffer = CSS × dpr，canvas 顯示維持 CSS 尺寸，手機高 dpr 才不糊
+// CSS 尺寸用 visualViewport（iOS Safari 真實可見高度），fallback innerWidth/Height
 const _applyDpr = () => {
-  const cssW = window.innerWidth, cssH = window.innerHeight;
+  const vp = window.visualViewport;
+  const cssW = vp ? vp.width : window.innerWidth;
+  const cssH = vp ? vp.height : window.innerHeight;
   game.scale.resize(cssW * DPR, cssH * DPR);
   game.canvas.style.width = cssW + "px";
   game.canvas.style.height = cssH + "px";
@@ -561,4 +564,7 @@ game.events.once("ready", () => {
   _applyDpr();
   window.addEventListener("resize", _applyDpr);
   window.addEventListener("orientationchange", _applyDpr);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", _applyDpr);
+  }
 });

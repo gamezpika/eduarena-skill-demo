@@ -10,14 +10,15 @@
     margin: 0; padding: 0;
     background: #1a2412;
     overflow: hidden;
-    height: 100vh;
+    height: 100vh; /* fallback */
+    height: 100dvh; /* iOS Safari 動態 viewport，扣掉 toolbar 高度 */
     width: 100vw;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
     overscroll-behavior: none;
   }
-  #game { width: 100vw; height: 100vh; }
+  #game { width: 100vw; height: 100vh; height: 100dvh; }
   canvas { display: block; touch-action: none; }
   .hint {
     position: fixed; left: 12px; top: 12px;
@@ -38,6 +39,6 @@
 <div id="game"></div>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/phaser3-rex-plugins@1.1.84/dist/rexvirtualjoystickplugin.min.js"></script>
-<script src="explore.js?v=28"></script>
+<script src="explore.js?v=29"></script>
 </body>
 </html>
