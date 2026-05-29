@@ -23,7 +23,8 @@
           "frame_width": 234,
           "frame_height": 457,
           "frames": 9,
-          "frame_rate": 6
+          "frame_rate": 6,
+          "facing": "left"
         },
         "down": {
           "image": "player1.png",
@@ -1617,7 +1618,8 @@
               "frame_width": 151,
               "frame_height": 206,
               "frames": 9,
-              "frame_rate": 12
+              "frame_rate": 12,
+              "facing": "right"
             },
             "down": {
               "image": "hero_walk.png",
@@ -1683,7 +1685,8 @@
               "grid_cols": 3,
               "grid_rows": 3,
               "frames": 9,
-              "frame_rate": 4
+              "frame_rate": 4,
+              "facing": "right"
             }
           }
         },
@@ -1747,7 +1750,8 @@
               "grid_cols": 3,
               "grid_rows": 3,
               "frames": 9,
-              "frame_rate": 6
+              "frame_rate": 6,
+              "facing": "left"
             },
             "down": {
               "image": "girl1.png",

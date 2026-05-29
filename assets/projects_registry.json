@@ -89,7 +89,8 @@
               "frame_width": 151,
               "frame_height": 206,
               "frames": 9,
-              "frame_rate": 12
+              "frame_rate": 12,
+              "facing": "right"
             },
             "down": {
               "image": "hero_walk.png",
@@ -121,7 +122,8 @@
               "grid_cols": 3,
               "grid_rows": 3,
               "frames": 9,
-              "frame_rate": 4
+              "frame_rate": 4,
+              "facing": "right"
             },
             "up": {
               "image": "cowwalk2.png",
@@ -141,9 +143,34 @@
           "default_interaction": "open_modal",
           "default_greeting": "嗨～",
           "sprites": {
-            "side": { "image": "girl3.png", "frame_width": 234, "frame_height": 464, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 },
-            "down": { "image": "girl1.png", "frame_width": 281, "frame_height": 491, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 },
-            "up":   { "image": "girl2.png", "frame_width": 269, "frame_height": 486, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 }
+            "side": {
+              "image": "girl3.png",
+              "frame_width": 234,
+              "frame_height": 464,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6,
+              "facing": "left"
+            },
+            "down": {
+              "image": "girl1.png",
+              "frame_width": 281,
+              "frame_height": 491,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6
+            },
+            "up": {
+              "image": "girl2.png",
+              "frame_width": 269,
+              "frame_height": 486,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6
+            }
           }
         }
       ]

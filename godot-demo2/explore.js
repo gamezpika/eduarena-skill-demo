@@ -453,9 +453,15 @@ class ExploreScene extends Phaser.Scene {
     if (!horizMore) want = dy > 0 ? keys.down : keys.up;
     const cur = npc.sprite.anims.currentAnim;
     if (!cur || cur.key !== want) npc.sprite.play(want);
-    // sprite 原圖一律假設「朝右」(modern walk cycle 標準) — 朝左走才翻
-    if (want === keys.side) npc.sprite.setFlipX(dx < 0);
-    else npc.sprite.setFlipX(false);
+    // 每張 sprite 原圖朝向可能不同 — 讀 sprite.sprites.side.facing ('left'/'right'，預設 'right')
+    if (want === keys.side) {
+      const sideCfg = (npc.cfg.sprite && npc.cfg.sprite.sprites && npc.cfg.sprite.sprites.side) || {};
+      const forwardRight = (sideCfg.facing || 'right') === 'right';
+      // 朝右走 (dx>0)：朝右圖不翻、朝左圖翻；朝左走相反
+      npc.sprite.setFlipX(forwardRight ? dx < 0 : dx > 0);
+    } else {
+      npc.sprite.setFlipX(false);
+    }
   }
 
   _updateInteractable() {
@@ -521,10 +527,12 @@ class ExploreScene extends Phaser.Scene {
     }
     const cur = this.playerSprite.anims.currentAnim;
     if (!cur || cur.key !== wantAnim) this.playerSprite.play(wantAnim);
-    // 玩家 sprite 也假設原圖朝右 — 朝左走才翻
+    // 玩家 side spritesheet 朝向讀 config.player.sprites.side.facing (預設 'right')
     if (wantAnim === "hero_walk") {
-      if (dx >  0.1) this.playerSprite.setFlipX(false);
-      else if (dx < -0.1) this.playerSprite.setFlipX(true);
+      const sideCfg = (this.config.player.sprites && this.config.player.sprites.side) || {};
+      const forwardRight = (sideCfg.facing || 'right') === 'right';
+      if (dx >  0.1) this.playerSprite.setFlipX(forwardRight ? false : true);
+      else if (dx < -0.1) this.playerSprite.setFlipX(forwardRight ? true : false);
     } else {
       this.playerSprite.setFlipX(false);
     }
