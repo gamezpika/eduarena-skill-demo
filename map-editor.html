@@ -433,6 +433,7 @@
         <button class="btn-secondary" id="btnLoadLocal">📂 上傳本地圖</button>
         <button class="btn-secondary" id="btnLoadUrl">🔗 從 URL</button>
         <button class="btn-secondary" id="btnNewBuilding">➕ 新 building</button>
+        <button class="btn-secondary" id="btnNewObstacle" title="加新障礙物 polygon（河流/不規則阻擋）">➕ 新障礙物</button>
     </div>
 
     <div class="mode-tabs">
@@ -820,6 +821,17 @@ function loadServerMap(useCachedConfig) {
         .then(json => {
             const serverConfig = json.map_config;
             if (!Array.isArray(serverConfig.buildings)) serverConfig.buildings = [];
+            // Normalize obstacle_areas (河流之類不規則 polygon 障礙物) — 加 bounding_box 給編輯器用
+            if (!Array.isArray(serverConfig.obstacle_areas)) serverConfig.obstacle_areas = [];
+            serverConfig.obstacle_areas.forEach(a => {
+                if (!a.id) a.id = 'area_' + Math.random().toString(36).slice(2, 8);
+                if (!a.name) a.name = '障礙物';
+                if (!a.mask_color) a.mask_color = '#00aaff';
+                if (typeof a.render_order !== 'number') a.render_order = 100;
+                if (Array.isArray(a.polygon) && a.polygon.length >= 3 && !a.bounding_box) {
+                    a.bounding_box = bboxFromPolygon(a.polygon);
+                }
+            });
             // Schema-normalize：village 模式 building 缺的欄位補 default 不讓 editor 崩
             serverConfig.buildings.forEach(b => {
                 if (!b.path) b.path = [];
@@ -869,6 +881,17 @@ function loadServerMap(useCachedConfig) {
                 mapConfig.buildings = [];
             }
             if (!Array.isArray(mapConfig.objects)) mapConfig.objects = [];
+            // 同樣 normalize cached config 的 obstacle_areas
+            if (!Array.isArray(mapConfig.obstacle_areas)) mapConfig.obstacle_areas = [];
+            mapConfig.obstacle_areas.forEach(a => {
+                if (!a.id) a.id = 'area_' + Math.random().toString(36).slice(2, 8);
+                if (!a.name) a.name = '障礙物';
+                if (!a.mask_color) a.mask_color = '#00aaff';
+                if (typeof a.render_order !== 'number') a.render_order = 100;
+                if (Array.isArray(a.polygon) && a.polygon.length >= 3 && !a.bounding_box) {
+                    a.bounding_box = bboxFromPolygon(a.polygon);
+                }
+            });
             // 5/26 派派：dog.glb 從未設過 follow → 預設跟玩家走
             mapConfig.objects.forEach(o => {
                 if (o.glb === 'dog.glb' && o.follow === undefined) o.follow = true;
@@ -1128,6 +1151,37 @@ function renderBuildingList() {
         });
         buildingList.appendChild(row);
     });
+    // 5/29 派派：obstacle_areas（河流之類）也列出來可選+編
+    const areas = mapConfig.obstacle_areas || [];
+    if (areas.length > 0) {
+        const sep = document.createElement('div');
+        sep.style.cssText = 'padding:6px 12px;background:#1a2030;font-size:10px;color:#fdc500;font-weight:700;border-top:1px solid #0d1019;border-bottom:1px solid #0d1019;';
+        sep.textContent = '🌊 障礙物 polygons';
+        buildingList.appendChild(sep);
+        areas.forEach(a => {
+            const row = document.createElement('div');
+            row.className = 'building-row' + (a.id === selectedBuildingId ? ' selected' : '');
+            row.innerHTML = `
+                <div class="building-color" style="background:${a.mask_color}"></div>
+                <div class="building-name">${a.name}</div>
+                <div class="building-count">${(a.polygon || []).length} vertices</div>
+            `;
+            row.addEventListener('click', () => {
+                selectedBuildingId = a.id;
+                renderAll();
+            });
+            buildingList.appendChild(row);
+        });
+    }
+}
+
+// 5/29 找 selectedBuildingId 屬於哪 array（buildings or obstacle_areas）
+function findItemAndOwner(id) {
+    let item = mapConfig.buildings.find(b => b.id === id);
+    if (item) return { item, ownerArray: mapConfig.buildings, isObstacle: false };
+    item = (mapConfig.obstacle_areas || []).find(a => a.id === id);
+    if (item) return { item, ownerArray: mapConfig.obstacle_areas, isObstacle: true };
+    return null;
 }
 
 function renderPolygons() {
@@ -1144,8 +1198,12 @@ function renderPolygons() {
     pathSvg.setAttribute('height', mh);
     pathSvg.style.pointerEvents = 'auto';  // 讓 polygon 可以被 click
 
-    // 依 render_order 由小到大畫
-    const buildings = [...mapConfig.buildings].sort((a, b) => a.render_order - b.render_order);
+    // 依 render_order 由小到大畫（buildings + obstacle_areas）
+    const allItems = [
+        ...mapConfig.buildings,
+        ...(mapConfig.obstacle_areas || []),
+    ];
+    const buildings = allItems.sort((a, b) => (a.render_order || 0) - (b.render_order || 0));
     buildings.forEach(b => {
         if (!b.polygon || b.polygon.length < 3) {
             // 沒 polygon 或太少點 → 從 bbox 推 4 點
@@ -1563,22 +1621,26 @@ function placeSpriteAt(libIdx, normX, normY) {
     } else {
         if (!Array.isArray(mapConfig.buildings)) mapConfig.buildings = [];
         const id = item.image.replace(/\.png$/, '') + '_' + (mapConfig.buildings.length + 1);
-        const halfSize = 0.02;
+        // bbox 從 sprite library 讀 default（派派要的：上傳就有合理紅框，bbox 模式只是微調）
+        const halfW = (item.bbox_w_norm || 0.05) / 2;
+        const halfH = (item.bbox_h_norm || 0.02) / 2;
+        // bbox 中心在 anchor 點往上半個 bbox 高（房子腳底就是 anchor）
+        const bboxCenterY = normY - halfH;
         mapConfig.buildings.push({
             id, name: item.name.replace(/^\W+\s*/, ''), category: item.type || 'building',
             sprite: { image: item.image, scale: item.scale || 0.74, anchor_x: 0.5, anchor_y: 1.0 },
             anchor: { x: normX, y: normY },
-            bounding_box: { x_min: normX - halfSize, x_max: normX + halfSize,
-                            y_min: normY - 0.01, y_max: normY + 0.005 },
+            bounding_box: { x_min: normX - halfW, x_max: normX + halfW,
+                            y_min: bboxCenterY - halfH, y_max: bboxCenterY + halfH },
             interaction: item.default_interaction
                 ? { type: item.default_interaction, label: item.name.replace(/^\W+\s*/, ''), body: '', radius: 110 }
                 : undefined,
             path: [], center: { x: normX, y: normY },
             polygon: [
-                { x: normX - halfSize, y: normY - 0.01 },
-                { x: normX + halfSize, y: normY - 0.01 },
-                { x: normX + halfSize, y: normY + 0.005 },
-                { x: normX - halfSize, y: normY + 0.005 },
+                { x: normX - halfW, y: bboxCenterY - halfH },
+                { x: normX + halfW, y: bboxCenterY - halfH },
+                { x: normX + halfW, y: bboxCenterY + halfH },
+                { x: normX - halfW, y: bboxCenterY + halfH },
             ],
             mask_color: '#FF3B30', render_order: 500,
             interaction_type: item.default_interaction || 'open_modal',
@@ -2532,6 +2594,32 @@ document.getElementById('btnNewBuilding').addEventListener('click', () => {
     };
     mapConfig.buildings.push(newB);
     selectedBuildingId = id;
+    renderAll();
+});
+
+// 新障礙物 polygon（河流之類）
+document.getElementById('btnNewObstacle').addEventListener('click', () => {
+    if (!mapConfig) { alert('請先載入圖片'); return; }
+    if (!Array.isArray(mapConfig.obstacle_areas)) mapConfig.obstacle_areas = [];
+    const idx = mapConfig.obstacle_areas.length + 1;
+    const id = 'area_' + String(idx).padStart(3, '0');
+    const name = prompt('障礙物名稱：', '河流/障礙' + idx);
+    if (!name) return;
+    // 預設 4 邊形在中央偏南（派派 容易看到位置可拖點調整）
+    const cx = 0.5, cy = 0.6, halfW = 0.06, halfH = 0.04;
+    const poly = [
+        { x: cx - halfW, y: cy - halfH },
+        { x: cx + halfW, y: cy - halfH },
+        { x: cx + halfW, y: cy + halfH },
+        { x: cx - halfW, y: cy + halfH },
+    ];
+    mapConfig.obstacle_areas.push({
+        id, name, mask_color: '#00aaff', render_order: 100,
+        polygon: poly,
+        bounding_box: bboxFromPolygon(poly),
+    });
+    selectedBuildingId = id;
+    setMode('bbox');
     renderAll();
 });
 
