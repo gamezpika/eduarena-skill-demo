@@ -1619,7 +1619,7 @@
               "frame_height": 206,
               "frames": 9,
               "frame_rate": 12,
-              "facing": "right"
+              "facing": "left"
             },
             "down": {
               "image": "hero_walk.png",
@@ -1686,7 +1686,7 @@
               "grid_rows": 3,
               "frames": 9,
               "frame_rate": 4,
-              "facing": "right"
+              "facing": "left"
             }
           }
         },
@@ -1751,7 +1751,7 @@
               "grid_rows": 3,
               "frames": 9,
               "frame_rate": 6,
-              "facing": "left"
+              "facing": "right"
             },
             "down": {
               "image": "girl1.png",
