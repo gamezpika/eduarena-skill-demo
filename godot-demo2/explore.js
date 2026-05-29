@@ -3,9 +3,13 @@
 // 派派用 map-editor.html?map=village 編輯 → 推 GitHub → 自動上線
 
 const CONFIG_URL = "../assets/village_config.json";
+const DPR = Math.max(1, window.devicePixelRatio || 1);
 
 class ExploreScene extends Phaser.Scene {
   constructor() { super("explore"); }
+  // backbuffer 是 css × dpr，UI/zoom 計算要用 CSS 尺寸（除以 dpr）
+  get cssW() { return this.scale.width / DPR; }
+  get cssH() { return this.scale.height / DPR; }
 
   preload() {
     this.load.json("village", CONFIG_URL + "?v=" + Date.now());
@@ -261,21 +265,22 @@ class ExploreScene extends Phaser.Scene {
   }
 
   _buildTouchUI() {
-    const baseR = 70, stickR = 30;
-    const jx = baseR + 30, jy = this.scale.height - baseR - 30;
-    this.joyBase  = this.add.circle(jx, jy, baseR,  0x000000, 0.28).setStrokeStyle(3, 0xffffff, 0.55).setScrollFactor(0).setDepth(10000);
-    this.joyThumb = this.add.circle(jx, jy, stickR, 0xffffff, 0.7 ).setStrokeStyle(2, 0x101010, 0.7 ).setScrollFactor(0).setDepth(10001);
+    // 所有 UI 尺寸×DPR：backbuffer 在 retina 設備是 CSS×DPR，UI 不乘 DPR 會顯示縮一半
+    const baseR = 70 * DPR, stickR = 30 * DPR, pad = 30 * DPR;
+    const jx = baseR + pad, jy = this.scale.height - baseR - pad;
+    this.joyBase  = this.add.circle(jx, jy, baseR,  0x000000, 0.28).setStrokeStyle(3 * DPR, 0xffffff, 0.55).setScrollFactor(0).setDepth(10000);
+    this.joyThumb = this.add.circle(jx, jy, stickR, 0xffffff, 0.7 ).setStrokeStyle(2 * DPR, 0x101010, 0.7 ).setScrollFactor(0).setDepth(10001);
     this.joystick = this.plugins.get("rexVirtualJoystick").add(this, {
       x: jx, y: jy, radius: baseR, base: this.joyBase, thumb: this.joyThumb,
-      dir: "8dir", forceMin: 16,
+      dir: "8dir", forceMin: 16 * DPR,
     });
-    const aR = 44;
-    const ax = this.scale.width - aR - 30, ay = this.scale.height - aR - 30;
-    this.aBtn = this.add.circle(ax, ay, aR, 0xfad440, 0.4).setStrokeStyle(3, 0x101010, 0.85).setScrollFactor(0).setDepth(10000).setInteractive();
-    this.aBtnText = this.add.text(ax, ay, "A", { fontFamily: "sans-serif", fontSize: 26, color: "#1a0d00", fontStyle: "bold" }).setOrigin(0.5).setScrollFactor(0).setDepth(10001);
-    this.aBtnHint = this.add.text(ax, ay - aR - 18, "", {
-      fontFamily: "-apple-system, 'PingFang TC', sans-serif", fontSize: 14, color: "#fff",
-      backgroundColor: "rgba(0,0,0,0.55)", padding: { x: 8, y: 4 },
+    const aR = 44 * DPR;
+    const ax = this.scale.width - aR - pad, ay = this.scale.height - aR - pad;
+    this.aBtn = this.add.circle(ax, ay, aR, 0xfad440, 0.4).setStrokeStyle(3 * DPR, 0x101010, 0.85).setScrollFactor(0).setDepth(10000).setInteractive();
+    this.aBtnText = this.add.text(ax, ay, "A", { fontFamily: "sans-serif", fontSize: 26 * DPR, color: "#1a0d00", fontStyle: "bold" }).setOrigin(0.5).setScrollFactor(0).setDepth(10001);
+    this.aBtnHint = this.add.text(ax, ay - aR - 18 * DPR, "", {
+      fontFamily: "-apple-system, 'PingFang TC', sans-serif", fontSize: 14 * DPR, color: "#fff",
+      backgroundColor: "rgba(0,0,0,0.55)", padding: { x: 8 * DPR, y: 4 * DPR },
     }).setOrigin(0.5).setScrollFactor(0).setDepth(10002).setVisible(false);
     this.aBtn.on("pointerdown", () => { if (this.currentInteractable) this.aBtn.setFillStyle(0xc4a020, 1.0); });
     this.aBtn.on("pointerup", () => { this._tryInteract(); this._refreshAButtonStyle(); });
@@ -291,15 +296,15 @@ class ExploreScene extends Phaser.Scene {
 
   _onResize() {
     this._adjustZoom();
-    const baseR = 70, aR = 44;
-    const jx = baseR + 30, jy = this.scale.height - baseR - 30;
+    const baseR = 70 * DPR, aR = 44 * DPR, pad = 30 * DPR;
+    const jx = baseR + pad, jy = this.scale.height - baseR - pad;
     this.joyBase.setPosition(jx, jy);
     this.joyThumb.setPosition(jx, jy);
     this.joystick.setPosition(jx, jy);
-    const ax = this.scale.width - aR - 30, ay = this.scale.height - aR - 30;
+    const ax = this.scale.width - aR - pad, ay = this.scale.height - aR - pad;
     this.aBtn.setPosition(ax, ay);
     this.aBtnText.setPosition(ax, ay);
-    this.aBtnHint.setPosition(ax, ay - aR - 18);
+    this.aBtnHint.setPosition(ax, ay - aR - 18 * DPR);
   }
 
   _refreshAButtonStyle() {
@@ -319,18 +324,18 @@ class ExploreScene extends Phaser.Scene {
     const sw = this.scale.width, sh = this.scale.height;
     this.modalContainer = this.add.container(sw/2, sh/2).setScrollFactor(0).setDepth(20000);
     const backdrop = this.add.rectangle(0, 0, sw*3, sh*3, 0x000000, 0.55).setInteractive();
-    const box = this.add.rectangle(0, 0, 360, 200, 0xfff8e0).setStrokeStyle(5, 0x4a3520);
-    const title = this.add.text(0, -55, item.label, {
+    const box = this.add.rectangle(0, 0, 360 * DPR, 200 * DPR, 0xfff8e0).setStrokeStyle(5 * DPR, 0x4a3520);
+    const title = this.add.text(0, -55 * DPR, item.label, {
       fontFamily: "-apple-system, 'PingFang TC', sans-serif",
-      fontSize: 30, color: "#4a3520", fontStyle: "bold",
+      fontSize: 30 * DPR, color: "#4a3520", fontStyle: "bold",
     }).setOrigin(0.5);
     const body = this.add.text(0, 0, item.body, {
       fontFamily: "-apple-system, 'PingFang TC', sans-serif",
-      fontSize: 18, color: "#4a3520",
+      fontSize: 18 * DPR, color: "#4a3520",
     }).setOrigin(0.5);
-    const closeBtn = this.add.text(0, 60, "[ 關閉 ]", {
+    const closeBtn = this.add.text(0, 60 * DPR, "[ 關閉 ]", {
       fontFamily: "-apple-system, 'PingFang TC', sans-serif",
-      fontSize: 20, color: "#a04020", fontStyle: "bold",
+      fontSize: 20 * DPR, color: "#a04020", fontStyle: "bold",
     }).setOrigin(0.5).setInteractive();
     const closeFn = () => {
       if (this.modalContainer) { this.modalContainer.destroy(); this.modalContainer = null; }
@@ -462,23 +467,12 @@ class ExploreScene extends Phaser.Scene {
       const d = Math.hypot(px - it.cx, py - it.cy);
       if (d < it.radius && d < bestDist) { nearest = it; bestDist = d; }
     }
-    // NPC 動態
+    // NPC：只冒氣泡，不再列入 A button 互動（派派要求：經過就有泡、不用按 A 對話）
     for (const npc of this.npcs) {
       const r = (npc.cfg.interaction && npc.cfg.interaction.radius) || 110;
       const d = Math.hypot(px - npc.body.x, py - npc.body.y);
       const inRange = d < r;
-      // 氣泡：在範圍內就冒出來（不用按 A）
       if (npc.bubble) npc.bubble.setVisible(inRange);
-      if (!npc.cfg.interaction) continue;
-      if (inRange && d < bestDist) {
-        nearest = {
-          cx: npc.body.x, cy: npc.body.y,
-          type: npc.cfg.interaction.type || "open_modal",
-          label: npc.cfg.interaction.label || npc.cfg.name,
-          body: npc.cfg.interaction.body || "",
-        };
-        bestDist = d;
-      }
     }
 
     if (nearest !== this.currentInteractable) {
@@ -541,10 +535,9 @@ const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: "game",
   scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: window.innerWidth,
-    height: window.innerHeight,
+    mode: Phaser.Scale.NONE,
+    width: window.innerWidth * DPR,
+    height: window.innerHeight * DPR,
   },
   physics: { default: "arcade", arcade: { gravity: { y: 0 }, debug: false } },
   plugins: {
@@ -555,4 +548,17 @@ const game = new Phaser.Game({
   backgroundColor: "#8cb45a",
   scene: ExploreScene,
   render: { pixelArt: false, antialias: true },
+});
+
+// Retina：backbuffer = CSS × dpr，canvas 顯示維持 CSS 尺寸，手機高 dpr 才不糊
+const _applyDpr = () => {
+  const cssW = window.innerWidth, cssH = window.innerHeight;
+  game.scale.resize(cssW * DPR, cssH * DPR);
+  game.canvas.style.width = cssW + "px";
+  game.canvas.style.height = cssH + "px";
+};
+game.events.once("ready", () => {
+  _applyDpr();
+  window.addEventListener("resize", _applyDpr);
+  window.addEventListener("orientationchange", _applyDpr);
 });
