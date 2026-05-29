@@ -1703,6 +1703,7 @@ function placeSpriteAt(libIdx, normX, normY) {
             spawn: { x: normX, y: normY },
             patrol: [{ x: normX, y: normY }],
             speed: 60,
+            greeting: item.default_greeting || '哈囉～',
             interaction: { type: item.default_interaction || 'open_modal',
                            label: itemName,
                            body: '你好！', radius: 110 },

@@ -15,7 +15,7 @@
         "x": 0.49987346655291687,
         "y": 0.672657974792804
       },
-      "scale": 0.35,
+      "scale": 0.3,
       "speed": 220,
       "sprites": {
         "side": {
@@ -1401,7 +1401,7 @@
         "id": "villager_01",
         "name": "村民",
         "sprite": {
-          "scale": 0.5,
+          "scale": 0.6,
           "sprites": {
             "side": {
               "image": "hero_walk2.png",
@@ -1458,7 +1458,8 @@
           "label": "村民",
           "body": "你好！我是村民",
           "radius": 110
-        }
+        },
+        "greeting": "你好～"
       },
       {
         "id": "npc_03",
@@ -1521,7 +1522,8 @@
           "label": "走路牛",
           "body": "你好！",
           "radius": 110
-        }
+        },
+        "greeting": "哞～"
       }
     ],
     "objects": []

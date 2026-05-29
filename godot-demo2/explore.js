@@ -208,6 +208,7 @@ class ExploreScene extends Phaser.Scene {
           sprite: null,
           patrolIdx: 0,
           animKeys: { side: dSide.anim, down: dDown.anim, up: dUp.anim },
+          bubble: null,
         };
         npc.sprite = this.add.sprite(npc.body.x, npc.body.y + 22, dSide.tex, 0);
         npc.sprite.setOrigin(0.5, 1);
@@ -217,6 +218,23 @@ class ExploreScene extends Phaser.Scene {
           npc.sprite.setTint(tintNum);
         }
         npc.sprite.play(dSide.anim);
+
+        // 氣泡：玩家走近就冒「哞～」「你好～」這類短招呼
+        const greeting = npcCfg.greeting
+          || (npcCfg.interaction && npcCfg.interaction.body
+              && String(npcCfg.interaction.body).split(/[！。!.\n]/)[0].slice(0, 12))
+          || npcCfg.name || "";
+        if (greeting) {
+          npc.bubble = this.add.text(npc.body.x, npc.body.y - 80, greeting, {
+            fontFamily: '"PingFang TC","Microsoft JhengHei",sans-serif',
+            fontSize: "18px",
+            color: "#1a1a1a",
+            backgroundColor: "#ffffff",
+            padding: { x: 10, y: 6 },
+            stroke: "#ffffff", strokeThickness: 0,
+          }).setOrigin(0.5, 1).setVisible(false);
+        }
+
         this.npcs.push(npc);
       });
     }
@@ -421,6 +439,11 @@ class ExploreScene extends Phaser.Scene {
     npc.shadow.y = npc.body.y + 18;
     npc.sprite.setDepth(npc.sprite.y);
     npc.shadow.setDepth(npc.sprite.y - 1);
+    if (npc.bubble) {
+      npc.bubble.x = npc.body.x;
+      npc.bubble.y = npc.body.y - 90;
+      npc.bubble.setDepth(npc.sprite.y + 1);
+    }
     const horizMore = Math.abs(dx) > Math.abs(dy);
     const keys = npc.animKeys;
     let want = keys.side;
@@ -441,10 +464,13 @@ class ExploreScene extends Phaser.Scene {
     }
     // NPC 動態
     for (const npc of this.npcs) {
-      if (!npc.cfg.interaction) continue;
-      const r = npc.cfg.interaction.radius || 110;
+      const r = (npc.cfg.interaction && npc.cfg.interaction.radius) || 110;
       const d = Math.hypot(px - npc.body.x, py - npc.body.y);
-      if (d < r && d < bestDist) {
+      const inRange = d < r;
+      // 氣泡：在範圍內就冒出來（不用按 A）
+      if (npc.bubble) npc.bubble.setVisible(inRange);
+      if (!npc.cfg.interaction) continue;
+      if (inRange && d < bestDist) {
         nearest = {
           cx: npc.body.x, cy: npc.body.y,
           type: npc.cfg.interaction.type || "open_modal",
