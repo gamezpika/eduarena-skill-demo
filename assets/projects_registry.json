@@ -26,7 +26,8 @@
           } },
         { "name": "🐮 走路牛", "type": "npc", "scale": 0.45, "default_interaction": "open_modal", "default_greeting": "哞～",
           "sprites": {
-            "side": { "image": "cowwalk.png", "frame_width": 640, "frame_height": 562, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 4 }
+            "side": { "image": "cowwalk.png",  "frame_width": 640, "frame_height": 562, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 4 },
+            "up":   { "image": "cowwalk2.png", "frame_width": 628, "frame_height": 588, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 4 }
           } }
       ]
     }

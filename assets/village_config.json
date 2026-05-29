@@ -1475,6 +1475,15 @@
               "grid_rows": 3,
               "frames": 9,
               "frame_rate": 4
+            },
+            "up": {
+              "image": "cowwalk2.png",
+              "frame_width": 628,
+              "frame_height": 588,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 4
             }
           }
         },
