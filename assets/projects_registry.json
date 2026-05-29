@@ -208,7 +208,8 @@
               "frame_rate": 8,
               "facing": "left"
             }
-          }
+          },
+          "default_depth_override": 9999
         }
       ]
     }

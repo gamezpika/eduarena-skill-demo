@@ -872,6 +872,19 @@ function _loadImageDim(image) {
     _imageDimCache.set(image, p);
     return p;
 }
+// 天空 sprite 推之前自動補 depth_override（派派從編輯器拖完不會丟）
+const AERIAL_NPC_IMAGES = new Set(['bird.png']);
+function preserveAerialNpcDepth(cfg) {
+    if (!cfg) return;
+    (cfg.npcs || []).forEach(npc => {
+        const s = npc.sprite && npc.sprite.sprites || {};
+        const img = (s.side && s.side.image) || (s.down && s.down.image) || (s.up && s.up.image) || (npc.sprite && npc.sprite.image) || '';
+        if (AERIAL_NPC_IMAGES.has(img) && typeof npc.depth_override !== 'number') {
+            npc.depth_override = 9999;
+        }
+    });
+}
+
 async function normalizeSpriteFramesFromImage(cfg) {
     if (!cfg) return;
     const tasks = [];
@@ -1811,7 +1824,7 @@ function placeSpriteAt(libIdx, normX, normY) {
             npcSprite.frame_width = item.frame_width || 231;
             npcSprite.frame_height = item.frame_height || 384;
         }
-        mapConfig.npcs.push({
+        const newNpc = {
             id, name: itemName,
             sprite: npcSprite,
             spawn: { x: normX, y: normY },
@@ -1821,7 +1834,11 @@ function placeSpriteAt(libIdx, normX, normY) {
             interaction: { type: item.default_interaction || 'open_modal',
                            label: itemName,
                            body: '你好！', radius: 110 },
-        });
+        };
+        if (typeof item.default_depth_override === 'number') {
+            newNpc.depth_override = item.default_depth_override;
+        }
+        mapConfig.npcs.push(newNpc);
     } else {
         if (!Array.isArray(mapConfig.buildings)) mapConfig.buildings = [];
         const id = item.image.replace(/\.png$/, '') + '_' + (mapConfig.buildings.length + 1);
@@ -2630,6 +2647,8 @@ async function pushToGitHub() {
         //    避免 localStorage 草稿黏舊值蓋掉 server 正確值
         btn.textContent = '⏳ 校正 frame size...';
         await normalizeSpriteFramesFromImage(mapConfig);
+        // 補回天空 NPC 的 depth_override（鳥群這類，編輯器 UI 沒這欄位易被丟）
+        preserveAerialNpcDepth(mapConfig);
 
         // 3. PUT 新內容
         btn.textContent = '⏳ 推送中...';
