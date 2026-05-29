@@ -1735,7 +1735,7 @@
         "greeting": "哞～"
       },
       {
-        "id": "npc_03",
+        "id": "npc_04",
         "name": "女學生 NPC",
         "sprite": {
           "scale": 0.35,

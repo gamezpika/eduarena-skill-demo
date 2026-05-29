@@ -851,6 +851,23 @@ function normalizeSpriteFrames(cfg) {
         if (s.sprites) Object.values(s.sprites).forEach(fix);
     });
 }
+// NPC id 撞了會讓 path mode 點哪個都 highlight 第一個 — load 時自動 dedup
+function dedupNpcIds(cfg) {
+    if (!cfg || !Array.isArray(cfg.npcs)) return;
+    let maxN = 0;
+    cfg.npcs.forEach(n => {
+        const m = (n.id || '').match(/^npc_(\d+)$/);
+        if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+    });
+    const seen = new Set();
+    cfg.npcs.forEach(n => {
+        if (!n.id || seen.has(n.id)) {
+            maxN += 1;
+            n.id = 'npc_' + String(maxN).padStart(2, '0');
+        }
+        seen.add(n.id);
+    });
+}
 
 // 共用：載 server 底圖（+ 可選自訂 config，預設用 server config）
 function loadServerMap(useCachedConfig) {
@@ -897,6 +914,8 @@ function loadServerMap(useCachedConfig) {
             mapConfig = useCachedConfig || serverConfig;
             // sprite frame size：localStorage 草稿可能黏舊值，強制 normalize
             normalizeSpriteFrames(mapConfig);
+            // NPC id 撞了會讓 path mode 點哪個都 highlight 第一個
+            dedupNpcIds(mapConfig);
             // 如果走 cached（localStorage）也要 normalize 一次
             if (Array.isArray(mapConfig.buildings)) {
                 mapConfig.buildings.forEach(b => {
@@ -1724,7 +1743,13 @@ function placeSpriteAt(libIdx, normX, normY) {
     if (!item) return;
     if (item.type === 'npc') {
         if (!Array.isArray(mapConfig.npcs)) mapConfig.npcs = [];
-        const id = 'npc_' + String(mapConfig.npcs.length + 1).padStart(2, '0');
+        // 用 max existing npc_NN + 1，避免 npcs.length 撞到已存在 id（派派刪過 NPC 後新加會撞）
+        let _maxN = 0;
+        mapConfig.npcs.forEach(n => {
+            const m = (n.id || '').match(/^npc_(\d+)$/);
+            if (m) _maxN = Math.max(_maxN, parseInt(m[1], 10));
+        });
+        const id = 'npc_' + String(_maxN + 1).padStart(2, '0');
         // 從顯示名 ("🐮 走路牛") 去掉開頭 emoji+空白，從第一個中/英/數開始截
         const cleanName = (s) => {
             const m = (s || '').match(/[一-鿿A-Za-z0-9].*/);
