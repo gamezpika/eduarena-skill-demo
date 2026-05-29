@@ -38,10 +38,10 @@ class ExploreScene extends Phaser.Scene {
         if (!this.textures.exists(b.sprite.image)) {
           // 有 frame_width = spritesheet 動畫（噴泉），否則靜態圖
           if (b.sprite.frame_width && b.sprite.frame_height) {
-            this.load.spritesheet(b.sprite.image, this.assetBase + b.sprite.image + "?v=7",
+            this.load.spritesheet(b.sprite.image, this.assetBase + b.sprite.image + "?v=8",
               { frameWidth: b.sprite.frame_width, frameHeight: b.sprite.frame_height });
           } else {
-            this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=7");
+            this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=8");
           }
         }
       }

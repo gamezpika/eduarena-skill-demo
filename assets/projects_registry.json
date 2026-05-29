@@ -22,8 +22,8 @@
           "default_interaction": "open_modal",
           "bbox_w_norm": 0.146,
           "bbox_h_norm": 0.054,
-          "frame_width": 448,
-          "frame_height": 506,
+          "frame_width": 269,
+          "frame_height": 304,
           "grid_cols": 2,
           "grid_rows": 2,
           "frames": 4,
@@ -37,8 +37,8 @@
           "default_interaction": "open_modal",
           "bbox_w_norm": 0.146,
           "bbox_h_norm": 0.054,
-          "frame_width": 502,
-          "frame_height": 494,
+          "frame_width": 301,
+          "frame_height": 296,
           "grid_cols": 2,
           "grid_rows": 2,
           "frames": 4,
@@ -79,8 +79,8 @@
           "default_interaction": "fountain_splash",
           "bbox_w_norm": 0.094,
           "bbox_h_norm": 0.047,
-          "frame_width": 448,
-          "frame_height": 552,
+          "frame_width": 269,
+          "frame_height": 331,
           "grid_cols": 2,
           "grid_rows": 2,
           "frames": 4,
@@ -192,19 +192,23 @@
           }
         },
         {
-          "image": "bird.png",
           "name": "🦅 鳥群",
-          "type": "decoration",
+          "type": "npc",
           "scale": 0.5,
-          "default_interaction": null,
-          "bbox_w_norm": 0.04,
-          "bbox_h_norm": 0.02,
-          "frame_width": 864,
-          "frame_height": 416,
-          "grid_cols": 3,
-          "grid_rows": 3,
-          "frames": 9,
-          "frame_rate": 8
+          "default_interaction": "open_modal",
+          "default_greeting": "啾啾～",
+          "sprites": {
+            "side": {
+              "image": "bird.png",
+              "frame_width": 518,
+              "frame_height": 250,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 8,
+              "facing": "right"
+            }
+          }
         }
       ]
     }
