@@ -1044,13 +1044,15 @@ document.getElementById('spriteFileInput').addEventListener('change', async (e) 
     const type = prompt('類型 (building / decoration / npc)：', files.length >= 3 ? 'npc' : 'building');
     if (!type) return;
 
-    // ─── NPC 走「3 張 spritesheet」流程 ───────────
+    // ─── NPC 走「1 張（只 side）或 3 張（side/down/up）」流程 ───
     if (type === 'npc') {
-        if (files.length < 3) {
-            alert('NPC 需要 3 張 spritesheet（side / down / up），請一次選 3 張');
+        if (files.length === 2) {
+            alert('NPC：1 張（只 side，全方向共用）或 3 張（side/down/up）');
             return;
         }
-        const [fileSide, fileDown, fileUp] = files.slice(0, 3);
+        const fileSide = files[0];
+        const fileDown = files[1] || null;
+        const fileUp   = files[2] || null;
         const name = prompt('NPC 顯示名稱：', '🐮 NPC');
         if (!name) return;
         const scaleStr = prompt('Phaser scale (建議 0.45 小動物 / 0.66 人形)：', '0.66');
@@ -1074,6 +1076,7 @@ document.getElementById('spriteFileInput').addEventListener('change', async (e) 
             const sprites = {};
             for (let i = 0; i < 3; i++) {
                 const f = localFiles[i];
+                if (!f) continue;  // 1 張 NPC：down/up 不傳，遊戲端走 side fallback
                 const fn = f.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
                 const arrBuf = await f.arrayBuffer();
                 const b64 = arrayBufferToBase64(arrBuf);

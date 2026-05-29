@@ -191,9 +191,15 @@ class ExploreScene extends Phaser.Scene {
           }
           return { tex: fallbackTex, anim: fallbackAnim };
         };
-        const dSide = resolveDir("side", "hero",      "hero_walk");
-        const dDown = resolveDir("down", "hero_down", "hero_walk_down");
-        const dUp   = resolveDir("up",   "hero_up",   "hero_walk_up");
+        const dSide = resolveDir("side", "hero", "hero_walk");
+        // 若 NPC 自帶 sprites 但只給 side（單張 NPC），down/up 共用 side；
+        // 完全沒 sprites（舊 villager_01）才走 hero 三方向 fallback。
+        const dDown = resolveDir("down",
+          sCfg ? dSide.tex : "hero_down",
+          sCfg ? dSide.anim : "hero_walk_down");
+        const dUp   = resolveDir("up",
+          sCfg ? dSide.tex : "hero_up",
+          sCfg ? dSide.anim : "hero_walk_up");
 
         const npc = {
           cfg: npcCfg,
