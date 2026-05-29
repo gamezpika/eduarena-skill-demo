@@ -36,7 +36,13 @@ class ExploreScene extends Phaser.Scene {
     config.buildings.forEach(b => {
       if (b.sprite && b.sprite.image) {
         if (!this.textures.exists(b.sprite.image)) {
-          this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=7");
+          // 有 frame_width = spritesheet 動畫（噴泉），否則靜態圖
+          if (b.sprite.frame_width && b.sprite.frame_height) {
+            this.load.spritesheet(b.sprite.image, this.assetBase + b.sprite.image + "?v=7",
+              { frameWidth: b.sprite.frame_width, frameHeight: b.sprite.frame_height });
+          } else {
+            this.load.image(b.sprite.image, this.assetBase + b.sprite.image + "?v=7");
+          }
         }
       }
     });
@@ -114,11 +120,30 @@ class ExploreScene extends Phaser.Scene {
       // Sprite
       if (b.sprite && b.sprite.image && this.textures.exists(b.sprite.image)) {
         const anchor = { x: this._nx(b.anchor.x), y: this._ny(b.anchor.y) };
-        const spr = this.add.image(anchor.x, anchor.y, b.sprite.image);
+        let spr;
+        if (b.sprite.frame_width && b.sprite.frame_height) {
+          // spritesheet 動畫（噴泉等）
+          spr = this.add.sprite(anchor.x, anchor.y, b.sprite.image, 0);
+          const animKey = `building_${b.id}_anim`;
+          if (!this.anims.exists(animKey)) {
+            const cols = b.sprite.grid_cols || Math.round(this.textures.get(b.sprite.image).source[0].width / b.sprite.frame_width);
+            const rows = b.sprite.grid_rows || Math.round(this.textures.get(b.sprite.image).source[0].height / b.sprite.frame_height);
+            const frameCount = b.sprite.frames || (cols * rows);
+            this.anims.create({
+              key: animKey,
+              frames: this.anims.generateFrameNumbers(b.sprite.image, { start: 0, end: frameCount - 1 }),
+              frameRate: b.sprite.frame_rate || 8,
+              repeat: -1,
+            });
+          }
+          spr.play(animKey);
+        } else {
+          spr = this.add.image(anchor.x, anchor.y, b.sprite.image);
+        }
         spr.setOrigin(b.sprite.anchor_x || 0.5, b.sprite.anchor_y || 1.0);
         spr.setScale(b.sprite.scale || 1.0);
         spr.setDepth(anchor.y);
-        // 噴泉自動加連續粒子水流（fountain_splash 互動類型）
+        // 噴泉自動加連續粒子水流（fountain_splash 互動類型，加強動感）
         if (b.interaction && b.interaction.type === "fountain_splash") {
           this._addFountainParticles(anchor.x, anchor.y);
         }

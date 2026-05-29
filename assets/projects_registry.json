@@ -60,13 +60,19 @@
           "bbox_h_norm": 0.054
         },
         {
-          "image": "fountain.png",
+          "image": "fountain_flow.png",
           "name": "⛲ 噴泉",
           "type": "decoration",
           "scale": 0.54,
           "default_interaction": "fountain_splash",
           "bbox_w_norm": 0.094,
-          "bbox_h_norm": 0.047
+          "bbox_h_norm": 0.047,
+          "frame_width": 448,
+          "frame_height": 552,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 6
         },
         {
           "image": "tree_green.png",

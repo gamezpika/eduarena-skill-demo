@@ -835,6 +835,7 @@ const SPRITE_FRAME_SIZE = {
     'girl1.png':      { w: 281, h: 491 },
     'girl2.png':      { w: 269, h: 486 },
     'girl3.png':      { w: 234, h: 464 },
+    'fountain_flow.png': { w: 448, h: 552 },
 };
 function normalizeSpriteFrames(cfg) {
     if (!cfg) return;
@@ -850,6 +851,8 @@ function normalizeSpriteFrames(cfg) {
         fix(s);
         if (s.sprites) Object.values(s.sprites).forEach(fix);
     });
+    // 也 normalize buildings 的 sprite（噴泉 spritesheet 用）
+    (cfg.buildings || []).forEach(b => fix(b.sprite));
 }
 // NPC id 撞了會讓 path mode 點哪個都 highlight 第一個 — load 時自動 dedup
 function dedupNpcIds(cfg) {

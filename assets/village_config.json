@@ -397,10 +397,16 @@
         "name": "噴泉",
         "category": "decoration",
         "sprite": {
-          "image": "fountain.png",
+          "image": "fountain_flow.png",
           "scale": 0.54,
           "anchor_x": 0.5,
-          "anchor_y": 1
+          "anchor_y": 1,
+          "frame_width": 448,
+          "frame_height": 552,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 6
         },
         "anchor": {
           "x": 0.5,
