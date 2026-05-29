@@ -502,17 +502,53 @@ class ExploreScene extends Phaser.Scene {
 
   _updateNPC(npc, delta) {
     if (!npc.cfg.patrol || npc.cfg.patrol.length === 0) return;
-    const target = npc.cfg.patrol[npc.patrolIdx];
-    const tx = this._nx(target.x), ty = this._ny(target.y);
-    const dx = tx - npc.body.x, dy = ty - npc.body.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 8) {
-      npc.patrolIdx = (npc.patrolIdx + 1) % npc.cfg.patrol.length;
-      npc.body.body.setVelocity(0, 0);
-    } else {
-      const speed = npc.cfg.speed || 60;
-      npc.body.body.setVelocity((dx / dist) * speed, (dy / dist) * speed);
+    const speed = npc.cfg.speed || 60;
+
+    // 卡住偵測：累計 1 秒位移 < 5px 就跳下一個 patrol 點 + 觸發 detour
+    if (!npc._stuck) npc._stuck = { lastX: npc.body.x, lastY: npc.body.y, t: 0, retries: 0 };
+    npc._stuck.t += delta;
+    if (npc._stuck.t > 1000) {
+      const moved = Math.hypot(npc.body.x - npc._stuck.lastX, npc.body.y - npc._stuck.lastY);
+      if (moved < 5) {
+        npc._stuck.retries += 1;
+        if (npc._stuck.retries <= 3) {
+          // 試 1~3 次：跳下一個 patrol + 隨機方向 detour 0.8 秒繞開
+          npc.patrolIdx = (npc.patrolIdx + 1) % npc.cfg.patrol.length;
+          npc._detourMs = 800;
+          npc._detourAngle = Math.random() * Math.PI * 2;
+        } else {
+          // 連跳 3 次都還卡 → 重設 spawn 位置（避免永遠抖在牆角）
+          const sp = npc.cfg.spawn;
+          if (sp) { npc.body.x = this._nx(sp.x); npc.body.y = this._ny(sp.y); }
+          npc._stuck.retries = 0;
+        }
+      } else {
+        npc._stuck.retries = 0;
+      }
+      npc._stuck.lastX = npc.body.x;
+      npc._stuck.lastY = npc.body.y;
+      npc._stuck.t = 0;
     }
+
+    // Detour 中：朝隨機方向走一段（繞過障礙物）
+    if (npc._detourMs > 0) {
+      npc._detourMs -= delta;
+      npc.body.body.setVelocity(Math.cos(npc._detourAngle) * speed, Math.sin(npc._detourAngle) * speed);
+    } else {
+      const target = npc.cfg.patrol[npc.patrolIdx];
+      const tx = this._nx(target.x), ty = this._ny(target.y);
+      const tdx = tx - npc.body.x, tdy = ty - npc.body.y;
+      const tdist = Math.hypot(tdx, tdy);
+      if (tdist < 8) {
+        npc.patrolIdx = (npc.patrolIdx + 1) % npc.cfg.patrol.length;
+        npc.body.body.setVelocity(0, 0);
+      } else {
+        npc.body.body.setVelocity((tdx / tdist) * speed, (tdy / tdist) * speed);
+      }
+    }
+    // 動畫方向用實際 velocity（collide 後可能被阻擋的方向）
+    const dx = npc.body.body.velocity.x;
+    const dy = npc.body.body.velocity.y;
     npc.sprite.x = npc.body.x;
     npc.sprite.y = npc.body.y + 22;
     npc.shadow.x = npc.body.x;
