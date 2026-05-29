@@ -1595,6 +1595,30 @@ function getPlacedNpcs() {
     return mapConfig.npcs || [];
 }
 
+// 5/29 派派：sprite 預設 polygon 用形狀模板，看出可拖點不只是矩形
+function makeDefaultPolygonForType(type, cx, cy, halfW, halfH) {
+    if (type === 'building') {
+        // 鑽石形（iso footprint 暗示）
+        return [
+            { x: cx,         y: cy - halfH },
+            { x: cx + halfW, y: cy },
+            { x: cx,         y: cy + halfH },
+            { x: cx - halfW, y: cy },
+        ];
+    }
+    // decoration / fountain / npc / 其他 → 8 邊形
+    const verts = [];
+    const sides = 8;
+    for (let i = 0; i < sides; i++) {
+        const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+        verts.push({
+            x: parseFloat((cx + Math.cos(a) * halfW).toFixed(4)),
+            y: parseFloat((cy + Math.sin(a) * halfH).toFixed(4)),
+        });
+    }
+    return verts;
+}
+
 function placeSpriteAt(libIdx, normX, normY) {
     if (!ACTIVE_PROJECT || !mapConfig) return;
     const lib = ACTIVE_PROJECT.sprite_library || [];
@@ -1632,12 +1656,8 @@ function placeSpriteAt(libIdx, normX, normY) {
                 ? { type: item.default_interaction, label: item.name.replace(/^\W+\s*/, ''), body: '', radius: 110 }
                 : undefined,
             path: [], center: { x: normX, y: normY },
-            polygon: [
-                { x: normX - halfW, y: bboxCenterY - halfH },
-                { x: normX + halfW, y: bboxCenterY - halfH },
-                { x: normX + halfW, y: bboxCenterY + halfH },
-                { x: normX - halfW, y: bboxCenterY + halfH },
-            ],
+            // 預設 polygon 用形狀模板（派派要：一眼看出是可拖點的多邊形不是矩形）
+            polygon: makeDefaultPolygonForType(item.type, normX, bboxCenterY, halfW, halfH),
             mask_color: '#FF3B30', render_order: 500,
             interaction_type: item.default_interaction || 'open_modal',
         });
