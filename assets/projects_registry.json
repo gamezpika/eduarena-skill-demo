@@ -133,6 +133,18 @@
               "frame_rate": 4
             }
           }
+        },
+        {
+          "name": "👧 女學生 NPC",
+          "type": "npc",
+          "scale": 0.35,
+          "default_interaction": "open_modal",
+          "default_greeting": "嗨～",
+          "sprites": {
+            "side": { "image": "girl3.png", "frame_width": 234, "frame_height": 464, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 },
+            "down": { "image": "girl1.png", "frame_width": 281, "frame_height": 491, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 },
+            "up":   { "image": "girl2.png", "frame_width": 269, "frame_height": 486, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 6 }
+          }
         }
       ]
     }
