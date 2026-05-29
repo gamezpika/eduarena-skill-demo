@@ -821,6 +821,34 @@ function autoSave() {
     }, 300);  // debounce 300ms
 }
 
+// 已知壓縮後的 sprite frame size — 載入草稿 + server config 都會 normalize 到這值
+// 避免派派 localStorage 草稿黏著舊 frame size，推回 server 時把正確值蓋掉
+const SPRITE_FRAME_SIZE = {
+    'cowwalk.png':    { w: 384, h: 337 },
+    'cowwalk2.png':   { w: 377, h: 353 },
+    'player1.png':    { w: 221, h: 500 },
+    'player2.png':    { w: 218, h: 498 },
+    'player3.png':    { w: 234, h: 457 },
+    'hero_walk.png':  { w: 139, h: 230 },
+    'hero_walk2.png': { w: 151, h: 206 },
+    'hero_walk3.png': { w: 96,  h: 173 },
+};
+function normalizeSpriteFrames(cfg) {
+    if (!cfg) return;
+    const fix = (d) => {
+        if (!d || !d.image) return;
+        const m = SPRITE_FRAME_SIZE[d.image];
+        if (m) { d.frame_width = m.w; d.frame_height = m.h; }
+    };
+    if (cfg.player && cfg.player.sprites) Object.values(cfg.player.sprites).forEach(fix);
+    (cfg.npcs || []).forEach(npc => {
+        const s = npc.sprite;
+        if (!s) return;
+        fix(s);
+        if (s.sprites) Object.values(s.sprites).forEach(fix);
+    });
+}
+
 // 共用：載 server 底圖（+ 可選自訂 config，預設用 server config）
 function loadServerMap(useCachedConfig) {
     const placeholder = document.getElementById('empty-placeholder');
@@ -864,6 +892,8 @@ function loadServerMap(useCachedConfig) {
             });
             if (!Array.isArray(serverConfig.objects)) serverConfig.objects = [];
             mapConfig = useCachedConfig || serverConfig;
+            // sprite frame size：localStorage 草稿可能黏舊值，強制 normalize
+            normalizeSpriteFrames(mapConfig);
             // 如果走 cached（localStorage）也要 normalize 一次
             if (Array.isArray(mapConfig.buildings)) {
                 mapConfig.buildings.forEach(b => {
