@@ -18,7 +18,12 @@
         { "image": "house_yellow.png", "name": "🏠 黃屋", "type": "building",   "scale": 0.74, "default_interaction": "open_modal", "bbox_w_norm": 0.146, "bbox_h_norm": 0.054 },
         { "image": "fountain.png",     "name": "⛲ 噴泉", "type": "decoration", "scale": 0.54, "default_interaction": "fountain_splash", "bbox_w_norm": 0.094, "bbox_h_norm": 0.047 },
         { "image": "tree_green.png",   "name": "🌳 綠樹", "type": "decoration", "scale": 0.36, "default_interaction": null, "bbox_w_norm": 0.021, "bbox_h_norm": 0.020 },
-        { "image": "hero_walk.png",    "name": "👤 村民 NPC", "type": "npc",     "scale": 0.66, "tint": "#9a4eff", "default_interaction": "open_modal", "frame_width": 231, "frame_height": 384, "grid_cols": 5, "grid_rows": 5 },
+        { "name": "👤 村民 NPC", "type": "npc", "scale": 0.45, "default_interaction": "open_modal",
+          "sprites": {
+            "side": { "image": "hero_walk2.png", "frame_width": 252, "frame_height": 344, "frames": 9,  "frame_rate": 12 },
+            "down": { "image": "hero_walk.png",  "frame_width": 231, "frame_height": 384, "frames": 25, "frame_rate": 14 },
+            "up":   { "image": "hero_walk3.png", "frame_width": 160, "frame_height": 288, "frames": 16, "frame_rate": 14 }
+          } },
         { "name": "🐮 走路牛", "type": "npc", "scale": 0.45, "default_interaction": "open_modal",
           "sprites": {
             "side": { "image": "cowwalk.png", "frame_width": 640, "frame_height": 562, "grid_cols": 3, "grid_rows": 3, "frames": 9, "frame_rate": 4 }

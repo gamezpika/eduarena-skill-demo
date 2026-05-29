@@ -15,29 +15,29 @@
         "x": 0.5,
         "y": 0.763514
       },
-      "scale": 0.66,
+      "scale": 0.35,
       "speed": 220,
       "sprites": {
         "side": {
-          "image": "hero_walk2.png",
-          "frame_width": 252,
-          "frame_height": 344,
+          "image": "player3.png",
+          "frame_width": 390,
+          "frame_height": 762,
           "frames": 9,
-          "frame_rate": 12
+          "frame_rate": 6
         },
         "down": {
-          "image": "hero_walk.png",
-          "frame_width": 231,
-          "frame_height": 384,
-          "frames": 25,
-          "frame_rate": 14
+          "image": "player1.png",
+          "frame_width": 368,
+          "frame_height": 834,
+          "frames": 9,
+          "frame_rate": 6
         },
         "up": {
-          "image": "hero_walk3.png",
-          "frame_width": 160,
-          "frame_height": 288,
-          "frames": 16,
-          "frame_rate": 14
+          "image": "player2.png",
+          "frame_width": 364,
+          "frame_height": 830,
+          "frames": 9,
+          "frame_rate": 6
         }
       }
     },
@@ -1401,11 +1401,30 @@
         "id": "villager_01",
         "name": "村民",
         "sprite": {
-          "image": "hero_walk.png",
-          "tint": "#9a4eff",
           "scale": 0.45,
-          "frame_width": 231,
-          "frame_height": 384
+          "sprites": {
+            "side": {
+              "image": "hero_walk2.png",
+              "frame_width": 252,
+              "frame_height": 344,
+              "frames": 9,
+              "frame_rate": 12
+            },
+            "down": {
+              "image": "hero_walk.png",
+              "frame_width": 231,
+              "frame_height": 384,
+              "frames": 25,
+              "frame_rate": 14
+            },
+            "up": {
+              "image": "hero_walk3.png",
+              "frame_width": 160,
+              "frame_height": 288,
+              "frames": 16,
+              "frame_rate": 14
+            }
+          }
         },
         "spawn": {
           "x": 0.4975962467292068,
