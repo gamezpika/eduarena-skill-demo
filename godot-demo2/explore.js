@@ -1,6 +1,6 @@
 // godot-demo2 Phaser 版 — 2.5D 大富翁風村莊
-// Layout: village_ground.png 1920x1080 底圖 + 7 sprite (5 房子 + 噴泉 + 樹)
-//          chibi 小男孩 4 方向 walk + Y-sort + 房子/噴泉碰撞擋住
+// Layout: village_ground.jpg 1920x1480 底圖（含上方 400 px 草地）+ 5 房子 + 噴泉 + 8 綠樹
+//          chibi 小男孩 4 方向 walk + Y-sort + 房子/噴泉/樹碰撞擋住
 
 const MAP_W = 1920;
 const MAP_H = 1080;
@@ -8,27 +8,28 @@ const PLAYER_SPEED = 220;
 const VIEW_BASE_WIDTH = 1200;
 
 // 派派 5/29 手動指定座標
+// 註：sprite scale 跟舊版相比加倍（source 1024→512 後 scale 0.37→0.74 顯示尺寸不變）
 const VILLAGE_SPRITES = [
   // 5 房子
-  { key: "house_red",    x: 300,  y: 300, scale: 0.37 },
-  { key: "house_brown",  x: 960,  y: 250, scale: 0.37 },
-  { key: "house_blue",   x: 1500, y: 300, scale: 0.37 },
-  { key: "house_green",  x: 300,  y: 670, scale: 0.37 },
-  { key: "house_yellow", x: 1660, y: 680, scale: 0.37 },
+  { key: "house_red",    x: 300,  y: 300, scale: 0.74 },
+  { key: "house_brown",  x: 960,  y: 250, scale: 0.74 },
+  { key: "house_blue",   x: 1500, y: 300, scale: 0.74 },
+  { key: "house_green",  x: 300,  y: 670, scale: 0.74 },
+  { key: "house_yellow", x: 1660, y: 680, scale: 0.74 },
   // 噴泉
-  { key: "fountain",     x: 960,  y: 600, scale: 0.27 },
+  { key: "fountain",     x: 960,  y: 600, scale: 0.54 },
   // 8 棵綠樹放安全 corridors：
   //   x=490-770 (red/green column 跟 brown column 中間)
   //   x=1150-1310 (brown 跟 blue/yellow 中間)
   //   x<110 / x>1850 (左右邊緣，避開河流)
-  { key: "tree_green",   x: 60,   y: 200, scale: 0.18 },
-  { key: "tree_green",   x: 630,  y: 250, scale: 0.18 },
-  { key: "tree_green",   x: 1230, y: 250, scale: 0.18 },
-  { key: "tree_green",   x: 1900, y: 250, scale: 0.18 },
-  { key: "tree_green",   x: 630,  y: 530, scale: 0.18 },
-  { key: "tree_green",   x: 1230, y: 530, scale: 0.18 },
-  { key: "tree_green",   x: 630,  y: 900, scale: 0.18 },
-  { key: "tree_green",   x: 1230, y: 900, scale: 0.18 },
+  { key: "tree_green",   x: 60,   y: 200, scale: 0.36 },
+  { key: "tree_green",   x: 630,  y: 250, scale: 0.36 },
+  { key: "tree_green",   x: 1230, y: 250, scale: 0.36 },
+  { key: "tree_green",   x: 1900, y: 250, scale: 0.36 },
+  { key: "tree_green",   x: 630,  y: 530, scale: 0.36 },
+  { key: "tree_green",   x: 1230, y: 530, scale: 0.36 },
+  { key: "tree_green",   x: 630,  y: 900, scale: 0.36 },
+  { key: "tree_green",   x: 1230, y: 900, scale: 0.36 },
 ];
 
 // 碰撞 hitbox：物件 footprint
@@ -56,24 +57,24 @@ class ExploreScene extends Phaser.Scene {
   constructor() { super("explore"); }
 
   preload() {
-    // chibi 小男孩 sprite sheets
-    this.load.spritesheet("hero",      "hero_walk2.png?v=1", { frameWidth: 758, frameHeight: 1032 });
-    this.load.spritesheet("hero_down", "hero_walk.png?v=1",  { frameWidth: 694, frameHeight: 1154 });
-    this.load.spritesheet("hero_up",   "hero_walk3.png?v=1", { frameWidth: 480, frameHeight: 864 });
-    // 村莊 ground + 障礙物 sprite（sprite cache-bust v=2 因 alpha 修過）
-    this.load.image("village_ground", "village_ground.png?v=1");
-    this.load.image("house_red",      "house_red.png?v=4");
-    this.load.image("house_brown",    "house_brown.png?v=4");
-    this.load.image("house_blue",     "house_blue.png?v=4");
-    this.load.image("house_green",    "house_green.png?v=4");
-    this.load.image("house_yellow",   "house_yellow.png?v=4");
-    this.load.image("fountain",       "fountain.png?v=4");
-    this.load.image("tree_green",     "tree_green.png?v=3");
+    // chibi 小男孩 sprite sheets（縮 1/3 = 9x 檔小：18MB→2.7MB）
+    this.load.spritesheet("hero",      "hero_walk2.png?v=2", { frameWidth: 252, frameHeight: 344 });
+    this.load.spritesheet("hero_down", "hero_walk.png?v=2",  { frameWidth: 231, frameHeight: 384 });
+    this.load.spritesheet("hero_up",   "hero_walk3.png?v=2", { frameWidth: 160, frameHeight: 288 });
+    // 村莊 ground（JPG 加速 + 上方加 400 px 草地）+ sprite 縮 512x512
+    this.load.image("village_ground", "village_ground.jpg?v=1");
+    this.load.image("house_red",      "house_red.png?v=5");
+    this.load.image("house_brown",    "house_brown.png?v=5");
+    this.load.image("house_blue",     "house_blue.png?v=5");
+    this.load.image("house_green",    "house_green.png?v=5");
+    this.load.image("house_yellow",   "house_yellow.png?v=5");
+    this.load.image("fountain",       "fountain.png?v=5");
+    this.load.image("tree_green",     "tree_green.png?v=4");
   }
 
   create() {
-    // 1. 背景：村莊 ground（depth=0）
-    this.add.image(0, 0, "village_ground").setOrigin(0, 0).setDepth(0);
+    // 1. 背景：村莊 ground（depth=0），新 ground 高 1480（含上方 400 px 草地），放在 y=-400 讓原座標不動
+    this.add.image(0, -400, "village_ground").setOrigin(0, 0).setDepth(0);
 
     // 2. Village sprite (5 房子 + 噴泉 + 樹) — bottom-anchor + Y-sort
     VILLAGE_SPRITES.forEach(s => {
@@ -93,7 +94,7 @@ class ExploreScene extends Phaser.Scene {
 
     this.playerSprite = this.add.sprite(PX, PY + 22, "hero", 0);
     this.playerSprite.setOrigin(0.5, 1);
-    this.playerSprite.setScale(0.22);  // 派派 5/29 從 0.32 縮到 0.22 避免玩家穿過屋頂（2.5D 比例對齊）
+    this.playerSprite.setScale(0.66);  // hero frame 已縮 1/3，0.22 × 3 = 0.66 顯示尺寸不變
 
     // 4. 動畫
     this.anims.create({ key: "hero_walk",      frames: this.anims.generateFrameNumbers("hero",      { start: 0, end: 8  }), frameRate: 12, repeat: -1 });
