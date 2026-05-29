@@ -63,6 +63,17 @@ class ExploreScene extends Phaser.Scene {
     // 1. 背景
     this.add.image(0, this.WORLD_OFFSET_Y, "village_ground").setOrigin(0, 0).setDepth(0);
 
+    // 1b. 水珠紋理（Phaser Graphics 即時畫，給粒子噴泉用）
+    if (!this.textures.exists("water_drop")) {
+      const g = this.add.graphics();
+      g.fillStyle(0xa0d8ff, 1);
+      g.fillCircle(7, 7, 7);
+      g.fillStyle(0xe0f0ff, 0.6);
+      g.fillCircle(5, 5, 3);
+      g.generateTexture("water_drop", 14, 14);
+      g.destroy();
+    }
+
     // 2. Buildings：sprite + collision + interaction
     this.interactables = [];
     this.obstacles = this.physics.add.staticGroup();
@@ -74,6 +85,10 @@ class ExploreScene extends Phaser.Scene {
         spr.setOrigin(b.sprite.anchor_x || 0.5, b.sprite.anchor_y || 1.0);
         spr.setScale(b.sprite.scale || 1.0);
         spr.setDepth(anchor.y);
+        // 噴泉自動加連續粒子水流（fountain_splash 互動類型）
+        if (b.interaction && b.interaction.type === "fountain_splash") {
+          this._addFountainParticles(anchor.x, anchor.y);
+        }
       }
       // Collision bbox
       if (b.bounding_box) {
@@ -256,6 +271,34 @@ class ExploreScene extends Phaser.Scene {
     closeBtn.on("pointerdown", closeFn);
     backdrop.on("pointerdown", closeFn);
     this.modalContainer.add([backdrop, box, title, body, closeBtn]);
+  }
+
+  _addFountainParticles(anchorX, anchorY) {
+    // 連續水流粒子（從噴泉頂端噴出，重力往下落）
+    // 噴泉視覺頂端在 anchor 上方 ~140 px（fountain sprite 中段）
+    const topY = anchorY - 140;
+    // 主水柱：往上噴 + 重力下落
+    this.add.particles(anchorX, topY, "water_drop", {
+      speed: { min: 60, max: 110 },
+      angle: { min: 255, max: 285 },   // 往上 ±15 度散
+      gravityY: 280,
+      lifespan: 900,
+      alpha: { start: 0.85, end: 0 },
+      scale: { start: 0.7, end: 0.25 },
+      frequency: 70,
+      quantity: 1,
+    }).setDepth(anchorY + 1);  // 比噴泉 sprite 稍前
+    // 環流（盆口邊緣輕微飄）
+    this.add.particles(anchorX, topY + 30, "water_drop", {
+      speed: { min: 20, max: 40 },
+      angle: { min: 200, max: 340 },
+      gravityY: 100,
+      lifespan: 600,
+      alpha: { start: 0.5, end: 0 },
+      scale: { start: 0.4, end: 0.15 },
+      frequency: 150,
+      quantity: 1,
+    }).setDepth(anchorY + 1);
   }
 
   _fountainSplash(fx, fy) {
