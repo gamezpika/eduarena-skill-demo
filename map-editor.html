@@ -1839,12 +1839,12 @@ function renderSpriteMarkers() {
         return lib.find(s => s.image === image) || {};
     }
 
-    // Buildings — 真實 sprite 圖
+    // Buildings — 真實 sprite 圖（spritesheet 動畫只顯示第一格）
     getPlacedSprites().forEach(b => {
         const meta = libMeta(b.sprite.image);
         const spriteScale = (b.sprite && b.sprite.scale) || meta.scale || 0.74;
-        const srcSize = meta.source_size || 512;
-        const renderSize = srcSize * spriteScale * displayScale;
+        const bSprite = b.sprite || {};
+        const isSheet = bSprite.frame_width && bSprite.frame_height;
         const el = document.createElement('div');
         el.className = 'placed-sprite';
         if (isReference) {
@@ -1855,19 +1855,35 @@ function renderSpriteMarkers() {
         }
         el.style.left   = (b.anchor.x * w) + 'px';
         el.style.top    = (b.anchor.y * h) + 'px';
-        el.style.width  = renderSize + 'px';
-        el.style.height = renderSize + 'px';
-        const img = document.createElement('img');
-        img.src = '../' + ACTIVE_PROJECT.sprite_base + b.sprite.image;
-        img.alt = b.name;
-        img.onerror = () => {
-            el.innerHTML = '';
-            const fb = document.createElement('div');
-            fb.className = 'fallback'; fb.textContent = '❌';
-            el.appendChild(fb);
-            if (!isReference) el.appendChild(makeAnchorDot());
-        };
-        el.appendChild(img);
+        if (isSheet) {
+            // spritesheet 用 backgroundImage + size 顯示第 1 frame
+            const gridCols = bSprite.grid_cols || meta.grid_cols || 2;
+            const gridRows = bSprite.grid_rows || meta.grid_rows || 2;
+            const renderW = bSprite.frame_width * spriteScale * displayScale;
+            const renderH = bSprite.frame_height * spriteScale * displayScale;
+            el.style.width  = renderW + 'px';
+            el.style.height = renderH + 'px';
+            el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${bSprite.image}")`;
+            el.style.backgroundSize = `${renderW * gridCols}px ${renderH * gridRows}px`;
+            el.style.backgroundPosition = '0 0';
+        } else {
+            // 靜態 image 用 <img>
+            const srcSize = meta.source_size || 512;
+            const renderSize = srcSize * spriteScale * displayScale;
+            el.style.width  = renderSize + 'px';
+            el.style.height = renderSize + 'px';
+            const img = document.createElement('img');
+            img.src = '../' + ACTIVE_PROJECT.sprite_base + bSprite.image;
+            img.alt = b.name;
+            img.onerror = () => {
+                el.innerHTML = '';
+                const fb = document.createElement('div');
+                fb.className = 'fallback'; fb.textContent = '❌';
+                el.appendChild(fb);
+                if (!isReference) el.appendChild(makeAnchorDot());
+            };
+            el.appendChild(img);
+        }
         if (!isReference) el.appendChild(makeAnchorDot());
         el.dataset.bid = b.id;
         if (!isReference) attachSpriteDrag(el, b, w, h, false);
