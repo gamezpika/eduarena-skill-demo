@@ -449,7 +449,7 @@
             <span>🎨 Sprite 庫（點 sprite → 點地圖放）</span>
             <button id="btnUploadSprite" style="background:#444;color:#fdc500;border:1px solid #555;border-radius:4px;padding:3px 7px;font-size:11px;font-weight:700;cursor:pointer;">📤 上傳</button>
         </div>
-        <input type="file" id="spriteFileInput" accept="image/png,image/jpeg" style="display:none">
+        <input type="file" id="spriteFileInput" accept="image/png,image/jpeg" multiple style="display:none">
         <div id="spriteHint" style="display:none; padding:8px 12px; background:#3a4a20; color:#fdc500; font-size:11px;"></div>
         <div class="sprite-library" id="spriteLibrary" style="
             display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;
@@ -768,9 +768,12 @@ function renderSpriteLibrary() {
         el.innerHTML = '<div style="padding:12px;color:#888;font-size:11px;">這個專案還沒有 sprite library（在 projects_registry.json 編輯）</div>';
         return;
     }
+    const thumbOf = (s) => s.image
+        || (s.sprites && (s.sprites.side?.image || s.sprites.down?.image || s.sprites.up?.image))
+        || '';
     el.innerHTML = lib.map((s, idx) => `
         <div class="sprite-card" data-sprite-idx="${idx}" title="點選後到地圖點要放的位置">
-            <img src="../${ACTIVE_PROJECT.sprite_base}${s.image}?v=5" alt="${s.name}">
+            <img src="../${ACTIVE_PROJECT.sprite_base}${thumbOf(s)}?v=5" alt="${s.name}">
             <div class="sprite-card-name">${s.name}</div>
         </div>
     `).join('');
@@ -1033,42 +1036,87 @@ document.getElementById('btnUploadSprite').addEventListener('click', () => {
     document.getElementById('spriteFileInput').click();
 });
 document.getElementById('spriteFileInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = '';  // 清，下次同檔可重選
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = '';
     if (!ACTIVE_PROJECT) { alert('沒有 active project'); return; }
+
+    const type = prompt('類型 (building / decoration / npc)：', files.length >= 3 ? 'npc' : 'building');
+    if (!type) return;
+
+    // ─── NPC 走「3 張 spritesheet」流程 ───────────
+    if (type === 'npc') {
+        if (files.length < 3) {
+            alert('NPC 需要 3 張 spritesheet（side / down / up），請一次選 3 張');
+            return;
+        }
+        const [fileSide, fileDown, fileUp] = files.slice(0, 3);
+        const name = prompt('NPC 顯示名稱：', '🐮 NPC');
+        if (!name) return;
+        const scaleStr = prompt('Phaser scale (建議 0.45 小動物 / 0.66 人形)：', '0.66');
+        const scale = parseFloat(scaleStr);
+        if (isNaN(scale)) { alert('scale 不是數字'); return; }
+        const fwStr = prompt('每格 frame_width (像素)：', '231');
+        const fhStr = prompt('每格 frame_height (像素)：', '384');
+        const gcStr = prompt('grid cols (每張 sheet 橫向幾格)：', '5');
+        const grStr = prompt('grid rows (每張 sheet 縱向幾格)：', '5');
+        const frameRateStr = prompt('frame rate (每秒幾格)：', '8');
+        const tint = prompt('tint 顏色（hex，可留空）：', '');
+        const fw = parseInt(fwStr, 10), fh = parseInt(fhStr, 10);
+        const gc = parseInt(gcStr, 10), gr = parseInt(grStr, 10);
+        const fr = parseInt(frameRateStr, 10) || 8;
+        if (!fw || !fh || !gc || !gr) { alert('frame size / grid 不能空'); return; }
+        const frames = gc * gr;
+
+        try {
+            const order = ['side', 'down', 'up'];
+            const localFiles = [fileSide, fileDown, fileUp];
+            const sprites = {};
+            for (let i = 0; i < 3; i++) {
+                const f = localFiles[i];
+                const fn = f.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+                const arrBuf = await f.arrayBuffer();
+                const b64 = arrayBufferToBase64(arrBuf);
+                const targetPath = ACTIVE_PROJECT.sprite_base + fn;
+                await pushFileToGitHubRaw(targetPath, b64, `feat(${ACTIVE_PROJECT.id}): 上傳 NPC ${order[i]} ${fn}`);
+                sprites[order[i]] = { image: fn, frame_width: fw, frame_height: fh, grid_cols: gc, grid_rows: gr, frames, frame_rate: fr };
+            }
+            const newEntry = {
+                name: name.trim(), type: 'npc',
+                scale, default_interaction: 'open_modal',
+                sprites,
+            };
+            if (tint && tint.trim()) newEntry.tint = tint.trim();
+            ACTIVE_PROJECT.sprite_library.push(newEntry);
+            await pushFileToGitHubRaw(REGISTRY_PATH, utf8ToBase64(JSON.stringify({ projects: PROJECTS_REGISTRY }, null, 2)),
+                `feat(${ACTIVE_PROJECT.id}): registry 加 NPC ${name.trim()}`);
+            renderSpriteLibrary();
+            alert(`NPC ${name.trim()} 上傳完成（3 張 spritesheet）！\n等 Railway 部署後從 library 拖到地圖。`);
+        } catch (err) {
+            alert('上傳失敗：' + err.message);
+        }
+        return;
+    }
+
+    // ─── building / decoration 走「單張 PNG」流程（原邏輯） ─────
+    const file = files[0];
     const filename = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
     const name = prompt('Sprite 顯示名稱：', filename.replace(/\.[^.]+$/, ''));
     if (!name) return;
-    const type = prompt('類型 (building / decoration / npc)：', 'building');
-    if (!type) return;
-    const scaleStr = prompt('Phaser scale (建議 0.74 房子 / 0.54 噴泉 / 0.36 樹 / 0.66 NPC)：', type === 'npc' ? '0.66' : type === 'decoration' ? '0.36' : '0.74');
+    const scaleStr = prompt('Phaser scale (建議 0.74 房子 / 0.54 噴泉 / 0.36 樹)：', type === 'decoration' ? '0.36' : '0.74');
     const scale = parseFloat(scaleStr);
     if (isNaN(scale)) { alert('scale 不是數字'); return; }
-    const defaultInteraction = type === 'npc' ? 'open_modal' : (type === 'building' ? 'open_modal' : null);
+    const defaultInteraction = type === 'building' ? 'open_modal' : null;
 
     try {
-        // 1. 讀檔成 base64（用 chunked helper 避免大檔 stack overflow）
         const arrBuf = await file.arrayBuffer();
         const b64 = arrayBufferToBase64(arrBuf);
-        // 2. 推到 sprite_base
         const targetPath = ACTIVE_PROJECT.sprite_base + filename;
         await pushFileToGitHubRaw(targetPath, b64, `feat(${ACTIVE_PROJECT.id}): 上傳 sprite ${filename}`);
-        // 3. registry 加 entry
         const newEntry = {
             image: filename, name: name.trim(), type: type.trim(),
-            scale: scale, default_interaction: defaultInteraction,
+            scale, default_interaction: defaultInteraction,
         };
-        if (type === 'npc') {
-            const fw = parseInt(prompt('NPC frame_width (像素)：', '231'), 10);
-            const fh = parseInt(prompt('NPC frame_height (像素)：', '384'), 10);
-            const gc = parseInt(prompt('NPC grid cols：', '5'), 10);
-            const gr = parseInt(prompt('NPC grid rows：', '5'), 10);
-            newEntry.frame_width = fw; newEntry.frame_height = fh;
-            newEntry.grid_cols = gc; newEntry.grid_rows = gr;
-            const tint = prompt('NPC tint 顏色（hex，可空）：', '#9a4eff');
-            if (tint && tint.trim()) newEntry.tint = tint.trim();
-        }
         ACTIVE_PROJECT.sprite_library.push(newEntry);
         await pushFileToGitHubRaw(REGISTRY_PATH, utf8ToBase64(JSON.stringify({ projects: PROJECTS_REGISTRY }, null, 2)),
             `feat(${ACTIVE_PROJECT.id}): registry 加 sprite ${filename}`);
@@ -1627,10 +1675,20 @@ function placeSpriteAt(libIdx, normX, normY) {
     if (item.type === 'npc') {
         if (!Array.isArray(mapConfig.npcs)) mapConfig.npcs = [];
         const id = 'npc_' + String(mapConfig.npcs.length + 1).padStart(2, '0');
+        const npcSprite = { scale: item.scale || 0.66 };
+        if (item.tint) npcSprite.tint = item.tint;
+        if (item.sprites) {
+            // 新 schema：3 張 spritesheet（side/down/up）
+            npcSprite.sprites = JSON.parse(JSON.stringify(item.sprites));
+        } else if (item.image) {
+            // 舊 schema fallback：單一 image（會跟玩家共用 hero 動畫）
+            npcSprite.image = item.image;
+            npcSprite.frame_width = item.frame_width || 231;
+            npcSprite.frame_height = item.frame_height || 384;
+        }
         mapConfig.npcs.push({
             id, name: item.name.replace(/^\W+\s*/, ''),
-            sprite: { image: item.image, tint: item.tint || '#ffffff', scale: item.scale || 0.66,
-                      frame_width: item.frame_width || 231, frame_height: item.frame_height || 384 },
+            sprite: npcSprite,
             spawn: { x: normX, y: normY },
             patrol: [{ x: normX, y: normY }],
             speed: 60,
@@ -1725,14 +1783,17 @@ function renderSpriteMarkers() {
         mf.appendChild(el);
     });
 
-    // NPCs — sprite sheet 顯示第一格
+    // NPCs — sprite sheet 顯示第一格（新 schema 用 sprites.side，舊 fallback 用 image）
     getPlacedNpcs().forEach(n => {
-        const meta = libMeta(n.sprite.image);
+        const sCfg = n.sprite && n.sprite.sprites && (n.sprite.sprites.side || n.sprite.sprites.down || n.sprite.sprites.up);
+        const npcImg = (n.sprite && n.sprite.image) || (sCfg && sCfg.image);
+        if (!npcImg) return;  // 沒圖跳過
+        const meta = libMeta(npcImg);
         const spriteScale = (n.sprite && n.sprite.scale) || meta.scale || 0.66;
-        const frameW = (n.sprite && n.sprite.frame_width)  || meta.frame_width  || 231;
-        const frameH = (n.sprite && n.sprite.frame_height) || meta.frame_height || 384;
-        const gridCols = meta.grid_cols || 5;
-        const gridRows = meta.grid_rows || 5;
+        const frameW = (n.sprite && n.sprite.frame_width)  || (sCfg && sCfg.frame_width)  || meta.frame_width  || 231;
+        const frameH = (n.sprite && n.sprite.frame_height) || (sCfg && sCfg.frame_height) || meta.frame_height || 384;
+        const gridCols = (sCfg && sCfg.grid_cols) || meta.grid_cols || 5;
+        const gridRows = (sCfg && sCfg.grid_rows) || meta.grid_rows || 5;
         const renderW = frameW * spriteScale * displayScale;
         const renderH = frameH * spriteScale * displayScale;
         const el = document.createElement('div');
@@ -1747,7 +1808,7 @@ function renderSpriteMarkers() {
         el.style.top    = (n.spawn.y * h) + 'px';
         el.style.width  = renderW + 'px';
         el.style.height = renderH + 'px';
-        el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${n.sprite.image}")`;
+        el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${npcImg}")`;
         el.style.backgroundSize = `${renderW * gridCols}px ${renderH * gridRows}px`;
         if (!isReference) el.appendChild(makeAnchorDot());
         el.dataset.nid = n.id;

@@ -36,11 +36,28 @@ class ExploreScene extends Phaser.Scene {
         }
       }
     });
-    // Player + NPC sprites
+    // Player sprites（3 方向）
     const ps = config.player.sprites;
     this.load.spritesheet("hero",      this.assetBase + ps.side.image + "?v=2", { frameWidth: ps.side.frame_width, frameHeight: ps.side.frame_height });
     this.load.spritesheet("hero_down", this.assetBase + ps.down.image + "?v=2", { frameWidth: ps.down.frame_width, frameHeight: ps.down.frame_height });
     this.load.spritesheet("hero_up",   this.assetBase + ps.up.image   + "?v=2", { frameWidth: ps.up.frame_width,   frameHeight: ps.up.frame_height });
+
+    // NPC sprites（每隻 NPC 可帶自己的 side/down/up；沒給就 fallback 用 hero）
+    if (Array.isArray(config.npcs)) {
+      config.npcs.forEach(npcCfg => {
+        const sCfg = npcCfg.sprite && npcCfg.sprite.sprites;
+        if (!sCfg) return;
+        ["side", "down", "up"].forEach(dir => {
+          const def = sCfg[dir];
+          if (!def || !def.image) return;
+          const key = `npc_${npcCfg.id}_${dir}`;
+          if (!this.textures.exists(key)) {
+            this.load.spritesheet(key, this.assetBase + def.image + "?v=1",
+              { frameWidth: def.frame_width, frameHeight: def.frame_height });
+          }
+        });
+      });
+    }
 
     this.load.once("complete", () => this._buildScene());
     this.load.start();
@@ -152,21 +169,48 @@ class ExploreScene extends Phaser.Scene {
     if (Array.isArray(config.npcs)) {
       config.npcs.forEach(npcCfg => {
         const sp = npcCfg.spawn;
+        const id = npcCfg.id;
+        const sCfg = npcCfg.sprite && npcCfg.sprite.sprites;
+
+        // 解析每方向 texture + anim key（自帶 spritesheet 用自己的，否則 fallback hero）
+        const resolveDir = (dir, fallbackTex, fallbackAnim) => {
+          const def = sCfg && sCfg[dir];
+          const texKey = `npc_${id}_${dir}`;
+          if (def && def.image && this.textures.exists(texKey)) {
+            const animKey = `npc_${id}_walk_${dir}`;
+            if (!this.anims.exists(animKey)) {
+              this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(texKey,
+                  { start: 0, end: (def.frames || ((def.grid_cols || 1) * (def.grid_rows || 1))) - 1 }),
+                frameRate: def.frame_rate || 8,
+                repeat: -1,
+              });
+            }
+            return { tex: texKey, anim: animKey };
+          }
+          return { tex: fallbackTex, anim: fallbackAnim };
+        };
+        const dSide = resolveDir("side", "hero",      "hero_walk");
+        const dDown = resolveDir("down", "hero_down", "hero_walk_down");
+        const dUp   = resolveDir("up",   "hero_up",   "hero_walk_up");
+
         const npc = {
           cfg: npcCfg,
           body: this.add.rectangle(this._nx(sp.x), this._ny(sp.y), 22, 22, 0xffffff, 0).setVisible(false),
           shadow: this.add.ellipse(this._nx(sp.x), this._ny(sp.y) + 12, 56, 16, 0x000000, 0.35),
           sprite: null,
           patrolIdx: 0,
+          animKeys: { side: dSide.anim, down: dDown.anim, up: dUp.anim },
         };
-        npc.sprite = this.add.sprite(npc.body.x, npc.body.y + 22, "hero", 0);
+        npc.sprite = this.add.sprite(npc.body.x, npc.body.y + 22, dSide.tex, 0);
         npc.sprite.setOrigin(0.5, 1);
-        npc.sprite.setScale(npcCfg.sprite.scale || 0.66);
-        if (npcCfg.sprite.tint) {
+        npc.sprite.setScale((npcCfg.sprite && npcCfg.sprite.scale) || 0.66);
+        if (npcCfg.sprite && npcCfg.sprite.tint) {
           const tintNum = parseInt(npcCfg.sprite.tint.replace("#", ""), 16);
           npc.sprite.setTint(tintNum);
         }
-        npc.sprite.play("hero_walk");
+        npc.sprite.play(dSide.anim);
         this.npcs.push(npc);
       });
     }
@@ -372,11 +416,12 @@ class ExploreScene extends Phaser.Scene {
     npc.sprite.setDepth(npc.sprite.y);
     npc.shadow.setDepth(npc.sprite.y - 1);
     const horizMore = Math.abs(dx) > Math.abs(dy);
-    let want = "hero_walk";
-    if (!horizMore) want = dy > 0 ? "hero_walk_down" : "hero_walk_up";
+    const keys = npc.animKeys;
+    let want = keys.side;
+    if (!horizMore) want = dy > 0 ? keys.down : keys.up;
     const cur = npc.sprite.anims.currentAnim;
     if (!cur || cur.key !== want) npc.sprite.play(want);
-    if (want === "hero_walk") npc.sprite.setFlipX(dx > 0);
+    if (want === keys.side) npc.sprite.setFlipX(dx > 0);
     else npc.sprite.setFlipX(false);
   }
 
