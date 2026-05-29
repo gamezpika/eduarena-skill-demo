@@ -49,13 +49,19 @@
     "buildings": [
       {
         "id": "house_red",
-        "name": "紅屋",
+        "name": "蔬果攤",
         "category": "house",
         "sprite": {
-          "image": "house_red.png",
+          "image": "shop.png",
           "scale": 0.74,
           "anchor_x": 0.5,
-          "anchor_y": 1
+          "anchor_y": 1,
+          "frame_width": 448,
+          "frame_height": 506,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 4
         },
         "anchor": {
           "x": 0.18751482565035185,
@@ -69,8 +75,8 @@
         },
         "interaction": {
           "type": "open_modal",
-          "label": "紅屋",
-          "body": "歡迎來到紅屋",
+          "label": "蔬果攤",
+          "body": "歡迎光臨蔬果攤",
           "radius": 110
         },
         "polygon": [
@@ -118,13 +124,19 @@
       },
       {
         "id": "house_brown",
-        "name": "棕屋",
+        "name": "服裝店",
         "category": "house",
         "sprite": {
-          "image": "house_brown.png",
+          "image": "clothes.png",
           "scale": 0.74,
           "anchor_x": 0.5,
-          "anchor_y": 1
+          "anchor_y": 1,
+          "frame_width": 502,
+          "frame_height": 494,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 4
         },
         "anchor": {
           "x": 0.5010120764647719,
@@ -138,8 +150,8 @@
         },
         "interaction": {
           "type": "open_modal",
-          "label": "棕屋",
-          "body": "歡迎來到棕屋",
+          "label": "服裝店",
+          "body": "歡迎光臨服裝店",
           "radius": 110
         },
         "polygon": [

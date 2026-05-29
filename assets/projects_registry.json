@@ -15,22 +15,34 @@
       "world_offset_y": -400,
       "sprite_library": [
         {
-          "image": "house_red.png",
-          "name": "🏠 紅屋",
+          "image": "shop.png",
+          "name": "🛒 蔬果攤",
           "type": "building",
           "scale": 0.74,
           "default_interaction": "open_modal",
           "bbox_w_norm": 0.146,
-          "bbox_h_norm": 0.054
+          "bbox_h_norm": 0.054,
+          "frame_width": 448,
+          "frame_height": 506,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 4
         },
         {
-          "image": "house_brown.png",
-          "name": "🏠 棕屋",
+          "image": "clothes.png",
+          "name": "👗 服裝店",
           "type": "building",
           "scale": 0.74,
           "default_interaction": "open_modal",
           "bbox_w_norm": 0.146,
-          "bbox_h_norm": 0.054
+          "bbox_h_norm": 0.054,
+          "frame_width": 502,
+          "frame_height": 494,
+          "grid_cols": 2,
+          "grid_rows": 2,
+          "frames": 4,
+          "frame_rate": 4
         },
         {
           "image": "house_blue.png",
