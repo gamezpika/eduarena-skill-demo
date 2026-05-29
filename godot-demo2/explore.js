@@ -453,7 +453,8 @@ class ExploreScene extends Phaser.Scene {
     if (!horizMore) want = dy > 0 ? keys.down : keys.up;
     const cur = npc.sprite.anims.currentAnim;
     if (!cur || cur.key !== want) npc.sprite.play(want);
-    if (want === keys.side) npc.sprite.setFlipX(dx > 0);
+    // sprite 原圖一律假設「朝右」(modern walk cycle 標準) — 朝左走才翻
+    if (want === keys.side) npc.sprite.setFlipX(dx < 0);
     else npc.sprite.setFlipX(false);
   }
 
@@ -520,9 +521,10 @@ class ExploreScene extends Phaser.Scene {
     }
     const cur = this.playerSprite.anims.currentAnim;
     if (!cur || cur.key !== wantAnim) this.playerSprite.play(wantAnim);
+    // 玩家 sprite 也假設原圖朝右 — 朝左走才翻
     if (wantAnim === "hero_walk") {
-      if (dx >  0.1) this.playerSprite.setFlipX(true);
-      else if (dx < -0.1) this.playerSprite.setFlipX(false);
+      if (dx >  0.1) this.playerSprite.setFlipX(false);
+      else if (dx < -0.1) this.playerSprite.setFlipX(true);
     } else {
       this.playerSprite.setFlipX(false);
     }
