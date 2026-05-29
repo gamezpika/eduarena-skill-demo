@@ -1881,7 +1881,8 @@
           "label": "鳥群",
           "body": "啾啾～",
           "radius": 110
-        }
+        },
+        "depth_override": 9999
       }
     ],
     "objects": []

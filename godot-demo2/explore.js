@@ -511,12 +511,20 @@ class ExploreScene extends Phaser.Scene {
     npc.sprite.y = npc.body.y + 22;
     npc.shadow.x = npc.body.x;
     npc.shadow.y = npc.body.y + 18;
-    npc.sprite.setDepth(npc.sprite.y);
-    npc.shadow.setDepth(npc.sprite.y - 1);
+    // depth_override：天上飛的 NPC（鳥群）固定最高 depth，不被地面物件遮
+    const dz = npc.cfg.depth_override;
+    if (typeof dz === 'number') {
+      npc.sprite.setDepth(dz);
+      npc.shadow.setDepth(dz - 1);
+      if (npc.bubble) npc.bubble.setDepth(dz + 1);
+    } else {
+      npc.sprite.setDepth(npc.sprite.y);
+      npc.shadow.setDepth(npc.sprite.y - 1);
+      if (npc.bubble) npc.bubble.setDepth(npc.sprite.y + 1);
+    }
     if (npc.bubble) {
       npc.bubble.x = npc.body.x;
       npc.bubble.y = npc.body.y - 90;
-      npc.bubble.setDepth(npc.sprite.y + 1);
     }
     const horizMore = Math.abs(dx) > Math.abs(dy);
     const keys = npc.animKeys;
