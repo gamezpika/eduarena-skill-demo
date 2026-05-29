@@ -303,14 +303,25 @@ class ExploreScene extends Phaser.Scene {
 
   _setupTapToMove() {
     // 玩家點地圖某處，主角就朝那邊走
-    this.moveTarget = null;  // { x, y } world coord，null = 站著
+    this.moveTarget = null;
     this.targetMarker = this.add.circle(0, 0, 14 * DPR, 0xffffff, 0.65)
       .setStrokeStyle(3 * DPR, 0x101010, 0.7)
       .setDepth(9999)
       .setVisible(false);
+
+    // userZoom：派派手動縮放倍率（最終 zoom = base × userZoom）
+    this.userZoom = 1;
+    this.MIN_USER_ZOOM = 0.5;
+    this.MAX_USER_ZOOM = 3.0;
+    this._pinchStart = null;  // { dist, zoom } 雙指開始狀態
+
     this.input.on("pointerdown", (pointer) => {
       if (this.modalOpen) return;
-      // pointer.worldX/worldY = camera-aware 世界座標
+      // 雙指開始 = pinch zoom，不觸發 tap-to-move
+      if (this.input.pointer1.isDown && this.input.pointer2 && this.input.pointer2.isDown) {
+        this._beginPinch();
+        return;
+      }
       const wx = pointer.worldX, wy = pointer.worldY;
       this.moveTarget = { x: wx, y: wy };
       this.targetMarker.setPosition(wx, wy).setVisible(true);
@@ -318,6 +329,39 @@ class ExploreScene extends Phaser.Scene {
       this.tweens.add({ targets: this.targetMarker, alpha: 0, duration: 600,
                         onComplete: () => { this.targetMarker.setAlpha(0.65).setVisible(false); } });
     });
+
+    // Pinch (手機雙指縮放)
+    this.input.on("pointermove", () => {
+      if (this._pinchStart && this.input.pointer1.isDown && this.input.pointer2 && this.input.pointer2.isDown) {
+        const dx = this.input.pointer1.x - this.input.pointer2.x;
+        const dy = this.input.pointer1.y - this.input.pointer2.y;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / this._pinchStart.dist;
+        this.userZoom = Math.max(this.MIN_USER_ZOOM,
+                          Math.min(this.MAX_USER_ZOOM, this._pinchStart.zoom * ratio));
+        this._adjustZoom();
+        this.moveTarget = null;  // pinch 中不走
+      }
+    });
+    this.input.on("pointerup", () => {
+      // 任一指放開就結束 pinch
+      this._pinchStart = null;
+    });
+
+    // 滾輪縮放（桌面）
+    this.input.on("wheel", (pointer, _go, _dx, dy) => {
+      const dir = dy > 0 ? -1 : 1;
+      this.userZoom = Math.max(this.MIN_USER_ZOOM,
+                        Math.min(this.MAX_USER_ZOOM, this.userZoom * (1 + dir * 0.12)));
+      this._adjustZoom();
+    });
+  }
+
+  _beginPinch() {
+    const dx = this.input.pointer1.x - this.input.pointer2.x;
+    const dy = this.input.pointer1.y - this.input.pointer2.y;
+    this._pinchStart = { dist: Math.hypot(dx, dy), zoom: this.userZoom };
+    this.moveTarget = null;
   }
 
   _adjustZoom() {
@@ -327,6 +371,8 @@ class ExploreScene extends Phaser.Scene {
     // 手機 portrait（高 > 寬）視野放大，避免世界看起來太小
     const isPortrait = sh > sw;
     if (isPortrait) z *= 1.5;
+    // 派派手動縮放倍率
+    z *= (this.userZoom || 1);
     this.cameras.main.setZoom(z);
   }
 
@@ -575,6 +621,7 @@ const game = new Phaser.Game({
     width: window.innerWidth * DPR,
     height: window.innerHeight * DPR,
   },
+  input: { activePointers: 3 },  // 允許多指輸入給 pinch zoom 用
   physics: { default: "arcade", arcade: { gravity: { y: 0 }, debug: false } },
   plugins: {
     global: [
