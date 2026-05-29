@@ -1441,18 +1441,23 @@ function renderDetail() {
         buildingDetail.innerHTML = '<div style="text-align:center;color:#888;padding:20px 0;">選一個 building</div>';
         return;
     }
-    const b = mapConfig.buildings.find(x => x.id === selectedBuildingId);
-    if (!b) return;
+    const owned = findItemAndOwner(selectedBuildingId);
+    if (!owned) return;
+    const b = owned.item;
+    const isObstacle = owned.isObstacle;
+    const escName = (b.name || '').replace(/"/g, '&quot;');
 
     buildingDetail.innerHTML = `
-        <h3>${b.name} <span style="font-size:10px;color:#888;">${b.id}</span></h3>
-        <div class="field"><label>類別</label><input value="${b.category}" data-field="category"></div>
-        <div class="field"><label>互動</label><input value="${b.interaction_type}" data-field="interaction_type"></div>
-        <div class="field"><label>render_order</label><input type="number" value="${b.render_order}" data-field="render_order"></div>
-        <h3 style="margin-top:14px;">polygon (${b.polygon.length} 頂點)</h3>
+        <h3 style="display:flex;align-items:center;gap:6px;">名稱 <span style="font-size:10px;color:#888;font-weight:400;">${b.id}</span></h3>
+        <div class="field"><label>name</label><input value="${escName}" data-field="name" placeholder="例：樹9"></div>
+        ${isObstacle ? '' : `<div class="field"><label>類別</label><input value="${b.category || ''}" data-field="category"></div>
+        <div class="field"><label>互動</label><input value="${b.interaction_type || ''}" data-field="interaction_type"></div>
+        <div class="field"><label>render_order</label><input type="number" value="${b.render_order || 0}" data-field="render_order"></div>`}
+        <h3 style="margin-top:14px;">polygon (${(b.polygon || []).length} 頂點)</h3>
         <div style="font-size:10px;color:#888;margin-bottom:6px;">拖頂點移動・雙擊邊加新頂點・雙擊頂點刪除</div>
         <div id="vertexList"></div>
         <button class="btn-secondary" id="btnResetPoly" style="margin-top:6px;padding:6px 10px;font-size:11px;width:100%;">重置為矩形 (從 bbox)</button>
+        ${isObstacle ? '' : `
         <h3 style="margin-top:14px;">bbox (從 polygon 自動算)</h3>
         <div class="field"><label>x_min</label><input type="number" step="0.01" value="${b.bounding_box.x_min.toFixed(3)}" disabled></div>
         <div class="field"><label>y_min</label><input type="number" step="0.01" value="${b.bounding_box.y_min.toFixed(3)}" disabled></div>
@@ -1461,9 +1466,10 @@ function renderDetail() {
         <h3 style="margin-top:14px;">center (建築中心)</h3>
         <div class="field"><label>x</label><input type="number" step="0.01" value="${b.center.x.toFixed(3)}" data-center="x"></div>
         <div class="field"><label>y</label><input type="number" step="0.01" value="${b.center.y.toFixed(3)}" data-center="y"></div>
-        <h3 style="margin-top:14px;">path (${b.path.length} waypoints)</h3>
+        <h3 style="margin-top:14px;">path (${(b.path || []).length} waypoints)</h3>
         <div id="pathList"></div>
         <button class="btn-secondary" id="btnClearPath" style="margin-top:8px;padding:6px 10px;font-size:11px;">清空 path</button>
+        `}
     `;
 
     // vertex list
@@ -1508,9 +1514,9 @@ function renderDetail() {
         renderAll();
     });
 
-    // path list
+    // path list（僅 building 有）
     const pathList = buildingDetail.querySelector('#pathList');
-    b.path.forEach((p, i) => {
+    if (pathList && Array.isArray(b.path)) b.path.forEach((p, i) => {
         const row = document.createElement('div');
         row.className = 'field';
         row.innerHTML = `<label>#${i+1}</label>
@@ -1526,6 +1532,12 @@ function renderDetail() {
         input.addEventListener('change', e => {
             const k = input.dataset.field;
             b[k] = k === 'render_order' ? parseInt(input.value) : input.value;
+            if (k === 'name') {
+                // 同步 interaction.label（建築物模板互動標籤跟著改）
+                if (b.interaction && typeof b.interaction === 'object') b.interaction.label = b[k];
+                renderBuildingList();
+            }
+            autoSave();
         });
     });
     buildingDetail.querySelectorAll('input[data-bb]').forEach(input => {
