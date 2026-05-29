@@ -1678,6 +1678,12 @@ function placeSpriteAt(libIdx, normX, normY) {
     if (item.type === 'npc') {
         if (!Array.isArray(mapConfig.npcs)) mapConfig.npcs = [];
         const id = 'npc_' + String(mapConfig.npcs.length + 1).padStart(2, '0');
+        // 從顯示名 ("🐮 走路牛") 去掉開頭 emoji+空白，從第一個中/英/數開始截
+        const cleanName = (s) => {
+            const m = (s || '').match(/[一-鿿A-Za-z0-9].*/);
+            return (m ? m[0] : s || '').trim();
+        };
+        const itemName = cleanName(item.name) || item.name || id;
         const npcSprite = { scale: item.scale || 0.66 };
         if (item.tint) npcSprite.tint = item.tint;
         if (item.sprites) {
@@ -1690,31 +1696,37 @@ function placeSpriteAt(libIdx, normX, normY) {
             npcSprite.frame_height = item.frame_height || 384;
         }
         mapConfig.npcs.push({
-            id, name: item.name.replace(/^\W+\s*/, ''),
+            id, name: itemName,
             sprite: npcSprite,
             spawn: { x: normX, y: normY },
             patrol: [{ x: normX, y: normY }],
             speed: 60,
             interaction: { type: item.default_interaction || 'open_modal',
-                           label: item.name.replace(/^\W+\s*/, ''),
+                           label: itemName,
                            body: '你好！', radius: 110 },
         });
     } else {
         if (!Array.isArray(mapConfig.buildings)) mapConfig.buildings = [];
         const id = item.image.replace(/\.png$/, '') + '_' + (mapConfig.buildings.length + 1);
+        // 從顯示名 ("🌳 綠樹") 去掉開頭 emoji+空白，從第一個中/英/數開始截
+        const cleanName = (s) => {
+            const m = (s || '').match(/[一-鿿A-Za-z0-9].*/);
+            return (m ? m[0] : s || '').trim();
+        };
+        const itemName = cleanName(item.name) || item.name || id;
         // bbox 從 sprite library 讀 default（派派要的：上傳就有合理紅框，bbox 模式只是微調）
         const halfW = (item.bbox_w_norm || 0.05) / 2;
         const halfH = (item.bbox_h_norm || 0.02) / 2;
         // bbox 中心在 anchor 點往上半個 bbox 高（房子腳底就是 anchor）
         const bboxCenterY = normY - halfH;
         mapConfig.buildings.push({
-            id, name: item.name.replace(/^\W+\s*/, ''), category: item.type || 'building',
+            id, name: itemName, category: item.type || 'building',
             sprite: { image: item.image, scale: item.scale || 0.74, anchor_x: 0.5, anchor_y: 1.0 },
             anchor: { x: normX, y: normY },
             bounding_box: { x_min: normX - halfW, x_max: normX + halfW,
                             y_min: bboxCenterY - halfH, y_max: bboxCenterY + halfH },
             interaction: item.default_interaction
-                ? { type: item.default_interaction, label: item.name.replace(/^\W+\s*/, ''), body: '', radius: 110 }
+                ? { type: item.default_interaction, label: itemName, body: '', radius: 110 }
                 : undefined,
             path: [], center: { x: normX, y: normY },
             // 預設 polygon 用形狀模板（派派要：一眼看出是可拖點的多邊形不是矩形）
@@ -1877,9 +1889,9 @@ function renderPlacedSpriteList() {
     const el = document.getElementById('placedSpriteList');
     if (!el) return;
     const items = [
-        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name, isNpc: false, icon: '🏠',
+        ...getPlacedSprites().map(b => ({ id: b.id, name: b.name || b.id, isNpc: false, icon: '🏠',
                                           scale: (b.sprite && b.sprite.scale) || 0.74 })),
-        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name, isNpc: true, icon: '👤',
+        ...getPlacedNpcs().map(n => ({ id: n.id, name: n.name || n.id, isNpc: true, icon: '👤',
                                        scale: (n.sprite && n.sprite.scale) || 0.66 })),
     ];
     document.getElementById('spriteCount').textContent = items.length;

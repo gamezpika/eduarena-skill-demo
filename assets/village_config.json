@@ -889,7 +889,7 @@
       },
       {
         "id": "tree_green_15",
-        "name": "",
+        "name": "綠樹",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -952,7 +952,7 @@
       },
       {
         "id": "tree_green_16",
-        "name": "",
+        "name": "綠樹",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -1023,7 +1023,7 @@
       },
       {
         "id": "tree_green_17",
-        "name": "",
+        "name": "綠樹",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
@@ -1094,7 +1094,7 @@
       },
       {
         "id": "tree_green_18",
-        "name": "",
+        "name": "綠樹",
         "category": "decoration",
         "sprite": {
           "image": "tree_green.png",
