@@ -792,7 +792,12 @@ function renderSpriteLibrary() {
 let pendingSpriteIdx = null;
 
 // ─── localStorage 自動儲存
-const LS_KEY = 'eduarena_map_config_draft_' + _qMap;  // 每張地圖獨立 draft，避免跨 map 污染
+// 5/29 v2: bbox 預設加大，強制丟掉舊小 bbox 的 localStorage 緩存
+const LS_KEY = 'eduarena_map_config_draft_v2_' + _qMap;
+// 一次性清掉舊版 key，避免派派還看到舊資料
+['eduarena_map_config_draft', 'eduarena_map_config_draft_' + _qMap].forEach(k => {
+    if (localStorage.getItem(k)) localStorage.removeItem(k);
+});
 let saveTimer = null;
 function autoSave() {
     if (!mapConfig) return;
