@@ -20,18 +20,6 @@
         { "image": "tree_green.png",   "name": "🌳 綠樹", "type": "decoration", "scale": 0.36, "default_interaction": null },
         { "image": "hero_walk.png",    "name": "👤 村民 NPC", "type": "npc",     "scale": 0.66, "tint": "#9a4eff", "default_interaction": "open_modal", "frame_width": 231, "frame_height": 384, "grid_cols": 5, "grid_rows": 5 }
       ]
-    },
-    {
-      "id": "world",
-      "name": "🌍 世界地圖 3D (world.html)",
-      "engine": "three_world",
-      "config_path": "assets/world_map_config.json",
-      "background_path": "assets/images/world_map_iso.png",
-      "sprite_base": "assets/3d/character/",
-      "preview_url": "world.html",
-      "image_dimensions": { "width": 1024, "height": 1024 },
-      "world_offset_y": 0,
-      "sprite_library": []
     }
   ]
 }

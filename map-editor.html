@@ -30,6 +30,7 @@
             position: absolute; border: 2px solid rgba(255,255,255,0.6);
             cursor: move; user-select: none;
             transition: border-color 0.15s, background 0.15s;
+            z-index: 20;  /* 比 reference sprite (z=5) 高，比正常 sprite (z=22) 低 */
         }
         .bbox.selected {
             border: 3px solid #fdc500;
@@ -435,17 +436,19 @@
     </div>
 
     <div class="mode-tabs">
-        <button id="tab-bbox" class="active">📦 bbox</button>
-        <button id="tab-sprite">👤 sprite</button>
-        <button id="tab-path">🛣 路徑</button>
-        <button id="tab-objects">📍 物件</button>
+        <button id="tab-bbox" class="active" title="畫 collision 紅框（避免玩家走進）">📦 collision</button>
+        <button id="tab-sprite" title="拖 sprite 到地圖放">🖼️ sprite</button>
+        <button id="tab-path" title="選 NPC → 連續點地圖加 patrol waypoint">🛣 NPC 路徑</button>
+        <button id="tab-objects" style="display:none;" title="3D GLB 已停用">📍 物件</button>
     </div>
 
     <!-- 👤 Sprite mode 面板 -->
     <div class="sprite-panel" id="spritePanel" style="display:none;">
-        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
-            🎨 Sprite 庫（點 sprite → 點地圖放）
+        <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019; display:flex; align-items:center; justify-content:space-between;">
+            <span>🎨 Sprite 庫（點 sprite → 點地圖放）</span>
+            <button id="btnUploadSprite" style="background:#444;color:#fdc500;border:1px solid #555;border-radius:4px;padding:3px 7px;font-size:11px;font-weight:700;cursor:pointer;">📤 上傳</button>
         </div>
+        <input type="file" id="spriteFileInput" accept="image/png,image/jpeg" style="display:none">
         <div id="spriteHint" style="display:none; padding:8px 12px; background:#3a4a20; color:#fdc500; font-size:11px;"></div>
         <div class="sprite-library" id="spriteLibrary" style="
             display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;
@@ -463,11 +466,17 @@
     <!-- 🛣 Path mode 面板 -->
     <div class="path-panel" id="pathPanel" style="display:none;">
         <div style="padding:10px 12px; font-size:11px; color:#fdc500; font-weight:700; border-bottom:1px solid #0d1019;">
-            🛣 NPC 巡邏路徑
+            🛣 NPC 巡邏路徑（waypoint）
+        </div>
+        <div style="padding:8px 12px; font-size:10px; color:#aaa; border-bottom:1px solid #0d1019; line-height:1.5;">
+            選一個 NPC 進入編輯狀態，然後：<br>
+            • <b>點地圖</b>加 waypoint（NPC 會依序走）<br>
+            • <b>拖</b>移動 waypoint<br>
+            • <b>右鍵</b>刪除 waypoint
         </div>
         <div id="pathNpcList" style="padding:8px 12px;"></div>
         <div id="pathEditingHint" style="display:none; padding:8px 12px; background:#3a4a20; color:#fdc500; font-size:11px;">
-            點地圖加 waypoint，拖移、右鍵刪
+            點地圖加 waypoint
         </div>
     </div>
 
@@ -991,6 +1000,89 @@ async function pushFileToGitHub(filePath, content, commitMsg) {
     }
 }
 
+// ─── 上傳 sprite 到 sprite_library ─────────────────────────────
+document.getElementById('btnUploadSprite').addEventListener('click', () => {
+    document.getElementById('spriteFileInput').click();
+});
+document.getElementById('spriteFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';  // 清，下次同檔可重選
+    if (!ACTIVE_PROJECT) { alert('沒有 active project'); return; }
+    const filename = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+    const name = prompt('Sprite 顯示名稱：', filename.replace(/\.[^.]+$/, ''));
+    if (!name) return;
+    const type = prompt('類型 (building / decoration / npc)：', 'building');
+    if (!type) return;
+    const scaleStr = prompt('Phaser scale (建議 0.74 房子 / 0.54 噴泉 / 0.36 樹 / 0.66 NPC)：', type === 'npc' ? '0.66' : type === 'decoration' ? '0.36' : '0.74');
+    const scale = parseFloat(scaleStr);
+    if (isNaN(scale)) { alert('scale 不是數字'); return; }
+    const defaultInteraction = type === 'npc' ? 'open_modal' : (type === 'building' ? 'open_modal' : null);
+
+    try {
+        // 1. 讀檔成 base64（用 chunked helper 避免大檔 stack overflow）
+        const arrBuf = await file.arrayBuffer();
+        const b64 = arrayBufferToBase64(arrBuf);
+        // 2. 推到 sprite_base
+        const targetPath = ACTIVE_PROJECT.sprite_base + filename;
+        await pushFileToGitHubRaw(targetPath, b64, `feat(${ACTIVE_PROJECT.id}): 上傳 sprite ${filename}`);
+        // 3. registry 加 entry
+        const newEntry = {
+            image: filename, name: name.trim(), type: type.trim(),
+            scale: scale, default_interaction: defaultInteraction,
+        };
+        if (type === 'npc') {
+            const fw = parseInt(prompt('NPC frame_width (像素)：', '231'), 10);
+            const fh = parseInt(prompt('NPC frame_height (像素)：', '384'), 10);
+            const gc = parseInt(prompt('NPC grid cols：', '5'), 10);
+            const gr = parseInt(prompt('NPC grid rows：', '5'), 10);
+            newEntry.frame_width = fw; newEntry.frame_height = fh;
+            newEntry.grid_cols = gc; newEntry.grid_rows = gr;
+            const tint = prompt('NPC tint 顏色（hex，可空）：', '#9a4eff');
+            if (tint && tint.trim()) newEntry.tint = tint.trim();
+        }
+        ACTIVE_PROJECT.sprite_library.push(newEntry);
+        await pushFileToGitHubRaw(REGISTRY_PATH, utf8ToBase64(JSON.stringify({ projects: PROJECTS_REGISTRY }, null, 2)),
+            `feat(${ACTIVE_PROJECT.id}): registry 加 sprite ${filename}`);
+        renderSpriteLibrary();
+        alert(`Sprite ${filename} 上傳完成！\n等 Railway 部署後即可從 library 拖到地圖。`);
+    } catch (err) {
+        alert('上傳失敗：' + err.message);
+    }
+});
+
+// 通用 GitHub PutFile (raw base64 版，給上傳 PNG/registry 用)
+async function pushFileToGitHubRaw(filePath, base64Content, commitMsg) {
+    let pat = localStorage.getItem(GH_PAT_KEY);
+    if (!pat) {
+        pat = prompt('需要 GitHub PAT 才能推上傳，貼進去：');
+        if (!pat || !pat.trim()) throw new Error('沒給 PAT');
+        pat = pat.trim();
+        localStorage.setItem(GH_PAT_KEY, pat);
+    }
+    const apiBase = `https://api.github.com/repos/${GH_REPO_OWNER}/${GH_REPO_NAME}/contents/${filePath}`;
+    const authHeaders = {
+        'Authorization': `Bearer ${pat}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    };
+    let sha = null;
+    const getRes = await fetch(`${apiBase}?ref=${GH_BRANCH}`, { headers: authHeaders });
+    if (getRes.ok) sha = (await getRes.json()).sha;
+    else if (getRes.status !== 404) throw new Error('取 SHA 失敗 HTTP ' + getRes.status);
+    const body = { message: commitMsg, content: base64Content, branch: GH_BRANCH };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(apiBase, {
+        method: 'PUT',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    if (!putRes.ok) {
+        const txt = await putRes.text();
+        throw new Error(`PUT 失敗 HTTP ${putRes.status}: ${txt.slice(0, 200)}`);
+    }
+}
+
 function renderAll() {
     // 5/25 派派：確保 mapConfig.objects 存在
     if (mapConfig && !Array.isArray(mapConfig.objects)) mapConfig.objects = [];
@@ -1044,6 +1136,8 @@ function renderPolygons() {
     mapFrame.querySelectorAll('.poly-vertex').forEach(el => el.remove());
     mapFrame.querySelectorAll('.bbox-label').forEach(el => el.remove());
     if (!mapConfig) return;
+    // sprite mode 跟 path mode 不顯示 bbox overlay（純看 sprite）
+    if (mode === 'sprite' || mode === 'path') return;
 
     const mw = mapImg.clientWidth, mh = mapImg.clientHeight;
     pathSvg.setAttribute('width', mw);
@@ -1503,8 +1597,11 @@ function placeSpriteAt(libIdx, normX, normY) {
 
 function renderSpriteMarkers() {
     document.querySelectorAll('#mapFrame .placed-sprite').forEach(el => el.remove());
-    if (!mapConfig || mode !== 'sprite') return;
+    if (!mapConfig) return;
     if (!ACTIVE_PROJECT) return;
+    // sprite mode 全互動 + 全不透明；bbox mode 顯示為參考（半透明、不可拖、不可選）
+    const isReference = (mode === 'bbox');
+    if (mode !== 'sprite' && mode !== 'bbox') return;
     const mf = document.getElementById('mapFrame');
     const w = mapImg.clientWidth, h = mapImg.clientHeight;
     const imgW = mapImg.naturalWidth || 1920;
@@ -1519,11 +1616,16 @@ function renderSpriteMarkers() {
     getPlacedSprites().forEach(b => {
         const meta = libMeta(b.sprite.image);
         const spriteScale = (b.sprite && b.sprite.scale) || meta.scale || 0.74;
-        // 假設 source 512×512（村莊 sprite 統一）— 之後可從 meta.source_size 讀
         const srcSize = meta.source_size || 512;
         const renderSize = srcSize * spriteScale * displayScale;
         const el = document.createElement('div');
         el.className = 'placed-sprite';
+        if (isReference) {
+            el.classList.add('reference');
+            el.style.opacity = '0.55';
+            el.style.pointerEvents = 'none';
+            el.style.zIndex = 5;  // 比 .bbox(z=20) 低，比 mapImg 高
+        }
         el.style.left   = (b.anchor.x * w) + 'px';
         el.style.top    = (b.anchor.y * h) + 'px';
         el.style.width  = renderSize + 'px';
@@ -1536,12 +1638,12 @@ function renderSpriteMarkers() {
             const fb = document.createElement('div');
             fb.className = 'fallback'; fb.textContent = '❌';
             el.appendChild(fb);
-            el.appendChild(makeAnchorDot());
+            if (!isReference) el.appendChild(makeAnchorDot());
         };
         el.appendChild(img);
-        el.appendChild(makeAnchorDot());
+        if (!isReference) el.appendChild(makeAnchorDot());
         el.dataset.bid = b.id;
-        attachSpriteDrag(el, b, w, h, false);
+        if (!isReference) attachSpriteDrag(el, b, w, h, false);
         mf.appendChild(el);
     });
 
@@ -1557,15 +1659,21 @@ function renderSpriteMarkers() {
         const renderH = frameH * spriteScale * displayScale;
         const el = document.createElement('div');
         el.className = 'placed-sprite npc';
+        if (isReference) {
+            el.classList.add('reference');
+            el.style.opacity = '0.55';
+            el.style.pointerEvents = 'none';
+            el.style.zIndex = 5;  // 比 .bbox(z=20) 低
+        }
         el.style.left   = (n.spawn.x * w) + 'px';
         el.style.top    = (n.spawn.y * h) + 'px';
         el.style.width  = renderW + 'px';
         el.style.height = renderH + 'px';
         el.style.backgroundImage = `url("../${ACTIVE_PROJECT.sprite_base}${n.sprite.image}")`;
         el.style.backgroundSize = `${renderW * gridCols}px ${renderH * gridRows}px`;
-        el.appendChild(makeAnchorDot());
+        if (!isReference) el.appendChild(makeAnchorDot());
         el.dataset.nid = n.id;
-        attachSpriteDrag(el, n, w, h, true);
+        if (!isReference) attachSpriteDrag(el, n, w, h, true);
         mf.appendChild(el);
     });
 }
