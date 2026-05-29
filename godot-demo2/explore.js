@@ -62,13 +62,13 @@ class ExploreScene extends Phaser.Scene {
     this.load.spritesheet("hero_up",   "hero_walk3.png?v=1", { frameWidth: 480, frameHeight: 864 });
     // 村莊 ground + 障礙物 sprite（sprite cache-bust v=2 因 alpha 修過）
     this.load.image("village_ground", "village_ground.png?v=1");
-    this.load.image("house_red",      "house_red.png?v=3");
-    this.load.image("house_brown",    "house_brown.png?v=3");
-    this.load.image("house_blue",     "house_blue.png?v=3");
-    this.load.image("house_green",    "house_green.png?v=3");
-    this.load.image("house_yellow",   "house_yellow.png?v=3");
-    this.load.image("fountain",       "fountain.png?v=3");
-    this.load.image("tree_green",     "tree_green.png?v=2");
+    this.load.image("house_red",      "house_red.png?v=4");
+    this.load.image("house_brown",    "house_brown.png?v=4");
+    this.load.image("house_blue",     "house_blue.png?v=4");
+    this.load.image("house_green",    "house_green.png?v=4");
+    this.load.image("house_yellow",   "house_yellow.png?v=4");
+    this.load.image("fountain",       "fountain.png?v=4");
+    this.load.image("tree_green",     "tree_green.png?v=3");
   }
 
   create() {
