@@ -20,22 +20,22 @@
       "sprites": {
         "side": {
           "image": "player3.png",
-          "frame_width": 234,
-          "frame_height": 457,
+          "frame_width": 390,
+          "frame_height": 762,
           "frames": 9,
           "frame_rate": 6
         },
         "down": {
           "image": "player1.png",
-          "frame_width": 221,
-          "frame_height": 500,
+          "frame_width": 368,
+          "frame_height": 834,
           "frames": 9,
           "frame_rate": 6
         },
         "up": {
           "image": "player2.png",
-          "frame_width": 218,
-          "frame_height": 498,
+          "frame_width": 364,
+          "frame_height": 830,
           "frames": 9,
           "frame_rate": 6
         }
@@ -130,10 +130,10 @@
           "y": 0.43188870367995896
         },
         "bounding_box": {
-          "x_min": 0.409469242315259,
+          "x_min": 0.4231325612575193,
           "y_min": 0.18842608985495723,
           "x_max": 0.5735781209067397,
-          "y_max": 0.4236609787443696
+          "y_max": 0.4074127430930229
         },
         "interaction": {
           "type": "open_modal",
@@ -159,16 +159,20 @@
             "y": 0.34884215854094475
           },
           {
-            "x": 0.5398150539338724,
-            "y": 0.39668739392600033
+            "x": 0.5341220043745973,
+            "y": 0.3819162706065943
           },
           {
-            "x": 0.5029294685250253,
-            "y": 0.4236609787443696
+            "x": 0.5052066883487354,
+            "y": 0.4074127430930229
           },
           {
-            "x": 0.409469242315259,
-            "y": 0.3647621479280988
+            "x": 0.4838019288541153,
+            "y": 0.37322887668059396
+          },
+          {
+            "x": 0.4231325612575193,
+            "y": 0.3411283506170491
           },
           {
             "x": 0.42402316754961655,
@@ -1527,8 +1531,12 @@
             "y": 0.8011572918322862
           },
           {
-            "x": 0.2029000226931288,
-            "y": 0.7753857639440954
+            "x": 0.22546524779637564,
+            "y": 0.7830457753361189
+          },
+          {
+            "x": 0.20859307225240392,
+            "y": 0.7739086516121548
           },
           {
             "x": 0.1779000226931288,
@@ -1580,7 +1588,7 @@
         "bounding_box": {
           "x_min": 0,
           "y_min": 0.4922777639440954,
-          "x_max": 0.2029000226931288,
+          "x_max": 0.22546524779637564,
           "y_max": 0.8260617639440954
         }
       }
@@ -1594,22 +1602,22 @@
           "sprites": {
             "side": {
               "image": "hero_walk2.png",
-              "frame_width": 151,
-              "frame_height": 206,
+              "frame_width": 252,
+              "frame_height": 344,
               "frames": 9,
               "frame_rate": 12
             },
             "down": {
               "image": "hero_walk.png",
-              "frame_width": 139,
-              "frame_height": 230,
+              "frame_width": 231,
+              "frame_height": 384,
               "frames": 25,
               "frame_rate": 14
             },
             "up": {
               "image": "hero_walk3.png",
-              "frame_width": 96,
-              "frame_height": 173,
+              "frame_width": 160,
+              "frame_height": 288,
               "frames": 16,
               "frame_rate": 14
             }
@@ -1658,8 +1666,8 @@
           "sprites": {
             "side": {
               "image": "cowwalk.png",
-              "frame_width": 384,
-              "frame_height": 337,
+              "frame_width": 640,
+              "frame_height": 562,
               "grid_cols": 3,
               "grid_rows": 3,
               "frames": 9,
