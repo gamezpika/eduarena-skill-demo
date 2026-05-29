@@ -17,15 +17,18 @@ const VILLAGE_SPRITES = [
   { key: "house_yellow", x: 1660, y: 680, scale: 0.37 },
   // 噴泉
   { key: "fountain",     x: 960,  y: 600, scale: 0.27 },
-  // 8 棵綠樹（派派要求多點綠色樹分散草地，避開房子+路徑）
-  { key: "tree_green",   x: 180,  y: 280, scale: 0.18 },
-  { key: "tree_green",   x: 700,  y: 420, scale: 0.18 },
-  { key: "tree_green",   x: 1230, y: 420, scale: 0.18 },
-  { key: "tree_green",   x: 1820, y: 380, scale: 0.18 },
-  { key: "tree_green",   x: 180,  y: 880, scale: 0.18 },
-  { key: "tree_green",   x: 720,  y: 880, scale: 0.18 },
-  { key: "tree_green",   x: 1230, y: 880, scale: 0.18 },
-  { key: "tree_green",   x: 1820, y: 880, scale: 0.18 },
+  // 8 棵綠樹放安全 corridors：
+  //   x=490-770 (red/green column 跟 brown column 中間)
+  //   x=1150-1310 (brown 跟 blue/yellow 中間)
+  //   x<110 / x>1850 (左右邊緣，避開河流)
+  { key: "tree_green",   x: 60,   y: 200, scale: 0.18 },
+  { key: "tree_green",   x: 630,  y: 250, scale: 0.18 },
+  { key: "tree_green",   x: 1230, y: 250, scale: 0.18 },
+  { key: "tree_green",   x: 1900, y: 250, scale: 0.18 },
+  { key: "tree_green",   x: 630,  y: 530, scale: 0.18 },
+  { key: "tree_green",   x: 1230, y: 530, scale: 0.18 },
+  { key: "tree_green",   x: 630,  y: 900, scale: 0.18 },
+  { key: "tree_green",   x: 1230, y: 900, scale: 0.18 },
 ];
 
 // 碰撞 hitbox：物件 footprint
@@ -39,14 +42,14 @@ const OBSTACLES = [
   // 噴泉
   { cx: 960,  cy: 588, w: 180, h: 50 },
   // 8 棵樹幹底
-  { cx: 180,  cy: 275, w: 32,  h: 24 },
-  { cx: 700,  cy: 415, w: 32,  h: 24 },
-  { cx: 1230, cy: 415, w: 32,  h: 24 },
-  { cx: 1820, cy: 375, w: 32,  h: 24 },
-  { cx: 180,  cy: 875, w: 32,  h: 24 },
-  { cx: 720,  cy: 875, w: 32,  h: 24 },
-  { cx: 1230, cy: 875, w: 32,  h: 24 },
-  { cx: 1820, cy: 875, w: 32,  h: 24 },
+  { cx: 60,   cy: 195, w: 32,  h: 24 },
+  { cx: 630,  cy: 245, w: 32,  h: 24 },
+  { cx: 1230, cy: 245, w: 32,  h: 24 },
+  { cx: 1900, cy: 245, w: 32,  h: 24 },
+  { cx: 630,  cy: 525, w: 32,  h: 24 },
+  { cx: 1230, cy: 525, w: 32,  h: 24 },
+  { cx: 630,  cy: 895, w: 32,  h: 24 },
+  { cx: 1230, cy: 895, w: 32,  h: 24 },
 ];
 
 class ExploreScene extends Phaser.Scene {
@@ -59,13 +62,13 @@ class ExploreScene extends Phaser.Scene {
     this.load.spritesheet("hero_up",   "hero_walk3.png?v=1", { frameWidth: 480, frameHeight: 864 });
     // 村莊 ground + 障礙物 sprite（sprite cache-bust v=2 因 alpha 修過）
     this.load.image("village_ground", "village_ground.png?v=1");
-    this.load.image("house_red",      "house_red.png?v=2");
-    this.load.image("house_brown",    "house_brown.png?v=2");
-    this.load.image("house_blue",     "house_blue.png?v=2");
-    this.load.image("house_green",    "house_green.png?v=2");
-    this.load.image("house_yellow",   "house_yellow.png?v=2");
-    this.load.image("fountain",       "fountain.png?v=2");
-    this.load.image("tree_green",     "tree_green.png?v=1");
+    this.load.image("house_red",      "house_red.png?v=3");
+    this.load.image("house_brown",    "house_brown.png?v=3");
+    this.load.image("house_blue",     "house_blue.png?v=3");
+    this.load.image("house_green",    "house_green.png?v=3");
+    this.load.image("house_yellow",   "house_yellow.png?v=3");
+    this.load.image("fountain",       "fountain.png?v=3");
+    this.load.image("tree_green",     "tree_green.png?v=2");
   }
 
   create() {
