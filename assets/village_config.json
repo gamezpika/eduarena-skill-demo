@@ -1733,6 +1733,60 @@
           "radius": 110
         },
         "greeting": "哞～"
+      },
+      {
+        "id": "npc_03",
+        "name": "女學生 NPC",
+        "sprite": {
+          "scale": 0.35,
+          "sprites": {
+            "side": {
+              "image": "girl3.png",
+              "frame_width": 234,
+              "frame_height": 464,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6
+            },
+            "down": {
+              "image": "girl1.png",
+              "frame_width": 281,
+              "frame_height": 491,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6
+            },
+            "up": {
+              "image": "girl2.png",
+              "frame_width": 269,
+              "frame_height": 486,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 6
+            }
+          }
+        },
+        "spawn": {
+          "x": 0.24596345620924626,
+          "y": 0.4983587196238124
+        },
+        "patrol": [
+          {
+            "x": 0.24596345620924626,
+            "y": 0.4983587196238124
+          }
+        ],
+        "speed": 60,
+        "greeting": "嗨～",
+        "interaction": {
+          "type": "open_modal",
+          "label": "女學生 NPC",
+          "body": "你好！",
+          "radius": 110
+        }
       }
     ],
     "objects": []
