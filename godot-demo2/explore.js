@@ -255,8 +255,8 @@ class ExploreScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-SPACE", () => this._tryInteract());
     this.input.keyboard.on("keydown-ENTER", () => this._tryInteract());
 
-    // 9. 虛擬搖桿 + A 鈕
-    this._buildTouchUI();
+    // 9. 點地圖走過去（取代搖桿/A 按鈕）
+    this._setupTapToMove();
     this.scale.on("resize", () => this._onResize());
 
     // 10. State
@@ -264,27 +264,23 @@ class ExploreScene extends Phaser.Scene {
     this.modalOpen = false;
   }
 
-  _buildTouchUI() {
-    // 所有 UI 尺寸×DPR：backbuffer 在 retina 設備是 CSS×DPR，UI 不乘 DPR 會顯示縮一半
-    const baseR = 70 * DPR, stickR = 30 * DPR, pad = 30 * DPR;
-    const jx = baseR + pad, jy = this.scale.height - baseR - pad;
-    this.joyBase  = this.add.circle(jx, jy, baseR,  0x000000, 0.28).setStrokeStyle(3 * DPR, 0xffffff, 0.55).setScrollFactor(0).setDepth(10000);
-    this.joyThumb = this.add.circle(jx, jy, stickR, 0xffffff, 0.7 ).setStrokeStyle(2 * DPR, 0x101010, 0.7 ).setScrollFactor(0).setDepth(10001);
-    this.joystick = this.plugins.get("rexVirtualJoystick").add(this, {
-      x: jx, y: jy, radius: baseR, base: this.joyBase, thumb: this.joyThumb,
-      dir: "8dir", forceMin: 16 * DPR,
+  _setupTapToMove() {
+    // 玩家點地圖某處，主角就朝那邊走
+    this.moveTarget = null;  // { x, y } world coord，null = 站著
+    this.targetMarker = this.add.circle(0, 0, 14 * DPR, 0xffffff, 0.65)
+      .setStrokeStyle(3 * DPR, 0x101010, 0.7)
+      .setDepth(9999)
+      .setVisible(false);
+    this.input.on("pointerdown", (pointer) => {
+      if (this.modalOpen) return;
+      // pointer.worldX/worldY = camera-aware 世界座標
+      const wx = pointer.worldX, wy = pointer.worldY;
+      this.moveTarget = { x: wx, y: wy };
+      this.targetMarker.setPosition(wx, wy).setVisible(true);
+      this.tweens.killTweensOf(this.targetMarker);
+      this.tweens.add({ targets: this.targetMarker, alpha: 0, duration: 600,
+                        onComplete: () => { this.targetMarker.setAlpha(0.65).setVisible(false); } });
     });
-    const aR = 44 * DPR;
-    const ax = this.scale.width - aR - pad, ay = this.scale.height - aR - pad;
-    this.aBtn = this.add.circle(ax, ay, aR, 0xfad440, 0.4).setStrokeStyle(3 * DPR, 0x101010, 0.85).setScrollFactor(0).setDepth(10000).setInteractive();
-    this.aBtnText = this.add.text(ax, ay, "A", { fontFamily: "sans-serif", fontSize: 26 * DPR, color: "#1a0d00", fontStyle: "bold" }).setOrigin(0.5).setScrollFactor(0).setDepth(10001);
-    this.aBtnHint = this.add.text(ax, ay - aR - 18 * DPR, "", {
-      fontFamily: "-apple-system, 'PingFang TC', sans-serif", fontSize: 14 * DPR, color: "#fff",
-      backgroundColor: "rgba(0,0,0,0.55)", padding: { x: 8 * DPR, y: 4 * DPR },
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(10002).setVisible(false);
-    this.aBtn.on("pointerdown", () => { if (this.currentInteractable) this.aBtn.setFillStyle(0xc4a020, 1.0); });
-    this.aBtn.on("pointerup", () => { this._tryInteract(); this._refreshAButtonStyle(); });
-    this.aBtn.on("pointerout", () => this._refreshAButtonStyle());
   }
 
   _adjustZoom() {
@@ -296,19 +292,6 @@ class ExploreScene extends Phaser.Scene {
 
   _onResize() {
     this._adjustZoom();
-    const baseR = 70 * DPR, aR = 44 * DPR, pad = 30 * DPR;
-    const jx = baseR + pad, jy = this.scale.height - baseR - pad;
-    this.joyBase.setPosition(jx, jy);
-    this.joyThumb.setPosition(jx, jy);
-    this.joystick.setPosition(jx, jy);
-    const ax = this.scale.width - aR - pad, ay = this.scale.height - aR - pad;
-    this.aBtn.setPosition(ax, ay);
-    this.aBtnText.setPosition(ax, ay);
-    this.aBtnHint.setPosition(ax, ay - aR - 18 * DPR);
-  }
-
-  _refreshAButtonStyle() {
-    this.aBtn.setFillStyle(0xfad440, this.currentInteractable ? 1.0 : 0.4);
   }
 
   _tryInteract() {
@@ -475,27 +458,30 @@ class ExploreScene extends Phaser.Scene {
       if (npc.bubble) npc.bubble.setVisible(inRange);
     }
 
-    if (nearest !== this.currentInteractable) {
-      this.currentInteractable = nearest;
-      this._refreshAButtonStyle();
-      if (nearest) this.aBtnHint.setText(`A: ${nearest.label}`).setVisible(true);
-      else this.aBtnHint.setVisible(false);
-    } else if (nearest) {
-      this.aBtnHint.setText(`A: ${nearest.label}`);
-    }
+    this.currentInteractable = nearest;
   }
 
   update(time, delta) {
     if (!this.player) return;  // scene loading
     let dx = 0, dy = 0;
     if (!this.modalOpen) {
+      // 鍵盤輸入（電腦版仍可用方向鍵 / WASD）
       if (this.cursors.left.isDown  || this.wasd.A.isDown) dx -= 1;
       if (this.cursors.right.isDown || this.wasd.D.isDown) dx += 1;
       if (this.cursors.up.isDown    || this.wasd.W.isDown) dy -= 1;
       if (this.cursors.down.isDown  || this.wasd.S.isDown) dy += 1;
-      if (this.joystick.force > 0.05) {
-        const rad = Phaser.Math.DegToRad(this.joystick.angle);
-        dx = Math.cos(rad); dy = Math.sin(rad);
+      // 鍵盤一動立刻取消點擊目標
+      if (dx !== 0 || dy !== 0) this.moveTarget = null;
+      // 點擊移動：朝 moveTarget 直線走，撞牆自然停
+      if (dx === 0 && dy === 0 && this.moveTarget) {
+        const tx = this.moveTarget.x - this.player.x;
+        const ty = this.moveTarget.y - this.player.y;
+        const dist = Math.hypot(tx, ty);
+        if (dist < 10) {
+          this.moveTarget = null;
+        } else {
+          dx = tx / dist; dy = ty / dist;
+        }
       }
     }
     const len = Math.hypot(dx, dy);
