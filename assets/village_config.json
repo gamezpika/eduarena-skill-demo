@@ -1849,7 +1849,7 @@
               "grid_rows": 3,
               "frames": 9,
               "frame_rate": 8,
-              "facing": "right"
+              "facing": "left"
             }
           }
         },
