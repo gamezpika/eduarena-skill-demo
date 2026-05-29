@@ -1401,7 +1401,7 @@
         "id": "villager_01",
         "name": "村民",
         "sprite": {
-          "scale": 0.6,
+          "scale": 0.5,
           "sprites": {
             "side": {
               "image": "hero_walk2.png",
