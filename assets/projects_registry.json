@@ -210,6 +210,43 @@
             }
           },
           "default_depth_override": 9999
+        },
+        {
+          "name": "🐕 黃金獵犬 NPC",
+          "type": "npc",
+          "scale": 0.45,
+          "default_interaction": "open_modal",
+          "default_greeting": "汪～",
+          "sprites": {
+            "side": {
+              "image": "dog_side.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1,
+              "facing": "right"
+            },
+            "down": {
+              "image": "dog_down.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1
+            },
+            "up": {
+              "image": "dog_up.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1
+            }
+          }
         }
       ]
     }

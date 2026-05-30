@@ -1902,6 +1902,73 @@
           "body": "啾啾～",
           "radius": 110
         }
+      },
+      {
+        "id": "npc_05",
+        "name": "黃金獵犬",
+        "greeting": "汪～",
+        "sprite": {
+          "scale": 0.45,
+          "sprites": {
+            "side": {
+              "image": "dog_side.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1,
+              "facing": "right"
+            },
+            "down": {
+              "image": "dog_down.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1
+            },
+            "up": {
+              "image": "dog_up.png",
+              "frame_width": 307,
+              "frame_height": 307,
+              "grid_cols": 1,
+              "grid_rows": 1,
+              "frames": 1,
+              "frame_rate": 1
+            }
+          }
+        },
+        "spawn": {
+          "x": 0.55,
+          "y": 0.85
+        },
+        "patrol": [
+          {
+            "x": 0.5,
+            "y": 0.85
+          },
+          {
+            "x": 0.6,
+            "y": 0.85
+          },
+          {
+            "x": 0.6,
+            "y": 0.92
+          },
+          {
+            "x": 0.5,
+            "y": 0.92
+          }
+        ],
+        "speed": 80,
+        "interaction": {
+          "type": "open_modal",
+          "label": "黃金獵犬",
+          "body": "汪～",
+          "radius": 110
+        }
       }
     ],
     "objects": []
