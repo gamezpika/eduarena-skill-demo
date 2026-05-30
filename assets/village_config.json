@@ -1912,12 +1912,12 @@
           "sprites": {
             "side": {
               "image": "dog_side.png",
-              "frame_width": 307,
-              "frame_height": 307,
-              "grid_cols": 1,
-              "grid_rows": 1,
-              "frames": 1,
-              "frame_rate": 1,
+              "frame_width": 204,
+              "frame_height": 204,
+              "grid_cols": 3,
+              "grid_rows": 3,
+              "frames": 9,
+              "frame_rate": 8,
               "facing": "right"
             },
             "down": {
