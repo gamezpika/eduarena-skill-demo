@@ -1909,16 +1909,16 @@
         "name": "黃金獵犬",
         "greeting": "汪～",
         "sprite": {
-          "scale": 0.45,
+          "scale": 0.36,
           "sprites": {
             "side": {
               "image": "dog_side.png",
-              "frame_width": 204,
-              "frame_height": 204,
-              "grid_cols": 3,
-              "grid_rows": 3,
-              "frames": 9,
-              "frame_rate": 8,
+              "frame_width": 256,
+              "frame_height": 256,
+              "grid_cols": 4,
+              "grid_rows": 4,
+              "frames": 16,
+              "frame_rate": 12,
               "facing": "right"
             }
           }

@@ -62,7 +62,7 @@ class ExploreScene extends Phaser.Scene {
           if (!def || !def.image) return;
           const key = `npc_${npcCfg.id}_${dir}`;
           if (!this.textures.exists(key)) {
-            this.load.spritesheet(key, this.assetBase + def.image + "?v=2",
+            this.load.spritesheet(key, this.assetBase + def.image + "?v=3",
               { frameWidth: def.frame_width, frameHeight: def.frame_height });
           }
         });
