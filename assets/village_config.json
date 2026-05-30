@@ -1919,24 +1919,6 @@
               "frames": 9,
               "frame_rate": 8,
               "facing": "right"
-            },
-            "down": {
-              "image": "dog_down.png",
-              "frame_width": 307,
-              "frame_height": 307,
-              "grid_cols": 1,
-              "grid_rows": 1,
-              "frames": 1,
-              "frame_rate": 1
-            },
-            "up": {
-              "image": "dog_up.png",
-              "frame_width": 307,
-              "frame_height": 307,
-              "grid_cols": 1,
-              "grid_rows": 1,
-              "frames": 1,
-              "frame_rate": 1
             }
           }
         },
