@@ -512,7 +512,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.41523681505495375,
@@ -565,7 +566,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.33591363924579326,
@@ -638,7 +640,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.6547244145652003,
@@ -691,7 +694,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.5708468411480984,
@@ -748,7 +752,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.3190875306396774,
@@ -817,7 +822,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.6847078358503993,
@@ -870,7 +876,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.38993437178777574,
@@ -939,7 +946,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.5624970117049433,
@@ -992,7 +1000,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.04329089189905178,
@@ -1061,7 +1070,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.05088163200759073,
@@ -1138,7 +1148,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.06720170004800731,
@@ -1215,7 +1226,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.2118051588535955,
@@ -1296,7 +1308,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.3199731004798229,
@@ -1365,7 +1378,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.9667035304134772,
@@ -1434,7 +1448,8 @@
           "grid_cols": 4,
           "grid_rows": 4,
           "frames": 16,
-          "frame_rate": 12
+          "frame_rate": 12,
+          "play_on_proximity": true
         },
         "anchor": {
           "x": 0.6718035632430257,

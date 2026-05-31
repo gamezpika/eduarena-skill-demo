@@ -136,7 +136,13 @@ class ExploreScene extends Phaser.Scene {
               repeat: -1,
             });
           }
-          spr.play(animKey);
+          if (b.sprite.play_on_proximity) {
+            // 樹等：平常停在第0幀，玩家靠近才搖（update 控制）
+            spr.stop(); spr.setFrame(0);
+            (this._proxAnims = this._proxAnims || []).push({ spr, animKey, x: anchor.x, y: anchor.y, on: false });
+          } else {
+            spr.play(animKey);
+          }
         } else {
           spr = this.add.image(anchor.x, anchor.y, b.sprite.image);
         }
@@ -630,6 +636,16 @@ class ExploreScene extends Phaser.Scene {
     const len = Math.hypot(dx, dy);
     if (len > 1) { dx /= len; dy /= len; }
     this.player.body.setVelocity(dx * this.PLAYER_SPEED, dy * this.PLAYER_SPEED);
+
+    // 樹（play_on_proximity）：玩家靠近才搖，離開停回靜止幀
+    if (this._proxAnims) {
+      const px = this.player.x, py = this.player.y;
+      for (const t of this._proxAnims) {
+        const near = Math.hypot(t.x - px, t.y - py) < 170;
+        if (near && !t.on) { t.spr.play(t.animKey); t.on = true; }
+        else if (!near && t.on) { t.spr.stop(); t.spr.setFrame(0); t.on = false; }
+      }
+    }
 
     this.playerSprite.x = this.player.x;
     this.playerSprite.y = this.player.y + 22;
