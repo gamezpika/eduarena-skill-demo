@@ -1403,7 +1403,13 @@
           "image": "farm.png",
           "scale": 0.55,
           "anchor_x": 0.5,
-          "anchor_y": 1
+          "anchor_y": 1,
+          "frame_width": 1024,
+          "frame_height": 1024,
+          "grid_cols": 3,
+          "grid_rows": 2,
+          "frames": 6,
+          "frame_rate": 6
         },
         "anchor": {
           "x": 0.9040799852614508,
