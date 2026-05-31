@@ -1406,10 +1406,10 @@
           "anchor_y": 1,
           "frame_width": 1024,
           "frame_height": 1024,
-          "grid_cols": 3,
+          "grid_cols": 5,
           "grid_rows": 2,
-          "frames": 6,
-          "frame_rate": 6
+          "frames": 10,
+          "frame_rate": 10
         },
         "anchor": {
           "x": 0.9006641555258857,
