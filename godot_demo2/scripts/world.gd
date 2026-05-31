@@ -28,6 +28,13 @@ const ISLANDS := [
 @onready var background: Sprite2D = $Background
 @onready var entities: Node2D = $Entities
 
+# 牧場繞圈牛狀態（由 _process 驅動）
+var _cow: AnimatedSprite2D = null
+var _cow_center := Vector2.ZERO
+var _cow_rx := 30.0
+var _cow_ry := 10.0
+var _cow_ang := 0.0
+
 func _ready() -> void:
 	var bg_tex: Texture2D = load("res://assets/village/world_bg.jpg")
 	background.texture = bg_tex
@@ -77,3 +84,49 @@ func _spawn_object(data: Dictionary, scale_factor: float) -> void:
 	lbl.add_theme_constant_override("shadow_offset_x", 1)
 	lbl.add_theme_constant_override("shadow_offset_y", 1)
 	sb.add_child(lbl)
+
+	if data.get("name", "") == "farm":
+		_spawn_farm_cow(sb)
+
+
+# 牧場裡一隻會走的牛，沿草地橢圓繞圈，2 秒一圈無限循環
+# （避開底圖右下角原本那隻站著的牛）
+func _spawn_farm_cow(parent: Node2D) -> void:
+	var sheet: Texture2D = load("res://assets/village/cow_walk.png")
+	var fw := int(sheet.get_width() / 4.0)
+	var fh := sheet.get_height()
+
+	var frames := SpriteFrames.new()
+	frames.add_animation("walk")
+	frames.set_animation_loop("walk", true)
+	frames.set_animation_speed("walk", 8.0)
+	for i in 4:
+		var at := AtlasTexture.new()
+		at.atlas = sheet
+		at.region = Rect2(i * fw, 0, fw, fh)
+		frames.add_frame("walk", at)
+
+	var cow := AnimatedSprite2D.new()
+	cow.sprite_frames = frames
+	cow.animation = "walk"
+	cow.scale = Vector2(0.12, 0.12)
+	cow.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	cow.z_index = 10
+	cow.play()
+	parent.add_child(cow)
+
+	# 記錄牛 + 橢圓參數，繞圈交給 _process（座標相對 farm 原點，先估計值跑起來再微調）
+	_cow = cow
+	_cow_center = Vector2(8, -86)
+	_cow_rx = 30.0
+	_cow_ry = 10.0
+
+
+func _process(delta: float) -> void:
+	if _cow == null:
+		return
+	_cow_ang += delta * TAU / 2.0  # 2 秒一圈
+	if _cow_ang > TAU:
+		_cow_ang -= TAU
+	_cow.position = _cow_center + Vector2(cos(_cow_ang) * _cow_rx, sin(_cow_ang) * _cow_ry)
+	_cow.flip_h = sin(_cow_ang) > 0.0  # 上半圈往左走 → 翻面朝左
