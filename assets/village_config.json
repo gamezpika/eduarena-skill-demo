@@ -1394,6 +1394,59 @@
         "mask_color": "#FF3B30",
         "render_order": 500,
         "interaction_type": "open_modal"
+      },
+      {
+        "id": "farm",
+        "name": "農場",
+        "category": "house",
+        "sprite": {
+          "image": "farm.png",
+          "scale": 0.42,
+          "anchor_x": 0.5,
+          "anchor_y": 1
+        },
+        "anchor": {
+          "x": 0.5,
+          "y": 0.3
+        },
+        "bounding_box": {
+          "x_min": 0.388,
+          "y_min": 0.009405,
+          "x_max": 0.612,
+          "y_max": 0.3
+        },
+        "interaction": {
+          "type": "open_modal",
+          "label": "農場",
+          "body": "歡迎來到農場，這裡有牛在吃草～",
+          "radius": 110
+        },
+        "polygon": [
+          {
+            "x": 0.455,
+            "y": 0.155
+          },
+          {
+            "x": 0.567,
+            "y": 0.155
+          },
+          {
+            "x": 0.567,
+            "y": 0.218
+          },
+          {
+            "x": 0.455,
+            "y": 0.218
+          }
+        ],
+        "path": [],
+        "center": {
+          "x": 0.5,
+          "y": 0.3
+        },
+        "mask_color": "#FF3B30",
+        "render_order": 500,
+        "interaction_type": "open_modal"
       }
     ],
     "obstacle_areas": [
